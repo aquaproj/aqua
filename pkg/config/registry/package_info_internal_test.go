@@ -227,3 +227,34 @@ func TestPackageInfo_overrideVersion_betweenForges(t *testing.T) {
 		t.Fatal("an error must be returned")
 	}
 }
+
+// A forge's tags go with the host when an override changes the type: they name no instance
+// without it.
+func TestPackageInfo_overrideVersion_fromForgeTag(t *testing.T) {
+	t.Parallel()
+	pkgInfo := &PackageInfo{
+		Type:          PkgInfoTypeHTTP,
+		Host:          "codeberg.org",
+		RepoOwner:     "ziglang",
+		RepoName:      "zig",
+		VersionSource: VersionSourceForgejoTag,
+		URL:           "https://ziglang.org/download/{{.Version}}/zig.tar.xz",
+	}
+
+	pkg := pkgInfo.overrideVersion(&VersionOverride{
+		Type:  PkgInfoTypeGitHubRelease,
+		Asset: "zig.tar.xz",
+	})
+	if pkg.Host != "" || pkg.VersionSource != "" {
+		t.Fatalf("wanted the host and the version source gone, got %q and %q", pkg.Host, pkg.VersionSource)
+	}
+	if err := pkg.Validate(); err != nil {
+		t.Fatal(err)
+	}
+
+	// An override keeping the type keeps both.
+	pkg = pkgInfo.overrideVersion(&VersionOverride{URL: "https://ziglang.org/builds/zig.tar.xz"})
+	if pkg.Host != "codeberg.org" || pkg.VersionSource != VersionSourceForgejoTag {
+		t.Fatalf("wanted the host and the version source kept, got %q and %q", pkg.Host, pkg.VersionSource)
+	}
+}

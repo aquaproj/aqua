@@ -560,7 +560,10 @@
         "version_source": {
           "type": "string",
           "enum": [
-            "github_tag"
+            "github_tag",
+            "forgejo_tag",
+            "gitea_tag",
+            "gitlab_tag"
           ]
         },
         "complete_windows_ext": {
@@ -852,7 +855,13 @@
           "type": "string"
         },
         "version_source": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "github_tag",
+            "forgejo_tag",
+            "gitea_tag",
+            "gitlab_tag"
+          ]
         },
         "windows_ext": {
           "type": "string"
