@@ -86,6 +86,50 @@ func TestClient_ListReleases_notFound(t *testing.T) {
 	}
 }
 
+func TestClient_ListTags(t *testing.T) {
+	t.Parallel()
+	var got *url.URL
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		got = r.URL
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`[
+		  {"name": "0.17.0", "id": "a-sha", "commit": {"sha": "a-sha"}},
+		  {"name": "0.16.0", "id": "another-sha", "commit": {"sha": "another-sha"}}
+		]`))
+	}))
+	defer server.Close()
+
+	client := New(toServer(server))
+	tags, err := client.ListTags(context.Background(), "codeberg.org", "ziglang", "zig", 2, 30)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(tags) != 2 || tags[0].Name != "0.17.0" || tags[1].Name != "0.16.0" {
+		t.Fatalf("wanted the tags in the order the instance answered, got %+v", tags)
+	}
+	if got.Path != "/api/v1/repos/ziglang/zig/tags" {
+		t.Fatalf("wanted the v1 tags endpoint, got %s", got.Path)
+	}
+	if q := got.Query(); q.Get("page") != "2" || q.Get("limit") != "30" {
+		t.Fatalf("wanted page 2 of 30, got %s", got.RawQuery)
+	}
+}
+
+func TestClient_ListTags_notFound(t *testing.T) {
+	t.Parallel()
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte(`{"message":"The target couldn't be found."}`))
+	}))
+	defer server.Close()
+
+	client := New(toServer(server))
+	_, err := client.ListTags(context.Background(), "codeberg.org", "an-owner", "a-repo", 1, 30)
+	if err == nil || !strings.Contains(err.Error(), "The target couldn't be found.") {
+		t.Fatalf("wanted the error to carry what the instance said, got %v", err)
+	}
+}
+
 // toServer is an HTTP client that answers from the test server whatever instance it is
 // asked for, so that the request the client builds is the one under test rather than
 // something the test had to tell it to build.
