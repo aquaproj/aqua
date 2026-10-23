@@ -1127,6 +1127,30 @@ func TestPackageInfo_Validate_forgeTag(t *testing.T) { //nolint:funlen
 			isErr: true,
 		},
 		{
+			// Joined into the name, it would also be owner ziglang's zig/zig.
+			title: "an owner holding a separator is refused",
+			modify: func(p *registry.PackageInfo) {
+				p.RepoOwner = "ziglang/zig"
+			},
+			isErr: true,
+		},
+		{
+			title: "a dot segment is refused",
+			modify: func(p *registry.PackageInfo) {
+				p.RepoName = ".."
+			},
+			isErr: true,
+		},
+		{
+			title: "a GitLab project in subgroups",
+			modify: func(p *registry.PackageInfo) {
+				p.Host = ""
+				p.RepoOwner = "gitlab-org/security"
+				p.RepoName = "cli"
+				p.VersionSource = registry.VersionSourceGitLabTag
+			},
+		},
+		{
 			title: "private is not supported",
 			modify: func(p *registry.PackageInfo) {
 				p.Private = true
