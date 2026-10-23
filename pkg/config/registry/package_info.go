@@ -1028,7 +1028,7 @@ func hostOnly(host string) bool {
 // else may, and no segment of either may be a dot segment or hold a pattern's characters.
 func (p *PackageInfo) repoPathOnly() bool {
 	owners := []string{p.RepoOwner}
-	if p.Type == PkgInfoTypeGitLabRelease {
+	if p.Type == PkgInfoTypeGitLabRelease || p.VersionSource == VersionSourceGitLabTag {
 		owners = strings.Split(p.RepoOwner, "/")
 	}
 	for _, segment := range append(owners, p.RepoName) {
@@ -1106,6 +1106,11 @@ func (p *PackageInfo) validateForgeTag() error {
 	}
 	if !p.HasRepo() {
 		return errRepoRequired
+	}
+	if !p.repoPathOnly() {
+		// The owner and the name are joined into the package's name, so a
+		// separator in either would be another repository's name.
+		return errRepoPathInvalid
 	}
 	if p.asksWhatOnlyGitHubAnswers() {
 		// The repository these are checked against is the package's on github.com,
