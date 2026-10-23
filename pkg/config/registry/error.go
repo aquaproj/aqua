@@ -20,10 +20,10 @@ var (
 	errURLRequired = errors.New("http package requires url")
 	// errHostRequired is returned when a package on a forge instance lacks the instance it
 	// is on.
-	errHostRequired = errors.New("forgejo_release, gitea_release and gitlab_release packages require host")
+	errHostRequired = errors.New("forgejo_release, gitea_release and gitlab_release packages, and packages whose version_source is forgejo_tag or gitea_tag, require host")
 	// errForgePrivate is returned when a package on a forge instance says it is private,
 	// which there is no credential to read.
-	errForgePrivate = errors.New("forgejo_release, gitea_release and gitlab_release packages don't support private")
+	errForgePrivate = errors.New("forgejo_release, gitea_release and gitlab_release packages, and packages whose version_source is a forge's tags, don't support private")
 	// errHostInvalid is returned when the instance a package is on is written as anything
 	// but a host name.
 	errHostInvalid = errors.New("host must be a host name, with no scheme, userinfo, port or path")
@@ -32,10 +32,13 @@ var (
 	errForgeFileSource = errors.New("a forgejo_release, gitea_release or gitlab_release checksum file or signature requires a package of the same type")
 	// errGitHubFileSource is returned when a package on a forge instance reads a file beside
 	// its asset from github.com, where the same repository is somebody else's.
-	errGitHubFileSource = errors.New("a github_release checksum file or signature on a package that is on a forge instance must name the repository it is in")
+	errGitHubFileSource = errors.New("a github_release checksum file or signature on a package that is on a forge instance, or reads its versions from one, must name the repository it is in")
 	// errForgeGitHubVerification is returned when a package on a forge instance asks for a
 	// verification that only GitHub can answer.
-	errForgeGitHubVerification = errors.New("forgejo_release, gitea_release and gitlab_release packages don't support slsa_provenance or github_artifact_attestations")
+	errForgeGitHubVerification = errors.New("forgejo_release, gitea_release and gitlab_release packages, and packages whose version_source is a forge's tags, don't support slsa_provenance or github_artifact_attestations")
+	// errForgeTagType is returned when a package reads its versions from a forge's tags
+	// but is of a type that isn't on that forge.
+	errForgeTagType = errors.New("version_source forgejo_tag, gitea_tag and gitlab_tag require an http package, or a release package of the same forge")
 	// errRepoPathInvalid is returned when the owner or the name of a repository on a forge
 	// instance is written as anything but path segments.
 	errRepoPathInvalid = errors.New("repo_owner and repo_name must be path segments, with no dot segment and nothing a pattern is written with")
