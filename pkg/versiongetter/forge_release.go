@@ -94,21 +94,40 @@ func (g *ForgeReleaseVersionGetter) Get(ctx context.Context, logger *slog.Logger
 	if err != nil {
 		return "", err
 	}
-	candidates := []*Release{}
-	// Pages are 1-based, and an empty page is the end of the list. A short page is not:
-	// an instance can be configured to answer with fewer items than were asked for, and
-	// stopping there would hide every release after the first page.
-	for page := 1; page <= forge.MaxPages; page++ {
+	return latestForgeVersion(func(page int) ([]*forge.Release, error) {
 		releases, err := client.list(ctx, pkg.GetHost(), pkg.RepoOwner, pkg.RepoName, page, client.maxPerPage)
 		if err != nil {
-			return "", fmt.Errorf("list releases: %w", err)
+			return nil, fmt.Errorf("list releases: %w", err)
 		}
-		if len(releases) == 0 {
+		return releases, nil
+	}, func(release *forge.Release) (*Release, bool) {
+		if !filterForgeRelease(logger, release, filters) {
+			return nil, false
+		}
+		return convForgeRelease(release), true
+	})
+}
+
+// latestForgeVersion reads an instance's list page by page until a page has a version to
+// install, and returns the newest of those. conv says what an item is as a version, and
+// whether it is one to install.
+//
+// Pages are 1-based, and an empty page is the end of the list. A short page is not: an
+// instance can be configured to answer with fewer items than were asked for, and stopping
+// there would hide every version after the first page.
+func latestForgeVersion[T any](list func(page int) ([]T, error), conv func(item T) (*Release, bool)) (string, error) {
+	candidates := []*Release{}
+	for page := 1; page <= forge.MaxPages; page++ {
+		items, err := list(page)
+		if err != nil {
+			return "", err
+		}
+		if len(items) == 0 {
 			return "", nil
 		}
-		for _, release := range releases {
-			if filterForgeRelease(logger, release, filters) {
-				candidates = append(candidates, convForgeRelease(release))
+		for _, item := range items {
+			if release, ok := conv(item); ok {
+				candidates = append(candidates, release)
 			}
 		}
 		if len(candidates) > 0 {

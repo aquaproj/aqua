@@ -223,6 +223,7 @@ func InitializeGenerateCommandController(ctx context.Context, logger *slog.Logge
 		versiongetter.NewGitHubRelease,
 		versiongetter.NewGitHubTag,
 		versiongetter.NewForgeRelease,
+		versiongetter.NewForgeTag,
 		versiongetter.NewGoGetter,
 		wire.NewSet(
 			goproxy.New,
@@ -231,10 +232,12 @@ func InitializeGenerateCommandController(ctx context.Context, logger *slog.Logge
 		wire.NewSet(
 			gitea.New,
 			wire.Bind(new(versiongetter.GiteaReleaseClient), new(*gitea.Client)),
+			wire.Bind(new(versiongetter.GiteaTagClient), new(*gitea.Client)),
 		),
 		wire.NewSet(
 			gitlab.New,
 			wire.Bind(new(versiongetter.GitLabReleaseClient), new(*gitlab.Client)),
+			wire.Bind(new(versiongetter.GitLabTagClient), new(*gitlab.Client)),
 		),
 	)
 	return &generate.Controller{}, nil
@@ -1012,6 +1015,7 @@ func InitializeUpdateCommandController(ctx context.Context, logger *slog.Logger,
 		versiongetter.NewGitHubRelease,
 		versiongetter.NewGitHubTag,
 		versiongetter.NewForgeRelease,
+		versiongetter.NewForgeTag,
 		versiongetter.NewGoGetter,
 		wire.NewSet(
 			cargo.NewClient,
@@ -1024,10 +1028,12 @@ func InitializeUpdateCommandController(ctx context.Context, logger *slog.Logger,
 		wire.NewSet(
 			gitea.New,
 			wire.Bind(new(versiongetter.GiteaReleaseClient), new(*gitea.Client)),
+			wire.Bind(new(versiongetter.GiteaTagClient), new(*gitea.Client)),
 		),
 		wire.NewSet(
 			gitlab.New,
 			wire.Bind(new(versiongetter.GitLabReleaseClient), new(*gitlab.Client)),
+			wire.Bind(new(versiongetter.GitLabTagClient), new(*gitlab.Client)),
 		),
 		wire.NewSet(
 			which.New,

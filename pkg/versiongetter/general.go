@@ -16,15 +16,17 @@ type GeneralVersionGetter struct {
 	ghTag     *GitHubTagVersionGetter
 	ghRelease *GitHubReleaseVersionGetter
 	forge     *ForgeReleaseVersionGetter
+	forgeTag  *ForgeTagVersionGetter
 	goGetter  *GoGetter
 }
 
-func NewGeneralVersionGetter(cargo *CargoVersionGetter, ghTag *GitHubTagVersionGetter, ghRelease *GitHubReleaseVersionGetter, forgeRelease *ForgeReleaseVersionGetter, goGetter *GoGetter) *GeneralVersionGetter {
+func NewGeneralVersionGetter(cargo *CargoVersionGetter, ghTag *GitHubTagVersionGetter, ghRelease *GitHubReleaseVersionGetter, forgeRelease *ForgeReleaseVersionGetter, forgeTag *ForgeTagVersionGetter, goGetter *GoGetter) *GeneralVersionGetter {
 	return &GeneralVersionGetter{
 		cargo:     cargo,
 		ghTag:     ghTag,
 		ghRelease: ghRelease,
 		forge:     forgeRelease,
+		forgeTag:  forgeTag,
 		goGetter:  goGetter,
 	}
 }
@@ -49,15 +51,8 @@ func (g *GeneralVersionGetter) get(pkg *registry.PackageInfo) VersionGetter {
 	if pkg.Type == "cargo" {
 		return g.cargo
 	}
-	if registry.OnInstanceType(pkg.Type) {
-		// A release on a forge instance is read from that instance, by the client that
-		// speaks its API. Where GitHub's getters fall back to tags, there is nothing to
-		// fall back to: the version of a package installed from a release is the
-		// release's tag either way.
-		if g.forge == nil {
-			return nil
-		}
-		return g.forge
+	if getter, ok := g.getForge(pkg); ok {
+		return getter
 	}
 	if pkg.GoVersionPath != "" {
 		return g.goGetter
@@ -68,10 +63,35 @@ func (g *GeneralVersionGetter) get(pkg *registry.PackageInfo) VersionGetter {
 	if !pkg.HasRepo() {
 		return nil
 	}
-	if pkg.VersionSource == "github_tag" {
+	if pkg.VersionSource == registry.VersionSourceGitHubTag {
 		return g.ghTag
 	}
 	return g.ghRelease
+}
+
+// getForge returns the getter of a package whose versions are on a forge instance, and
+// whether they are.
+func (g *GeneralVersionGetter) getForge(pkg *registry.PackageInfo) (VersionGetter, bool) {
+	if registry.ForgeTagVersionSource(pkg.VersionSource) {
+		// The tags of a repository on a forge instance are read whatever the type
+		// is, which is why this is asked before the type: an http package is on no
+		// forge, and a release on one reads its tags only when it says so.
+		if g.forgeTag == nil || !pkg.HasRepo() {
+			return nil, true
+		}
+		return g.forgeTag, true
+	}
+	if registry.OnInstanceType(pkg.Type) {
+		// A release on a forge instance is read from that instance, by the client that
+		// speaks its API. Where GitHub's getters fall back to tags, there is nothing to
+		// fall back to: the version of a package installed from a release is the
+		// release's tag either way.
+		if g.forge == nil {
+			return nil, true
+		}
+		return g.forge, true
+	}
+	return nil, false
 }
 
 // If filters exist, filter as much data as possible and

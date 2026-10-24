@@ -80,6 +80,39 @@ func OnInstanceType(typ string) bool {
 		typ == PkgInfoTypeGitLabRelease
 }
 
+// Version source constants say where the versions of a package are read from when that is
+// not the type's own answer.
+const (
+	// VersionSourceGitHubTag reads the tags of the repository on github.com rather than
+	// its releases.
+	VersionSourceGitHubTag = "github_tag"
+	// VersionSourceForgejoTag reads the tags of a repository on a Forgejo instance, such
+	// as Codeberg.
+	VersionSourceForgejoTag = "forgejo_tag"
+	// VersionSourceGiteaTag reads the tags of a repository on a Gitea instance.
+	VersionSourceGiteaTag = "gitea_tag"
+	// VersionSourceGitLabTag reads the tags of a project on a GitLab instance.
+	VersionSourceGitLabTag = "gitlab_tag"
+)
+
+// forgeTagReleaseTypes is the release type of the forge each tag source reads.
+var forgeTagReleaseTypes = map[string]string{ //nolint:gochecknoglobals
+	VersionSourceForgejoTag: PkgInfoTypeForgejoRelease,
+	VersionSourceGiteaTag:   PkgInfoTypeGiteaRelease,
+	VersionSourceGitLabTag:  PkgInfoTypeGitLabRelease,
+}
+
+// ForgeTagVersionSource says whether a version source reads the tags of a repository on a
+// forge instance.
+//
+// Such a source is what a package whose assets are not published as releases there --
+// an http package downloading from the project's own site -- finds its versions by, so
+// the instance is named by Host the same way a package on that instance names it.
+func ForgeTagVersionSource(src string) bool {
+	_, ok := forgeTagReleaseTypes[src]
+	return ok
+}
+
 // ReleaseAssetType says whether a package type installs an asset published with a release.
 //
 // What such a package names is the asset, and what finds it is the release it belongs to --
@@ -104,6 +137,9 @@ type PackageInfo struct {
 	// forgejo_release and gitea_release packages, because a repository on either says
 	// nothing about which instance holds it. GitHub needs no such field: github.com is
 	// the only host its types can mean.
+	//
+	// An http package reads it when its version_source is a forge's tags: the versions
+	// are read from the instance, and the asset is still downloaded from the url.
 	Host                       string                      `yaml:",omitempty" json:"host,omitempty" jsonschema:"example=codeberg.org"`
 	Description                string                      `yaml:",omitempty" json:"description,omitempty"`
 	Link                       string                      `yaml:",omitempty" json:"link,omitempty"`
@@ -118,7 +154,7 @@ type PackageInfo struct {
 	Rosetta2                   bool                        `yaml:",omitempty" json:"rosetta2,omitempty"`
 	WindowsARMEmulation        bool                        `yaml:"windows_arm_emulation,omitempty" json:"windows_arm_emulation,omitempty"`
 	NoAsset                    bool                        `yaml:"no_asset,omitempty" json:"no_asset,omitempty"`
-	VersionSource              string                      `yaml:"version_source,omitempty" json:"version_source,omitempty" jsonschema:"enum=github_tag"`
+	VersionSource              string                      `yaml:"version_source,omitempty" json:"version_source,omitempty" jsonschema:"enum=github_tag,enum=forgejo_tag,enum=gitea_tag,enum=gitlab_tag"`
 	CompleteWindowsExt         *bool                       `yaml:"complete_windows_ext,omitempty" json:"complete_windows_ext,omitempty"`
 	WindowsExt                 string                      `yaml:"windows_ext,omitempty" json:"windows_ext,omitempty"`
 	Private                    bool                        `yaml:",omitempty" json:"private,omitempty"`
@@ -207,7 +243,7 @@ type VersionOverride struct {
 	GoVersionPath              *string                     `yaml:"go_version_path,omitempty" json:"go_version_path,omitempty"`
 	VersionFilter              *string                     `yaml:"version_filter,omitempty" json:"version_filter,omitempty"`
 	VersionPrefix              *string                     `yaml:"version_prefix,omitempty" json:"version_prefix,omitempty"`
-	VersionSource              string                      `yaml:"version_source,omitempty" json:"version_source,omitempty"`
+	VersionSource              string                      `yaml:"version_source,omitempty" json:"version_source,omitempty" jsonschema:"enum=github_tag,enum=forgejo_tag,enum=gitea_tag,enum=gitlab_tag"`
 	WindowsExt                 string                      `yaml:"windows_ext,omitempty" json:"windows_ext,omitempty"`
 	ErrorMessage               *string                     `yaml:"error_message,omitempty" json:"error_message,omitempty"`
 	Rosetta2                   *bool                       `yaml:",omitempty" json:"rosetta2,omitempty"`
@@ -551,7 +587,7 @@ func (p *PackageInfo) GetHost() string {
 	if p.Host != "" {
 		return p.Host
 	}
-	if p.Type == PkgInfoTypeGitLabRelease {
+	if p.Type == PkgInfoTypeGitLabRelease || p.VersionSource == VersionSourceGitLabTag {
 		return DefaultGitLabHost
 	}
 	return ""
@@ -564,7 +600,7 @@ func (p *PackageInfo) GetName() string {
 		return p.Name
 	}
 	if p.HasRepo() {
-		if host := p.GetHost(); OnInstanceType(p.Type) && host != "" {
+		if host := p.GetHost(); p.onInstance() && host != "" {
 			// The instance is part of the name: codeberg.org's mergiraf/mergiraf
 			// is not github.com's, and a name without the instance would be the
 			// name a GitHub repository of the same owner and name already has.
@@ -597,7 +633,7 @@ func (p *PackageInfo) GetLink() string {
 		return p.Link
 	}
 	if p.HasRepo() {
-		if host := p.GetHost(); OnInstanceType(p.Type) && host != "" {
+		if host := p.GetHost(); p.onInstance() && host != "" {
 			return "https://" + host + "/" + p.RepoOwner + "/" + p.RepoName
 		}
 		return "https://github.com/" + p.RepoOwner + "/" + p.RepoName
@@ -632,7 +668,7 @@ func (p *PackageInfo) GetChecksumReplacements() Replacements {
 
 // Validate checks if the PackageInfo has all required fields for its type.
 // It returns an error if any required fields are missing or invalid.
-func (p *PackageInfo) Validate() error { //nolint:cyclop
+func (p *PackageInfo) Validate() error { //nolint:cyclop,funlen
 	if p.GetName() == "" {
 		return errPkgNameIsRequired
 	}
@@ -644,6 +680,11 @@ func (p *PackageInfo) Validate() error { //nolint:cyclop
 	}
 	if err := p.Packslip.validate(p.Type); err != nil {
 		return err
+	}
+	if ForgeTagVersionSource(p.VersionSource) {
+		if err := p.validateForgeTag(); err != nil {
+			return err
+		}
 	}
 	if OnInstanceType(p.Type) {
 		// Whichever forge a type names, what the definition has to say is the same;
@@ -808,6 +849,13 @@ func (p *PackageInfo) SLSASourceURI() string {
 	return fmt.Sprintf("github.com/%s/%s", repoOwner, repoName)
 }
 
+// onInstance says whether the repository the package names is on a forge instance rather
+// than on github.com: either the package is installed from there, or its versions are read
+// from there.
+func (p *PackageInfo) onInstance() bool {
+	return OnInstanceType(p.Type) || ForgeTagVersionSource(p.VersionSource)
+}
+
 // pkgPaths returns the package installation paths for this specific package configuration.
 // This is used internally by PkgPaths to compute all possible paths.
 func (p *PackageInfo) pkgPaths() []string { //nolint:cyclop
@@ -874,7 +922,7 @@ func (p *PackageInfo) validateFileSources() error {
 			}
 			continue
 		}
-		if src.typ == PkgInfoTypeGitHubRelease && OnInstanceType(p.Type) && !src.ownRepo {
+		if src.typ == PkgInfoTypeGitHubRelease && p.onInstance() && !src.ownRepo {
 			return errGitHubFileSource
 		}
 	}
@@ -980,7 +1028,7 @@ func hostOnly(host string) bool {
 // else may, and no segment of either may be a dot segment or hold a pattern's characters.
 func (p *PackageInfo) repoPathOnly() bool {
 	owners := []string{p.RepoOwner}
-	if p.Type == PkgInfoTypeGitLabRelease {
+	if p.Type == PkgInfoTypeGitLabRelease || p.VersionSource == VersionSourceGitLabTag {
 		owners = strings.Split(p.RepoOwner, "/")
 	}
 	for _, segment := range append(owners, p.RepoName) {
@@ -994,12 +1042,8 @@ func (p *PackageInfo) repoPathOnly() bool {
 // validateForgeRelease checks the fields a release on a forge instance is found by. The
 // instance is one of them: unlike github.com it isn't implied by the type.
 func (p *PackageInfo) validateForgeRelease() error {
-	host := p.GetHost()
-	if host == "" {
-		return errHostRequired
-	}
-	if !hostOnly(host) {
-		return errHostInvalid
+	if err := p.validateHost(); err != nil {
+		return err
 	}
 	if p.Private {
 		// Only what an instance serves to anyone is downloaded: there is nowhere
@@ -1018,6 +1062,59 @@ func (p *PackageInfo) validateForgeRelease() error {
 		return errAssetRequired
 	}
 	if p.asksWhatOnlyGitHubAnswers() {
+		return errForgeGitHubVerification
+	}
+	return nil
+}
+
+// validateHost checks the instance the package names.
+func (p *PackageInfo) validateHost() error {
+	host := p.GetHost()
+	if host == "" {
+		return errHostRequired
+	}
+	if !hostOnly(host) {
+		return errHostInvalid
+	}
+	return nil
+}
+
+// validateForgeTag checks a package whose versions are read from the tags of a repository
+// on a forge instance.
+//
+// Only two types can say that. An http package downloads from wherever its url says, so
+// the versions can be read from anywhere; a release on a forge instance can read its own
+// instance's tags, the way a github_release package reads github_tag. Every other type is
+// on github.com or isn't on a forge at all, and the tags of another forge are not its
+// versions. Neither is another forge's API: a forgejo_release package reading gitlab_tag
+// would read its own host with GitLab's API.
+func (p *PackageInfo) validateForgeTag() error {
+	switch p.Type {
+	case PkgInfoTypeHTTP:
+	case forgeTagReleaseTypes[p.VersionSource]:
+		// The type checks the rest of what the instance is read by.
+		return nil
+	default:
+		return errForgeTagType
+	}
+	if err := p.validateHost(); err != nil {
+		return err
+	}
+	if p.Private {
+		// The tags are read the way a release is, with no credential.
+		return errForgePrivate
+	}
+	if !p.HasRepo() {
+		return errRepoRequired
+	}
+	if !p.repoPathOnly() {
+		// The owner and the name are joined into the package's name, so a
+		// separator in either would be another repository's name.
+		return errRepoPathInvalid
+	}
+	if p.asksWhatOnlyGitHubAnswers() {
+		// The repository these are checked against is the package's on github.com,
+		// which is somebody else's when the package is on another instance.
 		return errForgeGitHubVerification
 	}
 	return nil
@@ -1166,7 +1263,7 @@ func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //n
 
 // resetByPkgType resets package fields that are not applicable to the specified type.
 // This cleans up conflicting configuration when changing package types.
-func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
+func (p *PackageInfo) resetByPkgType(typ string) { //nolint:cyclop,funlen
 	if typ != p.Type {
 		// The instance belongs to the type that named it. Every other type is on
 		// github.com, and a package moved from one forge to another is on another
@@ -1174,6 +1271,12 @@ func (p *PackageInfo) resetByPkgType(typ string) { //nolint:funlen
 		// answers. Carrying the old forge's host over would read a Forgejo host with
 		// GitLab's API.
 		p.Host = ""
+		// Reading another forge's tags is what the host was for, and without it
+		// the version source names no instance. The override says both again
+		// when it means them.
+		if ForgeTagVersionSource(p.VersionSource) {
+			p.VersionSource = ""
+		}
 	}
 	if OnInstanceType(typ) {
 		p.URL = ""
