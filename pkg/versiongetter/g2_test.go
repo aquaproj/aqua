@@ -13,7 +13,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
 	"github.com/google/go-cmp/cmp"
-	gogithub "github.com/google/go-github/v92/github"
+	gogithub "github.com/google/go-github/v93/github"
 )
 
 type fakeTreeGetter struct {
