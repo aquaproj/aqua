@@ -80,7 +80,7 @@ packages:
 // when IsDir is set. The test changes into a temporary directory to exercise
 // those defaults without writing into the package directory, which is why it
 // can't run in parallel.
-func TestController_Init_defaultPath(t *testing.T) { //nolint:paralleltest // t.Chdir can't be used in a parallel test
+func TestController_Init_defaultPath(t *testing.T) {
 	data := []struct {
 		name  string
 		param *initcmd.Param
@@ -98,7 +98,7 @@ func TestController_Init_defaultPath(t *testing.T) { //nolint:paralleltest // t.
 		},
 	}
 	logger := slog.New(slog.DiscardHandler)
-	for _, d := range data { //nolint:paralleltest // t.Chdir can't be used in a parallel test
+	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			t.Chdir(t.TempDir())
 			gh := &github.MockRepositoriesService{
