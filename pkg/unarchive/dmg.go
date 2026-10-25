@@ -8,7 +8,7 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
-	"github.com/otiai10/copy"
+	cp "github.com/otiai10/copy"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
@@ -53,7 +53,7 @@ func (u *dmgUnarchiver) Unarchive(ctx context.Context, logger *slog.Logger, src 
 		}
 	}()
 
-	if err := copy.Copy(tmpMountPoint, u.dest); err != nil {
+	if err := cp.Copy(tmpMountPoint, u.dest); err != nil {
 		return fmt.Errorf("copy a directory: %w", err)
 	}
 
