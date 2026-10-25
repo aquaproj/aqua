@@ -116,7 +116,6 @@ func aquaVersionOverrides() []*registry.VersionOverride {
 		newAquaVersionOverride(`Version == "v1.30.2-1"`, cosignSigOwnWorkflow, true, nil),
 		newAquaVersionOverride(`Version == "v2.0.0-0"`, nil, false, nil),
 		newAquaVersionOverride(`Version == "v2.21.1"`, cosignSig, false, windowsZip),
-		newAquaVersionOverride(`Version == "v2.65.0"`, cosignSigstore, false, windowsZip),
 		newAquaVersionOverride(`semver("<= 0.1.0-6")`, nil, false, []*registry.Override{
 			{
 				GOOS: goosWindows,
@@ -137,7 +136,10 @@ func aquaVersionOverrides() []*registry.VersionOverride {
 		newAquaVersionOverride(`semver("<= 2.25.1-4")`, cosignSig, false, windowsZip),
 		newAquaVersionOverride(`semver("<= 2.55.0")`, cosignSig, true, windowsZip),
 		newAquaVersionOverride(`semver("<= 2.60.0")`, cosignBundle, true, windowsZip),
-		newAquaVersionOverride(`true`, cosignSigstore, true, windowsZip),
+		newAquaVersionOverride(`semver("< 2.65.0")`, cosignSigstore, true, windowsZip),
+		// SLSA Provenance isn't verified for aqua >= v2.65.0 so that aqua can stop publishing it.
+		// v2.65.0 doesn't have it, and later versions publish it only until old aqua requiring it is no longer used.
+		newAquaVersionOverride(`true`, cosignSigstore, false, windowsZip),
 	}
 }
 
