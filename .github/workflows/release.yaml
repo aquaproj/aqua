@@ -15,6 +15,7 @@ jobs:
       aqua_version: v2.65.2
       split_build: true
       slsa_provenance: true
+      packslip: true
     permissions:
       contents: write
       id-token: write
