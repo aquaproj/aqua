@@ -7,7 +7,7 @@ on:
 permissions: {}
 jobs:
   go:
-    uses: suzuki-shunsuke/go-autofix-action/.github/workflows/autofix-ci.yaml@2c7f494d0149fe60c0adc9feb09b6b995bae00ec # v0.2.0
+    uses: suzuki-shunsuke/go-autofix-action/.github/workflows/autofix-ci.yaml@ad61a60b1ab7061f3adca50247830727f0aa4df2 # v0.2.2
     permissions:
       contents: read
       id-token: write
