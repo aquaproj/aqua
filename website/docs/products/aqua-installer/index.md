@@ -86,7 +86,7 @@ Using the `packages` input, you can install only specific packages in advance.
 You don't need to pass a GitHub access token when running them.
 
 ```yaml
-- uses: aquaproj/aqua-installer@82d0e83878a8657c4a6f2ff1755d3bfbfc67f329 # v4.1.0
+- uses: aquaproj/aqua-installer@611554c6f0137ba41c8dd15aca8bee82504ea461 # v4.1.1
   with:
     aqua_version: v2.64.0
     packages: |
