@@ -101,10 +101,6 @@ jobs:
       issues: write
       id-token: write
 
-  typos:
-    uses: ./.github/workflows/workflow_call_typos.yaml
-    permissions: {}
-
   test-workflow:
     uses: suzuki-shunsuke/test-workflow/.github/workflows/test.yaml@51ece8dcaabff59820bfb2053c56e3cb281cf7b2 # v0.0.1
     with:
