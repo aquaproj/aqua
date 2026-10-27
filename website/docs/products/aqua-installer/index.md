@@ -71,6 +71,34 @@ e.g.
     AQUA_LOG_LEVEL: debug
 ```
 
+### Install only specific packages
+
+aqua-installer >= v4.1.0, aqua >= [v2.64.0](https://github.com/aquaproj/aqua/releases/tag/v2.64.0)
+
+By default, aqua-installer runs `aqua i -l`, so packages are installed by [Lazy Install](/docs/tutorial/install-only-link) when they are run.
+This has some problems:
+
+- Without a GitHub access token, Lazy Install can fail because of the GitHub API rate limit
+- Lazy Install logs are mixed into the command output
+- If you pass a GitHub access token to avoid the rate limit, the token is passed to commands that don't need it
+
+Using the `packages` input, you can install only specific packages in advance.
+You don't need to pass a GitHub access token when running them.
+
+```yaml
+- uses: aquaproj/aqua-installer@82d0e83878a8657c4a6f2ff1755d3bfbfc67f329 # v4.1.0
+  with:
+    aqua_version: v2.64.0
+    packages: |
+      ghalint # Command names
+      suzuki-shunsuke/tfcmt # Package names
+- run: ghalint run
+```
+
+Names are separated by whitespace or newlines.
+Empty lines and text after `#` are ignored.
+If `packages` is set and `aqua_opts` is the default value `-l`, `-l` isn't passed to `aqua i`.
+
 ### Inputs
 
 Please see [action.yaml](https://github.com/aquaproj/aqua-installer/blob/main/action.yaml) too.
@@ -89,7 +117,8 @@ name | default | description
 --- | --- | ---
 skip_install_aqua | `"false"` | If this true and aqua is already installed, installing aqua is skipped. aqua-installer >= [v3.1.0](https://github.com/aquaproj/aqua-installer/releases/tag/v3.1.0)
 enable_aqua_install | `"true"` | if this is `"false"`, `aqua i` is skipped
-aqua_opts | `-l` | `aqua i`'s option. If you want to specify global options, please use environment variables
+aqua_opts | `-l` | `aqua i`'s option. If you want to specify global options, please use environment variables. If `packages` is set and this is `-l`, this is ignored
+packages | `""` | aqua-installer >= v4.1.0, aqua >= `v2.64.0`. Command or package names to be installed. Names are separated by whitespace or newlines. Empty lines and text after `#` are ignored. [Install only specific packages](#install-only-specific-packages)
 working_directory | `""` | working directory
 policy_allow | `""` | aqua >= `v2.3.0`. If this is `"true"`, `aqua policy allow` command is run. If a Policy file path is set, `aqua policy allow "${{inputs.policy_allow}}"` is run
 
