@@ -92,7 +92,7 @@ jobs:
         working-directory: tests/main
       - run: aqua which go
       - name: Test which's -v option
-        run: aqua which -v cosign
+        run: aqua which -v golangci-lint
       - run: kind version
         working-directory: tests/main
       - run: kind version
