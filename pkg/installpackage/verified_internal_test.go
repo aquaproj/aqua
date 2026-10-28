@@ -2,6 +2,8 @@ package installpackage
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log/slog"
 	"slices"
 	"testing"
@@ -10,11 +12,13 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/ghattestation"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 )
 
 type fakeVerifier struct {
 	kind string
+	err  error
 }
 
 func (v *fakeVerifier) Kind() string {
@@ -26,7 +30,7 @@ func (v *fakeVerifier) Enabled(_ *slog.Logger) (bool, error) {
 }
 
 func (v *fakeVerifier) Verify(_ context.Context, _ *slog.Logger, _ string) error {
-	return nil
+	return v.err
 }
 
 func newVerifiedTestPackage() *config.Package {
@@ -182,6 +186,60 @@ func TestInstaller_runVerifiers(t *testing.T) {
 	}
 	if !slices.Equal(kinds, []string{"github_artifact_attestations", "cosign"}) {
 		t.Fatalf("kinds = %v", kinds)
+	}
+	// gh couldn't authenticate: the install goes on, but the attestations weren't
+	// verified, so they must not be recorded.
+	kinds, err = is.runVerifiers(t.Context(), logger, []FileVerifier{
+		&fakeVerifier{kind: "github_artifact_attestations", err: fmt.Errorf("verify a package with gh attestation: %w", ghattestation.ErrSkipped)},
+		&fakeVerifier{kind: "cosign"},
+	}, path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Equal(kinds, []string{"cosign"}) {
+		t.Fatalf("kinds = %v", kinds)
+	}
+	if _, err := is.runVerifiers(t.Context(), logger, []FileVerifier{
+		&fakeVerifier{kind: "cosign", err: errors.New("invalid signature")},
+	}, path); err == nil {
+		t.Fatal("an invalid signature must fail")
+	}
+}
+
+func TestInstaller_verifyChecksumFile_skipped(t *testing.T) {
+	t.Parallel()
+	is := &Installer{}
+	verified, err := is.verifyChecksumFile(t.Context(), slog.New(slog.DiscardHandler), []byte("checksums"), []FileVerifier{
+		&fakeVerifier{kind: "github_artifact_attestations", err: ghattestation.ErrSkipped},
+		&fakeVerifier{kind: "cosign"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if kinds := checksumFileKinds(verified); !slices.Equal(kinds, []string{"checksum.cosign"}) {
+		t.Fatalf("kinds = %v", kinds)
+	}
+}
+
+func TestHasChecksumFileRecord(t *testing.T) {
+	t.Parallel()
+	data := []struct {
+		name  string
+		entry *checksum.Checksum
+		exp   bool
+	}{
+		{name: "no entry"},
+		{name: "no record", entry: &checksum.Checksum{}},
+		{name: "the asset's own", entry: &checksum.Checksum{Verified: []string{"cosign"}}},
+		{name: "the checksum file's", entry: &checksum.Checksum{Verified: []string{"cosign", "checksum.cosign"}}, exp: true},
+	}
+	for _, d := range data {
+		t.Run(d.name, func(t *testing.T) {
+			t.Parallel()
+			if got := hasChecksumFileRecord(d.entry); got != d.exp {
+				t.Fatalf("hasChecksumFileRecord = %v, wanted %v", got, d.exp)
+			}
+		})
 	}
 }
 
