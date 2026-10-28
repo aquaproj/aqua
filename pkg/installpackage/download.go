@@ -2,15 +2,19 @@ package installpackage
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
+	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/download"
+	"github.com/aquaproj/aqua/v2/pkg/ghattestation"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
@@ -259,28 +263,41 @@ func (is *Installer) skipRecordedVerifiers(logger *slog.Logger, param *DownloadP
 		logger.Debug("skip verifying signatures because aqua-checksums.json records that they were verified when the checksum was recorded")
 		return nil, nil
 	}
-	checksumKinds, err := is.configuredChecksumFileKinds(logger, param.Package, param.Asset)
+	recorded, err := is.checksumFileVerified(logger, param.Package, param.Asset, entry)
 	if err != nil {
 		return nil, err
 	}
-	if len(checksumKinds) != 0 && entry.HasVerified(checksumKinds) {
+	if recorded {
 		logger.Debug("skip verifying signatures because aqua-checksums.json records that the checksum file's signatures were verified when the checksum was recorded")
 		return nil, nil
 	}
 	return verifiers, nil
 }
 
-// configuredChecksumFileKinds returns the kinds of signature over the checksum file that the
-// registry configures and that are enabled here.
-func (is *Installer) configuredChecksumFileKinds(logger *slog.Logger, pkg *config.Package, assetName string) ([]string, error) {
-	if !pkg.PackageInfo.Checksum.GetEnabled() {
-		return nil, nil
+// checksumFileVerified reports whether the entry records every kind of signature over
+// the checksum file that the registry configures and that is enabled here.
+func (is *Installer) checksumFileVerified(logger *slog.Logger, pkg *config.Package, assetName string, entry *checksum.Checksum) (bool, error) {
+	// Filtering the checksum file's verifiers logs a warning for each one the host
+	// doesn't support, so it is done only if the entry may skip by them.
+	if !pkg.PackageInfo.Checksum.GetEnabled() || !hasChecksumFileRecord(entry) {
+		return false, nil
 	}
 	verifiers, err := is.filterVerifiers(logger, is.newChecksumVerifiers(pkg, assetName))
 	if err != nil {
-		return nil, err
+		return false, err
 	}
-	return checksumFileKinds(verifiers), nil
+	return len(verifiers) != 0 && entry.HasVerified(checksumFileKinds(verifiers)), nil
+}
+
+// hasChecksumFileRecord reports whether the entry records a verification of the
+// checksum file's signature.
+func hasChecksumFileRecord(entry *checksum.Checksum) bool {
+	if entry == nil {
+		return false
+	}
+	return slices.ContainsFunc(entry.Verified, func(kind string) bool {
+		return strings.HasPrefix(kind, "checksum.")
+	})
 }
 
 func verifierKinds(verifiers []FileVerifier) []string {
@@ -305,12 +322,30 @@ func (is *Installer) runVerifiers(ctx context.Context, logger *slog.Logger, veri
 	if err != nil {
 		return nil, fmt.Errorf("get the path of the asset to verify: %w", err)
 	}
-	for _, verifier := range verifiers {
-		if err := verifier.Verify(ctx, logger, filePath); err != nil {
-			return nil, fmt.Errorf("verify the asset: %w", err)
-		}
+	verified, err := runEachVerifier(ctx, logger, verifiers, filePath)
+	if err != nil {
+		return nil, fmt.Errorf("verify the asset: %w", err)
 	}
-	return verifierKinds(verifiers), nil
+	return verifierKinds(verified), nil
+}
+
+// runEachVerifier runs the verifiers against the file and returns those that verified
+// it. A verifier that skipped the verification without failing it, as gh does when it
+// can't authenticate (ghattestation.ErrSkipped), lets the install go on, but isn't
+// returned: aqua-checksums.json must not record it as verified, or no install would
+// ever verify it again.
+func runEachVerifier(ctx context.Context, logger *slog.Logger, verifiers []FileVerifier, file string) ([]FileVerifier, error) {
+	verified := make([]FileVerifier, 0, len(verifiers))
+	for _, verifier := range verifiers {
+		if err := verifier.Verify(ctx, logger, file); err != nil {
+			if errors.Is(err, ghattestation.ErrSkipped) {
+				continue
+			}
+			return nil, fmt.Errorf("verify with %s: %w", verifier.Kind(), err)
+		}
+		verified = append(verified, verifier)
+	}
+	return verified, nil
 }
 
 // VerifyAsset verifies the signatures over an asset that has already been downloaded,

@@ -74,6 +74,11 @@ func (e *AuthError) Unwrap() error {
 
 var errVerify = errors.New("verify GitHub Artifact Attestations")
 
+// ErrSkipped tells that the attestations weren't verified because gh couldn't
+// authenticate. The install goes on, but the caller must not take the asset as
+// verified.
+var ErrSkipped = errors.New("skipped verifying GitHub Artifact Attestations because of the authentication error")
+
 func (e *ExecutorImpl) Verify(ctx context.Context, logger *slog.Logger, param *ParamVerify) error {
 	/*
 		$ gh attestation verify hello \
@@ -103,7 +108,7 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logger *slog.Logger, param *P
 		ae := &AuthError{}
 		if errors.As(err, &ae) {
 			slogerr.WithError(logger, err).Warn("skip verifying GitHub Artifact Attestations because of the authentication error")
-			return nil
+			return ErrSkipped
 		}
 		slogerr.WithError(logger, err).Warn("execute gh attestation verify",
 			"exe", e.exePath,
