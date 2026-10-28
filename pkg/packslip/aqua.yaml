@@ -7,4 +7,4 @@ registries:
 - type: standard
   ref: v4.579.0 # renovate: depName=aquaproj/aqua-registry
 packages:
-- name: jdx/packslip@v1.11.0
+- name: jdx/packslip@v1.11.1
