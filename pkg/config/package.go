@@ -418,9 +418,10 @@ type Param struct {
 	GitHubArtifactAttestationDisabled bool
 	SLSADisabled                      bool
 	// VerifySignatures asks for the signatures of a package installed from the lock
-	// file to be verified too. They are not by default: the lock file's checksum was
-	// checked against them when it was written, so the download is already pinned to
-	// the artifact they signed.
+	// file, or whose aqua-checksums.json entry records them as verified, to be
+	// verified too. They are not by default: the checksum was checked against them
+	// when it was written, so the download is already pinned to the artifact they
+	// signed.
 	VerifySignatures bool
 	Installed        bool
 	InitConfig       bool

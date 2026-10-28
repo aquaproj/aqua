@@ -2,6 +2,7 @@ package cosign
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -92,6 +93,94 @@ func (v *Verifier) Verify(ctx context.Context, logger *slog.Logger, rt *runtime.
 		))
 	}
 	return nil
+}
+
+// Supported reports whether cosign runs on this host. Where it doesn't, Verify
+// accepts everything without looking, so a caller recording what was verified has
+// to ask first.
+func (v *Verifier) Supported() bool {
+	return !v.disabled
+}
+
+// VerifyDigest verifies the signature against the asset's digest instead of its
+// bytes, so that the asset needn't be downloaded. digest is "<algorithm>:<hex>".
+//
+// cosign verify-blob takes a digest in place of the blob only for a bundle in the
+// new format (https://github.com/aquaproj/aqua/issues/5280): given an old bundle, or
+// --signature and --certificate, it tries to open the digest as a file. So the
+// bundle is downloaded and looked at first, and false is returned without running
+// cosign when the digest can't be used; the caller then verifies the asset itself.
+func (v *Verifier) VerifyDigest(ctx context.Context, logger *slog.Logger, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, digest string) (bool, error) {
+	if v.disabled {
+		return false, nil
+	}
+	opts, err := cos.RenderOpts(rt, art)
+	if err != nil {
+		return false, fmt.Errorf("render cosign options: %w", err)
+	}
+	if !digestUsable(cos, opts) {
+		return false, nil
+	}
+	bundle, err := v.downloadFile(ctx, logger, rt, file, art, cos.Bundle)
+	if bundle != "" {
+		defer os.Remove(bundle)
+	}
+	if err != nil {
+		return false, err
+	}
+	if f, err := isNewBundle(bundle); err != nil || !f {
+		if err == nil {
+			logger.Debug("the cosign bundle is in the old format, so the signature can't be verified with the digest")
+		}
+		return false, err
+	}
+	opts = append(opts, "--bundle", bundle)
+	if err := v.verify(ctx, logger, &ParamVerify{
+		Opts:   opts,
+		Target: digest,
+	}); err != nil {
+		return false, fmt.Errorf("verify a digest with Cosign: %w", slogerr.With(err,
+			"cosign_opts", strings.Join(opts, ", "),
+			"digest", digest,
+		))
+	}
+	return true, nil
+}
+
+// digestUsable reports whether the configuration verifies with a bundle alone, which
+// is the only way cosign may verify a digest.
+func digestUsable(cos *registry.Cosign, opts []string) bool {
+	return cos.Bundle != nil && cos.Signature == nil && cos.Certificate == nil && cos.Key == nil && !hasFileOpt(opts)
+}
+
+// hasFileOpt reports whether opts give cosign a signature, certificate, key or bundle
+// of their own, which the digest path can't be sure of.
+func hasFileOpt(opts []string) bool {
+	for _, opt := range opts {
+		name, _, _ := strings.Cut(opt, "=")
+		switch name {
+		case "--signature", "--certificate", "--cert", "--key", "--bundle":
+			return true
+		}
+	}
+	return false
+}
+
+// isNewBundle reports whether the file is a Sigstore bundle in the format that
+// carries a mediaType, the only one cosign verifies a digest with.
+func isNewBundle(p string) (bool, error) {
+	b, err := os.ReadFile(p)
+	if err != nil {
+		return false, fmt.Errorf("read a cosign bundle: %w", err)
+	}
+	bundle := &struct {
+		MediaType string `json:"mediaType"`
+	}{}
+	if err := json.Unmarshal(b, bundle); err != nil {
+		// Not JSON at all is not a bundle cosign takes a digest with either.
+		return false, nil //nolint:nilerr
+	}
+	return strings.HasPrefix(bundle.MediaType, "application/vnd.dev.sigstore.bundle"), nil
 }
 
 type Executor interface {
