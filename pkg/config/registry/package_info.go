@@ -215,12 +215,12 @@ type VersionOverride struct {
 	CompleteWindowsExt         *bool                       `yaml:"complete_windows_ext,omitempty" json:"complete_windows_ext,omitempty"`
 	NoAsset                    *bool                       `yaml:"no_asset,omitempty" json:"no_asset,omitempty"`
 	AppendExt                  *bool                       `yaml:"append_ext,omitempty" json:"append_ext,omitempty"`
-	Cargo                      *Cargo                      `json:"cargo,omitempty"`
+	Cargo                      *Cargo                      `yaml:",omitempty" json:"cargo,omitempty"`
 	Files                      []*File                     `yaml:",omitempty" json:"files,omitempty"`
 	FormatOverrides            FormatOverrides             `yaml:"format_overrides,omitempty" json:"format_overrides,omitempty"`
 	Replacements               Replacements                `yaml:",omitempty" json:"replacements,omitempty"`
-	Checksum                   *Checksum                   `json:"checksum,omitempty"`
-	Cosign                     *Cosign                     `json:"cosign,omitempty"`
+	Checksum                   *Checksum                   `yaml:",omitempty" json:"checksum,omitempty"`
+	Cosign                     *Cosign                     `yaml:",omitempty" json:"cosign,omitempty"`
 	SLSAProvenance             *SLSAProvenance             `yaml:"slsa_provenance,omitempty" json:"slsa_provenance,omitempty"`
 	Minisign                   *Minisign                   `yaml:",omitempty" json:"minisign,omitempty"`
 	Packslip                   *Packslip                   `yaml:",omitempty" json:"packslip,omitempty"`
@@ -779,7 +779,7 @@ func (p *PackageInfo) PkgPaths() map[string]struct{} {
 		m[a] = struct{}{}
 	}
 	for _, vo := range p.VersionOverrides {
-		pkg := p.overrideVersion(vo)
+		pkg := p.OverrideVersion(vo)
 		for _, a := range pkg.pkgPaths() {
 			m[a] = struct{}{}
 		}
@@ -806,6 +806,129 @@ func (p *PackageInfo) SLSASourceURI() string {
 		repoName = p.RepoName
 	}
 	return fmt.Sprintf("github.com/%s/%s", repoOwner, repoName)
+}
+
+// fileSource is where one file beside the asset comes from.
+type fileSource struct {
+	typ string
+	// ownRepo says the file names the repository it is in, rather than taking the
+	// package's.
+	ownRepo bool
+}
+
+// OverrideVersion applies a version override to create a new PackageInfo.
+// This creates a copy with version-specific configuration applied.
+//
+// It is exported because a registry format can define its own rule for which override
+// applies while meaning the same thing by applying it. aqua-registry-g2 does: its
+// overrides are ordered newest first and the first entry answers a version that
+// matches none of them.
+func (p *PackageInfo) OverrideVersion(child *VersionOverride) *PackageInfo { //nolint:cyclop,funlen,gocyclo,gocognit
+	pkg := p.Copy()
+	if child.Type != "" {
+		pkg.resetByPkgType(child.Type)
+		pkg.Type = child.Type
+	}
+	if child.RepoOwner != "" {
+		pkg.RepoOwner = child.RepoOwner
+	}
+	if child.RepoName != "" {
+		pkg.RepoName = child.RepoName
+	}
+	if child.Host != "" {
+		pkg.Host = child.Host
+	}
+	if child.Asset != "" {
+		pkg.Asset = child.Asset
+	}
+	if child.Crate != "" {
+		pkg.Crate = child.Crate
+	}
+	if child.Cargo != nil {
+		pkg.Cargo = child.Cargo
+	}
+	if child.Path != "" {
+		pkg.Path = child.Path
+	}
+	if child.Format != "" {
+		pkg.Format = child.Format
+	}
+	if child.Files != nil {
+		pkg.Files = child.Files
+	}
+	if child.URL != "" {
+		pkg.URL = child.URL
+	}
+	if child.Replacements != nil {
+		pkg.Replacements = child.Replacements
+	}
+	if child.Overrides != nil {
+		pkg.Overrides = child.Overrides
+	}
+	if child.FormatOverrides != nil {
+		pkg.FormatOverrides = child.FormatOverrides
+	}
+	if child.SupportedEnvs != nil {
+		pkg.SupportedEnvs = child.SupportedEnvs
+	}
+	if child.VersionFilter != nil {
+		pkg.VersionFilter = *child.VersionFilter
+	}
+	if child.VersionPrefix != nil {
+		pkg.VersionPrefix = *child.VersionPrefix
+	}
+	if child.GoVersionPath != nil {
+		pkg.GoVersionPath = *child.GoVersionPath
+	}
+	if child.Rosetta2 != nil {
+		pkg.Rosetta2 = *child.Rosetta2
+	}
+	if child.WindowsARMEmulation != nil {
+		pkg.WindowsARMEmulation = *child.WindowsARMEmulation
+	}
+	if child.VersionSource != "" {
+		pkg.VersionSource = child.VersionSource
+	}
+	if child.CompleteWindowsExt != nil {
+		pkg.CompleteWindowsExt = child.CompleteWindowsExt
+	}
+	if child.WindowsExt != "" {
+		pkg.WindowsExt = child.WindowsExt
+	}
+	if child.Checksum != nil {
+		pkg.Checksum = child.Checksum
+	}
+	if child.Cosign != nil {
+		pkg.Cosign = child.Cosign
+	}
+	if child.SLSAProvenance != nil {
+		pkg.SLSAProvenance = child.SLSAProvenance
+	}
+	if child.Minisign != nil {
+		pkg.Minisign = child.Minisign
+	}
+	if child.Packslip != nil {
+		pkg.Packslip = child.Packslip
+	}
+	if child.GitHubArtifactAttestations != nil {
+		pkg.GitHubArtifactAttestations = child.GitHubArtifactAttestations
+	}
+	if child.ErrorMessage != nil {
+		pkg.ErrorMessage = *child.ErrorMessage
+	}
+	if child.NoAsset != nil {
+		pkg.NoAsset = *child.NoAsset
+	}
+	if child.AppendExt != nil {
+		pkg.AppendExt = child.AppendExt
+	}
+	if child.Build != nil {
+		pkg.Build = child.Build
+	}
+	if child.Vars != nil {
+		pkg.Vars = child.Vars
+	}
+	return pkg
 }
 
 // pkgPaths returns the package installation paths for this specific package configuration.
@@ -879,14 +1002,6 @@ func (p *PackageInfo) validateFileSources() error {
 		}
 	}
 	return nil
-}
-
-// fileSource is where one file beside the asset comes from.
-type fileSource struct {
-	typ string
-	// ownRepo says the file names the repository it is in, rather than taking the
-	// package's.
-	ownRepo bool
 }
 
 // fileSources is where each file beside the asset is said to come from.
@@ -1052,116 +1167,6 @@ func (p *PackageInfo) defaultCmdName() string {
 		return path.Base(p.GetPath())
 	}
 	return path.Base(p.GetName())
-}
-
-// overrideVersion applies a version override to create a new PackageInfo.
-// This creates a copy with version-specific configuration applied.
-func (p *PackageInfo) overrideVersion(child *VersionOverride) *PackageInfo { //nolint:cyclop,funlen,gocyclo,gocognit
-	pkg := p.Copy()
-	if child.Type != "" {
-		pkg.resetByPkgType(child.Type)
-		pkg.Type = child.Type
-	}
-	if child.RepoOwner != "" {
-		pkg.RepoOwner = child.RepoOwner
-	}
-	if child.RepoName != "" {
-		pkg.RepoName = child.RepoName
-	}
-	if child.Host != "" {
-		pkg.Host = child.Host
-	}
-	if child.Asset != "" {
-		pkg.Asset = child.Asset
-	}
-	if child.Crate != "" {
-		pkg.Crate = child.Crate
-	}
-	if child.Cargo != nil {
-		pkg.Cargo = child.Cargo
-	}
-	if child.Path != "" {
-		pkg.Path = child.Path
-	}
-	if child.Format != "" {
-		pkg.Format = child.Format
-	}
-	if child.Files != nil {
-		pkg.Files = child.Files
-	}
-	if child.URL != "" {
-		pkg.URL = child.URL
-	}
-	if child.Replacements != nil {
-		pkg.Replacements = child.Replacements
-	}
-	if child.Overrides != nil {
-		pkg.Overrides = child.Overrides
-	}
-	if child.FormatOverrides != nil {
-		pkg.FormatOverrides = child.FormatOverrides
-	}
-	if child.SupportedEnvs != nil {
-		pkg.SupportedEnvs = child.SupportedEnvs
-	}
-	if child.VersionFilter != nil {
-		pkg.VersionFilter = *child.VersionFilter
-	}
-	if child.VersionPrefix != nil {
-		pkg.VersionPrefix = *child.VersionPrefix
-	}
-	if child.GoVersionPath != nil {
-		pkg.GoVersionPath = *child.GoVersionPath
-	}
-	if child.Rosetta2 != nil {
-		pkg.Rosetta2 = *child.Rosetta2
-	}
-	if child.WindowsARMEmulation != nil {
-		pkg.WindowsARMEmulation = *child.WindowsARMEmulation
-	}
-	if child.VersionSource != "" {
-		pkg.VersionSource = child.VersionSource
-	}
-	if child.CompleteWindowsExt != nil {
-		pkg.CompleteWindowsExt = child.CompleteWindowsExt
-	}
-	if child.WindowsExt != "" {
-		pkg.WindowsExt = child.WindowsExt
-	}
-	if child.Checksum != nil {
-		pkg.Checksum = child.Checksum
-	}
-	if child.Cosign != nil {
-		pkg.Cosign = child.Cosign
-	}
-	if child.SLSAProvenance != nil {
-		pkg.SLSAProvenance = child.SLSAProvenance
-	}
-	if child.Minisign != nil {
-		pkg.Minisign = child.Minisign
-	}
-	if child.Packslip != nil {
-		pkg.Packslip = child.Packslip
-	}
-	if child.GitHubArtifactAttestations != nil {
-		pkg.GitHubArtifactAttestations = child.GitHubArtifactAttestations
-	}
-	if child.ErrorMessage != nil {
-		pkg.ErrorMessage = *child.ErrorMessage
-	}
-	if child.NoAsset != nil {
-		pkg.NoAsset = *child.NoAsset
-	}
-	if child.AppendExt != nil {
-		pkg.AppendExt = child.AppendExt
-	}
-	if child.Build != nil {
-		pkg.Build = child.Build
-	}
-	if child.Vars != nil {
-		pkg.Vars = child.Vars
-	}
-	return pkg
 }
 
 // resetByPkgType resets package fields that are not applicable to the specified type.

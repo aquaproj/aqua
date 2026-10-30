@@ -20,6 +20,10 @@ type slsaVerifier struct {
 	asset     string
 }
 
+func (*slsaVerifier) Kind() string {
+	return "slsa_provenance"
+}
+
 func (s *slsaVerifier) Enabled(logger *slog.Logger) (bool, error) {
 	if s.disabled {
 		logger.Debug("slsa verification is disabled")

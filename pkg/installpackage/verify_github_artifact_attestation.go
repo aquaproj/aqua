@@ -11,6 +11,9 @@ import (
 )
 
 type FileVerifier interface {
+	// Kind names the verification as the registry does, e.g. "cosign". It is what
+	// aqua-checksums.json records as verified.
+	Kind() string
 	Enabled(logger *slog.Logger) (bool, error)
 	Verify(ctx context.Context, logger *slog.Logger, file string) error
 }
@@ -21,6 +24,10 @@ type gitHubArtifactAttestationsVerifier struct {
 	pkg         *config.Package
 	ghInstaller *DedicatedInstaller
 	ghVerifier  GitHubArtifactAttestationsVerifier
+}
+
+func (*gitHubArtifactAttestationsVerifier) Kind() string {
+	return "github_artifact_attestations"
 }
 
 func (g *gitHubArtifactAttestationsVerifier) Enabled(logger *slog.Logger) (bool, error) {

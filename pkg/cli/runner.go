@@ -6,12 +6,15 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/cli/cliargs"
 	"github.com/aquaproj/aqua/v2/pkg/cli/cp"
 	"github.com/aquaproj/aqua/v2/pkg/cli/exec"
+	"github.com/aquaproj/aqua/v2/pkg/cli/fixcmd"
 	"github.com/aquaproj/aqua/v2/pkg/cli/generate"
 	"github.com/aquaproj/aqua/v2/pkg/cli/genr"
 	"github.com/aquaproj/aqua/v2/pkg/cli/info"
 	"github.com/aquaproj/aqua/v2/pkg/cli/initcmd"
 	"github.com/aquaproj/aqua/v2/pkg/cli/install"
 	"github.com/aquaproj/aqua/v2/pkg/cli/list"
+	"github.com/aquaproj/aqua/v2/pkg/cli/lock"
+	"github.com/aquaproj/aqua/v2/pkg/cli/migrate"
 	cpolicy "github.com/aquaproj/aqua/v2/pkg/cli/policy"
 	"github.com/aquaproj/aqua/v2/pkg/cli/remove"
 	"github.com/aquaproj/aqua/v2/pkg/cli/root"
@@ -71,6 +74,7 @@ func Run(ctx context.Context, logger *slogutil.Logger, env *urfave.Env) error {
 			updateaqua.New,
 			upc.New,
 			update.New,
+			fixcmd.New,
 			which.New,
 			info.New,
 			remove.New,
@@ -81,6 +85,8 @@ func Run(ctx context.Context, logger *slogutil.Logger, env *urfave.Env) error {
 			cpolicy.NewInitPolicy,
 			exec.New,
 			list.New,
+			lock.New,
+			migrate.New,
 			genr.New,
 			root.New,
 		),

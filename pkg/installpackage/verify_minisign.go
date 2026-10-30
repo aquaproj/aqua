@@ -24,6 +24,10 @@ type minisignVerifier struct {
 	minisign    *registry.Minisign
 }
 
+func (*minisignVerifier) Kind() string {
+	return "minisign"
+}
+
 func (s *minisignVerifier) Enabled(logger *slog.Logger) (bool, error) {
 	if !s.minisign.GetEnabled() {
 		return false, nil

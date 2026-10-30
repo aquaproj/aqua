@@ -64,13 +64,28 @@ func listPkgsFromVersions(pkgName string, versions []string) []*aqua.Package {
 	return pkgs
 }
 
+// movingTags are the tags that name a place in a release history rather than a point
+// in it. A repository moves them as it releases, so what they point at changes.
+var movingTags = map[string]struct{}{ //nolint:gochecknoglobals
+	"latest":  {},
+	"nightly": {},
+	"stable":  {},
+}
+
+// IsMovingTag reports whether a tag names a place rather than a version.
+//
+// A registry describes a package with templates, so a moving tag resolves to whatever
+// it points at when it is installed, and naming one is a way of asking for that. A
+// caller that records what a tag points at instead -- an asset name, a checksum --
+// records something that stops being true the next time the repository releases, so
+// it has to know which tags those are. This is where the list lives.
+func IsMovingTag(tag string) bool {
+	_, ok := movingTags[tag]
+	return ok
+}
+
 func excludeVersion(logger *slog.Logger, tag string, cfg *Config) bool {
-	excludedVersions := map[string]struct{}{
-		"latest":  {},
-		"nightly": {},
-		"stable":  {},
-	}
-	if _, ok := excludedVersions[tag]; ok {
+	if IsMovingTag(tag) {
 		return true
 	}
 	if cfg.VersionFilter != nil {
@@ -91,11 +106,16 @@ func excludeVersion(logger *slog.Logger, tag string, cfg *Config) bool {
 	return false
 }
 
-func excludeAsset(logger *slog.Logger, asset string, cfg *Config) bool {
-	if cfg.AllAssetsFilter == nil {
+// excludeAsset reports whether an asset of this release is none of the package's.
+//
+// The filter depends on the version, because which of a release's assets is the
+// package can change over its history.
+func excludeAsset(logger *slog.Logger, tag, asset string, cfg *Config) bool {
+	filter := cfg.assetFilter(logger, tag)
+	if filter == nil {
 		return false
 	}
-	f, err := expr.EvaluateAssetFilter(cfg.AllAssetsFilter, asset)
+	f, err := expr.EvaluateAssetFilter(filter, asset)
 	if err != nil {
 		slogerr.WithError(logger, err).Warn("evaluate an asset filter", "asset", asset)
 		return false
@@ -104,7 +124,7 @@ func excludeAsset(logger *slog.Logger, asset string, cfg *Config) bool {
 }
 
 func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, logger *slog.Logger, pkgName string, pkgInfo *registry.PackageInfo, limit int, cfg *Config) []string {
-	return c.versionOverrides(logger, pkgName, pkgInfo, c.gitHubReleases(ctx, logger, pkgInfo, limit, cfg))
+	return c.versionOverrides(logger, pkgName, pkgInfo, c.gitHubReleases(ctx, logger, pkgInfo, limit, cfg), cfg)
 }
 
 // gitHubReleases are the releases of a GitHub repository, with what each publishes.
@@ -137,7 +157,7 @@ func (c *Controller) gitHubReleases(ctx context.Context, logger *slog.Logger, pk
 		arr := c.listReleaseAssets(ctx, logger, info, rel.ID)
 		logger.Debug("got assets", "num_of_assets", len(arr))
 		for _, asset := range arr {
-			if excludeAsset(logger, asset.GetName(), cfg) {
+			if excludeAsset(logger, tag, asset.GetName(), cfg) {
 				continue
 			}
 			rel.assets = append(rel.assets, asset.GetName())
@@ -150,7 +170,7 @@ func (c *Controller) gitHubReleases(ctx context.Context, logger *slog.Logger, pk
 // versionOverrides builds the definition that answers for every release it is given, which
 // is what reading more than one of them is for: a package whose asset naming changed is a
 // version_override saying so.
-func (c *Controller) versionOverrides(logger *slog.Logger, pkgName string, pkgInfo *registry.PackageInfo, releases []*Release) []string {
+func (c *Controller) versionOverrides(logger *slog.Logger, pkgName string, pkgInfo *registry.PackageInfo, releases []*Release, cfg *Config) []string {
 	sort.Slice(releases, func(i, j int) bool {
 		r1 := releases[i]
 		r2 := releases[j]
@@ -161,7 +181,7 @@ func (c *Controller) versionOverrides(logger *slog.Logger, pkgName string, pkgIn
 		}
 		return v1.LessThan(v2)
 	})
-	versions := c.generatePackage(logger, pkgInfo, pkgName, releases)
+	versions := c.generatePackage(logger, cfg, pkgInfo, pkgName, releases)
 	if len(pkgInfo.VersionOverrides) != 0 {
 		pkgInfo.VersionConstraints = "false"
 	}
