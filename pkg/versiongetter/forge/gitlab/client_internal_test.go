@@ -95,6 +95,38 @@ func TestClient_ListReleases_subgroups(t *testing.T) {
 	}
 }
 
+func TestClient_ListTags(t *testing.T) {
+	t.Parallel()
+	var got *url.URL
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		got = r.URL
+		_, _ = w.Write([]byte(`[
+		  {"name": "v1.10.0", "message": "", "target": "a-sha", "protected": true},
+		  {"name": "v1.9.0", "message": "", "target": "another-sha", "protected": true}
+		]`))
+	}))
+	defer server.Close()
+
+	client := New(toServer(server))
+	tags, err := client.ListTags(context.Background(), "gitlab.com", "gitlab-org/security/cli", 2, 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(tags) != 2 || tags[0].Name != "v1.10.0" || tags[1].Name != "v1.9.0" {
+		t.Fatalf("wanted the tags in the order the instance answered, got %+v", tags)
+	}
+	if got.EscapedPath() != "/api/v4/projects/gitlab-org%2Fsecurity%2Fcli/repository/tags" {
+		t.Fatalf("wanted the tags endpoint of the project as one segment, got %s", got.EscapedPath())
+	}
+	q := got.Query()
+	if q.Get("page") != "2" || q.Get("per_page") != "100" {
+		t.Fatalf("wanted page 2 of 100, got %s", got.RawQuery)
+	}
+	if q.Get("order_by") != "updated" || q.Get("sort") != "desc" {
+		t.Fatalf("wanted the newest tags first, got %s", got.RawQuery)
+	}
+}
+
 // What the instance said about a refusal is in the error: GitLab says which of a missing
 // project and a private one it was.
 func TestClient_ListReleases_refused(t *testing.T) {

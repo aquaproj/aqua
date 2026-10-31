@@ -66,6 +66,27 @@ func (c *Client) ListReleases(ctx context.Context, host, project string, page, l
 	return out, nil
 }
 
+// ListTags returns one page of a project's tags, newest first.
+//
+// The order is asked for although it is GitLab's default: ordered by name, v1.10.0 and
+// v1.9.0 are the wrong way round either way, and the newest is not on the first page the
+// version is looked for on.
+func (c *Client) ListTags(ctx context.Context, host, project string, page, limit int) ([]*forge.Tag, error) {
+	endpoint := fmt.Sprintf("https://%s/api/v4/projects/%s/repository/tags?order_by=updated&sort=desc&page=%d&per_page=%d",
+		host, url.PathEscape(project), page, limit)
+	tags := []*struct {
+		Name string `json:"name"`
+	}{}
+	if err := c.requester.GetJSON(ctx, endpoint, &tags); err != nil {
+		return nil, fmt.Errorf("list tags: %w", err)
+	}
+	out := make([]*forge.Tag, 0, len(tags))
+	for _, t := range tags {
+		out = append(out, &forge.Tag{Name: t.Name})
+	}
+	return out, nil
+}
+
 // release is a release as this API answers with it.
 type release struct {
 	TagName     string `json:"tag_name"`

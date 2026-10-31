@@ -87,6 +87,39 @@ func TestPackageInfo_GetName(t *testing.T) {
 			},
 		},
 		{
+			// The versions are read from the instance, so the name says which one,
+			// though the asset is downloaded from somewhere else.
+			title: "http with forgejo_tag",
+			exp:   "codeberg.org/ziglang/zig",
+			pkgInfo: &registry.PackageInfo{
+				Type:          registry.PkgInfoTypeHTTP,
+				Host:          "codeberg.org",
+				RepoOwner:     "ziglang",
+				RepoName:      "zig",
+				VersionSource: registry.VersionSourceForgejoTag,
+			},
+		},
+		{
+			title: "http with gitlab_tag and no host",
+			exp:   "gitlab.com/gitlab-org/cli",
+			pkgInfo: &registry.PackageInfo{
+				Type:          registry.PkgInfoTypeHTTP,
+				RepoOwner:     "gitlab-org",
+				RepoName:      "cli",
+				VersionSource: registry.VersionSourceGitLabTag,
+			},
+		},
+		{
+			title: "http with github_tag",
+			exp:   "ziglang/zig",
+			pkgInfo: &registry.PackageInfo{
+				Type:          registry.PkgInfoTypeHTTP,
+				RepoOwner:     "ziglang",
+				RepoName:      "zig",
+				VersionSource: registry.VersionSourceGitHubTag,
+			},
+		},
+		{
 			title: "forgejo_release with a name of its own",
 			exp:   "mergiraf",
 			pkgInfo: &registry.PackageInfo{
@@ -169,6 +202,17 @@ func TestPackageInfo_GetLink(t *testing.T) {
 				Host:      "gitlab.com",
 				RepoOwner: "gitlab-org",
 				RepoName:  "cli",
+			},
+		},
+		{
+			title: "http with forgejo_tag",
+			exp:   "https://codeberg.org/ziglang/zig",
+			pkgInfo: &registry.PackageInfo{
+				Type:          registry.PkgInfoTypeHTTP,
+				Host:          "codeberg.org",
+				RepoOwner:     "ziglang",
+				RepoName:      "zig",
+				VersionSource: registry.VersionSourceForgejoTag,
 			},
 		},
 	}
@@ -1015,6 +1059,161 @@ func TestPackageInfo_Validate_forgeRelease(t *testing.T) { //nolint:funlen
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
 			if err := d.pkgInfo.Validate(); err != nil {
+				if !d.isErr {
+					t.Fatal(err)
+				}
+				return
+			}
+			if d.isErr {
+				t.Fatal("error must be returned")
+			}
+		})
+	}
+}
+
+func TestPackageInfo_Validate_forgeTag(t *testing.T) { //nolint:funlen
+	t.Parallel()
+	zig := func() *registry.PackageInfo {
+		return &registry.PackageInfo{
+			Type:          registry.PkgInfoTypeHTTP,
+			Host:          "codeberg.org",
+			RepoOwner:     "ziglang",
+			RepoName:      "zig",
+			VersionSource: registry.VersionSourceForgejoTag,
+			URL:           "https://ziglang.org/download/{{.Version}}/zig-{{.Arch}}-{{.OS}}-{{.Version}}.{{.Format}}",
+		}
+	}
+	data := []struct {
+		title  string
+		modify func(p *registry.PackageInfo)
+		isErr  bool
+	}{
+		{
+			title:  "http with forgejo_tag",
+			modify: func(*registry.PackageInfo) {},
+		},
+		{
+			title: "http with gitea_tag",
+			modify: func(p *registry.PackageInfo) {
+				p.VersionSource = registry.VersionSourceGiteaTag
+			},
+		},
+		{
+			title: "http with gitlab_tag and no host is on gitlab.com",
+			modify: func(p *registry.PackageInfo) {
+				p.Host = ""
+				p.VersionSource = registry.VersionSourceGitLabTag
+			},
+		},
+		{
+			title: "host is required",
+			modify: func(p *registry.PackageInfo) {
+				p.Host = ""
+			},
+			isErr: true,
+		},
+		{
+			title: "host must be a host name",
+			modify: func(p *registry.PackageInfo) {
+				p.Host = "https://codeberg.org"
+			},
+			isErr: true,
+		},
+		{
+			title: "repo is required",
+			modify: func(p *registry.PackageInfo) {
+				p.RepoName = ""
+			},
+			isErr: true,
+		},
+		{
+			// Joined into the name, it would also be owner ziglang's zig/zig.
+			title: "an owner holding a separator is refused",
+			modify: func(p *registry.PackageInfo) {
+				p.RepoOwner = "ziglang/zig"
+			},
+			isErr: true,
+		},
+		{
+			title: "a dot segment is refused",
+			modify: func(p *registry.PackageInfo) {
+				p.RepoName = ".."
+			},
+			isErr: true,
+		},
+		{
+			title: "a GitLab project in subgroups",
+			modify: func(p *registry.PackageInfo) {
+				p.Host = ""
+				p.RepoOwner = "gitlab-org/security"
+				p.RepoName = "cli"
+				p.VersionSource = registry.VersionSourceGitLabTag
+			},
+		},
+		{
+			title: "private is not supported",
+			modify: func(p *registry.PackageInfo) {
+				p.Private = true
+			},
+			isErr: true,
+		},
+		{
+			title: "what only GitHub can verify is refused",
+			modify: func(p *registry.PackageInfo) {
+				p.SLSAProvenance = &registry.SLSAProvenance{}
+			},
+			isErr: true,
+		},
+		{
+			// It would be read from github.com/ziglang/zig, which is not where the
+			// package is.
+			title: "a github_release signature naming no repository is refused",
+			modify: func(p *registry.PackageInfo) {
+				p.Minisign = &registry.Minisign{Type: registry.PkgInfoTypeGitHubRelease}
+			},
+			isErr: true,
+		},
+		{
+			title: "a github_release signature naming its repository",
+			modify: func(p *registry.PackageInfo) {
+				p.Minisign = &registry.Minisign{
+					Type:      registry.PkgInfoTypeGitHubRelease,
+					RepoOwner: "ziglang",
+					RepoName:  "zig-signatures",
+				}
+			},
+		},
+		{
+			title: "a type on github.com is refused",
+			modify: func(p *registry.PackageInfo) {
+				p.Type = registry.PkgInfoTypeGitHubRelease
+				p.Asset = "zig.tar.xz"
+			},
+			isErr: true,
+		},
+		{
+			title: "a release on the same forge",
+			modify: func(p *registry.PackageInfo) {
+				p.Type = registry.PkgInfoTypeForgejoRelease
+				p.Asset = "zig.tar.xz"
+			},
+		},
+		{
+			title: "a release on another forge is refused",
+			modify: func(p *registry.PackageInfo) {
+				p.Type = registry.PkgInfoTypeForgejoRelease
+				p.Asset = "zig.tar.xz"
+				p.VersionSource = registry.VersionSourceGitLabTag
+			},
+			isErr: true,
+		},
+	}
+	for _, d := range data {
+		t.Run(d.title, func(t *testing.T) {
+			t.Parallel()
+			pkgInfo := zig()
+			d.modify(pkgInfo)
+			if err := pkgInfo.Validate(); err != nil {
 				if !d.isErr {
 					t.Fatal(err)
 				}
