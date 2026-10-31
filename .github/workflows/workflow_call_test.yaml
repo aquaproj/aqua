@@ -102,7 +102,7 @@ jobs:
       id-token: write
 
   test-workflow:
-    uses: suzuki-shunsuke/test-workflow/.github/workflows/test.yaml@51ece8dcaabff59820bfb2053c56e3cb281cf7b2 # v0.0.1
+    uses: suzuki-shunsuke/test-workflow/.github/workflows/test.yaml@0b89b9b4314282810bc944364380568708208eaa # v0.0.2
     with:
       aqua_version: v2.65.2
     permissions:
