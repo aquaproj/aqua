@@ -201,38 +201,38 @@
       "algorithm": "sha256"
     },
     {
-      "id": "http/nodejs.org/dist/v24.22.2/node-v24.22.2-darwin-arm64.tar.gz",
-      "checksum": "AA9549349E47DFFAA42DCF95D6E06ADE8C4BDAFC980979883B88767670DF385A",
+      "id": "http/nodejs.org/dist/v26.13.0/node-v26.13.0-darwin-arm64.tar.gz",
+      "checksum": "D38BD5E5A2DDCE6BBB5CE45E46E208337DA4D51FFFE611E567FD32073D6439F6",
       "algorithm": "sha256"
     },
     {
-      "id": "http/nodejs.org/dist/v24.22.2/node-v24.22.2-darwin-x64.tar.gz",
-      "checksum": "D5E336D588C45BE0C37DBD52CC29895593009CA4997A77A1FD02815131ED0E52",
+      "id": "http/nodejs.org/dist/v26.13.0/node-v26.13.0-darwin-x64.tar.gz",
+      "checksum": "525C9B29BB0263D687DE60A4CEC0E2A6DB876A8EB032369E5795ECA71E7C358E",
       "algorithm": "sha256"
     },
     {
-      "id": "http/nodejs.org/dist/v24.22.2/node-v24.22.2-linux-arm64.tar.gz",
-      "checksum": "95C264150ACEB7F3437A29FD6984924F5F8D1511EA3CBD6C508B83F6C555DAE2",
+      "id": "http/nodejs.org/dist/v26.13.0/node-v26.13.0-linux-arm64.tar.gz",
+      "checksum": "439E9C438ACDF6A6FFE47418DA709153D66C4BED812E30A473FAACB107DD2791",
       "algorithm": "sha256"
     },
     {
-      "id": "http/nodejs.org/dist/v24.22.2/node-v24.22.2-linux-x64.tar.gz",
-      "checksum": "361718C444E49AF2CA5A110C83BA6A8901143F23AB285EBBEF0341F391F482A9",
+      "id": "http/nodejs.org/dist/v26.13.0/node-v26.13.0-linux-x64.tar.gz",
+      "checksum": "5848553868B402D3FABB5B09270649977780A390F832155721025A08B5104455",
       "algorithm": "sha256"
     },
     {
-      "id": "http/nodejs.org/dist/v24.22.2/node-v24.22.2-win-x64.zip",
-      "checksum": "CA1BFF5D8EAD13C9F2EA404A176DB46BD430704D5B5113734049FA365E7799E2",
+      "id": "http/nodejs.org/dist/v26.13.0/node-v26.13.0-win-x64.zip",
+      "checksum": "DCC60D59A0746999F99064A01C020445D54D84228C691CDBF25B49AC3B59150A",
       "algorithm": "sha256"
     },
     {
-      "id": "http/unofficial-builds.nodejs.org/download/release/v24.22.2/node-v24.22.2-linux-arm64-musl.tar.gz",
-      "checksum": "70AFD250A927FBC32F3D95A58597EFDF14AA8AD194E894268F9B8309A2DAB84E",
+      "id": "http/unofficial-builds.nodejs.org/download/release/v26.13.0/node-v26.13.0-linux-arm64-musl.tar.gz",
+      "checksum": "F3DDA772BA0C1F2CD6FEC46F6EC24687584767F2C3F9117A47EDF191E7786720",
       "algorithm": "sha256"
     },
     {
-      "id": "http/unofficial-builds.nodejs.org/download/release/v24.22.2/node-v24.22.2-linux-x64-musl.tar.gz",
-      "checksum": "867E322D67294E9C405F10CAE5D70ED2E4940BB367FA47DBCB5151C9899D7C04",
+      "id": "http/unofficial-builds.nodejs.org/download/release/v26.13.0/node-v26.13.0-linux-x64-musl.tar.gz",
+      "checksum": "C6C738FE564C3EB053172BFD4CA1166EEC8BC076F84231A2EA70165E316F5809",
       "algorithm": "sha256"
     },
     {
