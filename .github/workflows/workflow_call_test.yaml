@@ -93,12 +93,18 @@ jobs:
       id-token: write
 
   test_doc:
-    uses: ./.github/workflows/workflow_call_deploy_doc.yaml
+    uses: suzuki-shunsuke/release-doc-action/.github/workflows/test.yaml@1cb15eb99aa8f0ae05ae28174430e49579e878fa # v0.2.0
+    with:
+      # Build the document only if these files are changed
+      paths: |
+        website/**
+        .github/workflows/test.yaml
+        .github/workflows/workflow_call_test.yaml
     secrets:
       TAKUMI_GUARD_BOT_ID: ${{secrets.TAKUMI_GUARD_BOT_ID}}
     permissions:
-      contents: write
-      issues: write
+      pull-requests: read
+      contents: read
       id-token: write
 
   test-workflow:
