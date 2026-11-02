@@ -5,5 +5,6 @@ const (
 
 	osDarwin  = "darwin"
 	osWindows = "windows"
+	osLinux   = "linux"
 	archAmd64 = "amd64"
 )
