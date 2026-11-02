@@ -9,13 +9,16 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
+	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/timer"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
+	"golang.org/x/oauth2"
 )
 
 type CommandExecutor interface {
@@ -31,6 +34,11 @@ type ExecutorImpl struct {
 	exePath  string
 	getEnv   func(string) string
 	environ  func() []string
+	// newTokenSource creates a token source getting a GitHub access token from the keyring or ghtkn.
+	newTokenSource func(logger *slog.Logger) (oauth2.TokenSource, error)
+	tokenSource    oauth2.TokenSource
+	tokenOnce      sync.Once
+	tokenErr       error
 }
 
 func NewExecutor(executor CommandExecutor, param *config.Param) (*ExecutorImpl, error) {
@@ -42,10 +50,11 @@ func NewExecutor(executor CommandExecutor, param *config.Param) (*ExecutorImpl, 
 		return nil, fmt.Errorf("get an executable file path of GitHub CLI: %w", err)
 	}
 	return &ExecutorImpl{
-		executor: executor,
-		exePath:  exePath,
-		getEnv:   os.Getenv,
-		environ:  os.Environ,
+		executor:       executor,
+		exePath:        exePath,
+		getEnv:         os.Getenv,
+		environ:        os.Environ,
+		newTokenSource: github.NewTokenSource,
 	}, nil
 }
 
@@ -96,7 +105,7 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logger *slog.Logger, param *P
 	}
 	args = append(args, param.certificateArgs()...)
 	for i := range 5 {
-		err := e.exec(ctx, args)
+		err := e.exec(ctx, logger, args)
 		if err == nil {
 			return nil
 		}
@@ -118,7 +127,61 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logger *slog.Logger, param *P
 	return errVerify
 }
 
-func (e *ExecutorImpl) exec(ctx context.Context, args []string) error {
+// getToken returns a GitHub access token from the keyring or ghtkn.
+// It returns an empty string if neither the keyring nor ghtkn is enabled.
+// The token source is created only once and the token is reused while it's valid.
+func (e *ExecutorImpl) getToken(logger *slog.Logger) (string, error) {
+	if e.newTokenSource == nil {
+		return "", nil
+	}
+	e.tokenOnce.Do(func() {
+		ts, err := e.newTokenSource(logger)
+		if err != nil {
+			e.tokenErr = err
+			return
+		}
+		if ts != nil {
+			e.tokenSource = oauth2.ReuseTokenSource(nil, ts)
+		}
+	})
+	if e.tokenErr != nil {
+		return "", e.tokenErr
+	}
+	if e.tokenSource == nil {
+		return "", nil
+	}
+	token, err := e.tokenSource.Token()
+	if err != nil {
+		return "", fmt.Errorf("get a GitHub access token: %w", err)
+	}
+	return token.AccessToken, nil
+}
+
+// tokenEnv returns an environment variable to pass a GitHub access token to GitHub CLI.
+// It returns an empty string if GITHUB_TOKEN or GH_TOKEN is set, because GitHub CLI reads them.
+func (e *ExecutorImpl) tokenEnv(logger *slog.Logger) string {
+	if e.getEnv("GITHUB_TOKEN") != "" || e.getEnv("GH_TOKEN") != "" {
+		return ""
+	}
+	if token := e.getEnv("AQUA_GITHUB_TOKEN"); token != "" {
+		return "GITHUB_TOKEN=" + token
+	}
+	// Pass a GitHub access token from the keyring or ghtkn.
+	// Otherwise, GitHub CLI calls GitHub API without an access token
+	// (GH_HOST makes GitHub CLI skip the authentication check),
+	// which easily hits the rate limit of unauthenticated requests.
+	token, err := e.getToken(logger)
+	if err != nil {
+		slogerr.WithError(logger, err).Warn("get a GitHub access token for GitHub CLI")
+		return ""
+	}
+	if token == "" {
+		return ""
+	}
+	return "GH_TOKEN=" + token
+}
+
+func (e *ExecutorImpl) exec(ctx context.Context, logger *slog.Logger, args []string) error {
 	cmd := osexec.Command(ctx, e.exePath, args...)
 	cmd.Args[0] = "gh"
 
@@ -130,10 +193,8 @@ func (e *ExecutorImpl) exec(ctx context.Context, args []string) error {
 		cmd.Env = e.environ()
 	}
 	cmd.Env = append(cmd.Env, "GH_HOST=github.com")
-	if e.getEnv("GITHUB_TOKEN") == "" && e.getEnv("GH_TOKEN") == "" {
-		if token := e.getEnv("AQUA_GITHUB_TOKEN"); token != "" {
-			cmd.Env = append(cmd.Env, "GITHUB_TOKEN="+token)
-		}
+	if env := e.tokenEnv(logger); env != "" {
+		cmd.Env = append(cmd.Env, env)
 	}
 
 	out, _, err := e.executor.ExecStderrAndGetCombinedOutput(cmd)

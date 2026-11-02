@@ -62,8 +62,22 @@ func getHTTPClientForGitHub(ctx context.Context, logger *slog.Logger, token stri
 			&oauth2.Token{AccessToken: token},
 		)), nil
 	}
+	ts, err := NewTokenSource(logger)
+	if err != nil {
+		return nil, err
+	}
+	if ts == nil {
+		return http.DefaultClient, nil
+	}
+	return oauth2.NewClient(ctx, ts), nil
+}
+
+// NewTokenSource returns a token source getting a GitHub access token from the keyring or ghtkn.
+// It doesn't read environment variables such as GITHUB_TOKEN.
+// It returns nil if neither the keyring nor ghtkn is enabled.
+func NewTokenSource(logger *slog.Logger) (oauth2.TokenSource, error) {
 	if keyring.Enabled() {
-		return oauth2.NewClient(ctx, ghtoken.NewTokenSource(logger, keyring.KeyService)), nil
+		return ghtoken.NewTokenSource(logger, keyring.KeyService), nil
 	}
 
 	ghtknEnabled, err := ghtkn.Enabled(&ghtkn.InputEnabled{
@@ -75,11 +89,11 @@ func getHTTPClientForGitHub(ctx context.Context, logger *slog.Logger, token stri
 		return nil, fmt.Errorf("check if ghtkn is enabled: %w", err)
 	}
 	if !ghtknEnabled {
-		return http.DefaultClient, nil
+		return nil, nil //nolint:nilnil
 	}
 	client, err := ghtkn.New()
 	if err != nil {
 		return nil, fmt.Errorf("create a ghtkn client: %w", err)
 	}
-	return oauth2.NewClient(ctx, client.TokenSource(logger, &ghtkn.InputGet{})), nil
+	return client.TokenSource(logger, &ghtkn.InputGet{}), nil
 }
