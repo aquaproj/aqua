@@ -36,9 +36,13 @@ type ExecutorImpl struct {
 	environ  func() []string
 	// newTokenSource creates a token source getting a GitHub access token from the keyring or ghtkn.
 	newTokenSource func(logger *slog.Logger) (oauth2.TokenSource, error)
+	tokenMutex     sync.Mutex
 	tokenSource    oauth2.TokenSource
-	tokenOnce      sync.Once
-	tokenErr       error
+	// tokenSourceCreated is true if newTokenSource has already been called.
+	tokenSourceCreated bool
+	// tokenDisabled is true if the token from the keyring or ghtkn is unavailable or invalid.
+	// Then GitHub CLI is run without the token for the rest of the process.
+	tokenDisabled bool
 }
 
 func NewExecutor(executor CommandExecutor, param *config.Param) (*ExecutorImpl, error) {
@@ -129,56 +133,67 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logger *slog.Logger, param *P
 
 // getToken returns a GitHub access token from the keyring or ghtkn.
 // It returns an empty string if neither the keyring nor ghtkn is enabled.
-// The token source is created only once and the token is reused while it's valid.
-func (e *ExecutorImpl) getToken(logger *slog.Logger) (string, error) {
-	if e.newTokenSource == nil {
-		return "", nil
+// If it fails to get a token, it outputs a warning and disables the token for the rest of the process,
+// so that it doesn't try to get a token and output the same warning for every package and retry.
+func (e *ExecutorImpl) getToken(logger *slog.Logger) string {
+	e.tokenMutex.Lock()
+	defer e.tokenMutex.Unlock()
+	if e.tokenDisabled || e.newTokenSource == nil {
+		return ""
 	}
-	e.tokenOnce.Do(func() {
+	if !e.tokenSourceCreated {
+		e.tokenSourceCreated = true
 		ts, err := e.newTokenSource(logger)
 		if err != nil {
-			e.tokenErr = err
-			return
+			e.tokenDisabled = true
+			slogerr.WithError(logger, err).Warn("create a token source for GitHub CLI")
+			return ""
 		}
-		if ts != nil {
-			e.tokenSource = oauth2.ReuseTokenSource(nil, ts)
-		}
-	})
-	if e.tokenErr != nil {
-		return "", e.tokenErr
+		e.tokenSource = ts
 	}
 	if e.tokenSource == nil {
-		return "", nil
+		return ""
 	}
+	// Both the keyring and ghtkn token sources cache the token, so this doesn't call any API every time.
 	token, err := e.tokenSource.Token()
 	if err != nil {
-		return "", fmt.Errorf("get a GitHub access token: %w", err)
+		e.tokenDisabled = true
+		slogerr.WithError(logger, err).Warn("get a GitHub access token for GitHub CLI")
+		return ""
 	}
-	return token.AccessToken, nil
+	return token.AccessToken
+}
+
+// disableToken disables the token from the keyring or ghtkn for the rest of the process.
+func (e *ExecutorImpl) disableToken() {
+	e.tokenMutex.Lock()
+	defer e.tokenMutex.Unlock()
+	e.tokenDisabled = true
 }
 
 // tokenEnv returns an environment variable to pass a GitHub access token to GitHub CLI.
 // It returns an empty string if GITHUB_TOKEN or GH_TOKEN is set, because GitHub CLI reads them.
-func (e *ExecutorImpl) tokenEnv(logger *slog.Logger) string {
+// fromStore is true if the token is got from the keyring or ghtkn.
+func (e *ExecutorImpl) tokenEnv(logger *slog.Logger) (env string, fromStore bool) {
 	if e.getEnv("GITHUB_TOKEN") != "" || e.getEnv("GH_TOKEN") != "" {
-		return ""
+		return "", false
 	}
 	if token := e.getEnv("AQUA_GITHUB_TOKEN"); token != "" {
-		return "GITHUB_TOKEN=" + token
+		return "GITHUB_TOKEN=" + token, false
 	}
 	// Pass a GitHub access token from the keyring or ghtkn.
 	// Otherwise, GitHub CLI calls GitHub API without an access token
 	// (GH_HOST makes GitHub CLI skip the authentication check),
 	// which easily hits the rate limit of unauthenticated requests.
-	token, err := e.getToken(logger)
-	if err != nil {
-		slogerr.WithError(logger, err).Warn("get a GitHub access token for GitHub CLI")
-		return ""
-	}
+	token := e.getToken(logger)
 	if token == "" {
-		return ""
+		return "", false
 	}
-	return "GH_TOKEN=" + token
+	return "GH_TOKEN=" + token, true
+}
+
+func isBadCredentials(out string) bool {
+	return strings.Contains(out, "HTTP 401") || strings.Contains(out, "Bad credentials")
 }
 
 func (e *ExecutorImpl) exec(ctx context.Context, logger *slog.Logger, args []string) error {
@@ -193,13 +208,23 @@ func (e *ExecutorImpl) exec(ctx context.Context, logger *slog.Logger, args []str
 		cmd.Env = e.environ()
 	}
 	cmd.Env = append(cmd.Env, "GH_HOST=github.com")
-	if env := e.tokenEnv(logger); env != "" {
+	env, fromStore := e.tokenEnv(logger)
+	if env != "" {
 		cmd.Env = append(cmd.Env, env)
 	}
 
 	out, _, err := e.executor.ExecStderrAndGetCombinedOutput(cmd)
 	if err == nil {
 		return nil
+	}
+
+	if fromStore && isBadCredentials(out) {
+		// The token from the keyring or ghtkn is invalid (e.g. revoked or expired).
+		// Before aqua passed the token, GitHub CLI was run without a token,
+		// so fall back to that instead of failing the installation.
+		slogerr.WithError(logger, err).Warn("the GitHub access token from the keyring or ghtkn is invalid, so run GitHub CLI without it")
+		e.disableToken()
+		return e.exec(ctx, logger, args)
 	}
 
 	// https://github.com/aquaproj/aqua/issues/3157
