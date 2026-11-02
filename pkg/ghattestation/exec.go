@@ -165,10 +165,16 @@ func (e *ExecutorImpl) getToken(logger *slog.Logger) string {
 }
 
 // disableToken disables the token from the keyring or ghtkn for the rest of the process.
-func (e *ExecutorImpl) disableToken() {
+// It returns true if the token has been enabled until now.
+// The return value is used to output a warning only once even if gh is run concurrently.
+func (e *ExecutorImpl) disableToken() bool {
 	e.tokenMutex.Lock()
 	defer e.tokenMutex.Unlock()
+	if e.tokenDisabled {
+		return false
+	}
 	e.tokenDisabled = true
+	return true
 }
 
 // tokenEnv returns an environment variable to pass a GitHub access token to GitHub CLI.
@@ -197,6 +203,45 @@ func isBadCredentials(out string) bool {
 }
 
 func (e *ExecutorImpl) exec(ctx context.Context, logger *slog.Logger, args []string) error {
+	env, fromStore := e.tokenEnv(logger)
+	out, err := e.run(ctx, args, env)
+	if err == nil {
+		return nil
+	}
+	if fromStore {
+		return e.retryWithoutToken(ctx, logger, args, out, err)
+	}
+	return toAuthError(out, err)
+}
+
+// retryWithoutToken reruns GitHub CLI without the token from the keyring or ghtkn
+// after it failed with the token.
+// GH_TOKEN takes precedence over the credential stored by `gh auth login`,
+// so the token may lack the permission that GitHub CLI had before aqua passed the token,
+// or it may be invalid (e.g. revoked or expired).
+func (e *ExecutorImpl) retryWithoutToken(ctx context.Context, logger *slog.Logger, args []string, out string, err error) error {
+	badCredentials := isBadCredentials(out)
+	out2, err2 := e.run(ctx, args, "")
+	if err2 == nil || badCredentials {
+		// GitHub CLI works without the token, or the token is invalid.
+		// Run GitHub CLI without the token from now on, as aqua did before it passed the token.
+		if e.disableToken() {
+			slogerr.WithError(logger, err).Warn("gh attestation verify failed with the GitHub access token from the keyring or ghtkn, so run GitHub CLI without it")
+		}
+		if err2 == nil {
+			return nil
+		}
+		return toAuthError(out2, err2)
+	}
+	// Both failed. Return the error with the token.
+	// Don't return the error without the token, because it may be an authentication error,
+	// which makes aqua skip the verification even though the verification failed.
+	return err
+}
+
+// run runs GitHub CLI and returns the combined output and the error.
+// tokenEnv is an environment variable to pass a GitHub access token. It's ignored if it's empty.
+func (e *ExecutorImpl) run(ctx context.Context, args []string, tokenEnv string) (string, error) {
 	cmd := osexec.Command(ctx, e.exePath, args...)
 	cmd.Args[0] = "gh"
 
@@ -208,29 +253,20 @@ func (e *ExecutorImpl) exec(ctx context.Context, logger *slog.Logger, args []str
 		cmd.Env = e.environ()
 	}
 	cmd.Env = append(cmd.Env, "GH_HOST=github.com")
-	env, fromStore := e.tokenEnv(logger)
-	if env != "" {
-		cmd.Env = append(cmd.Env, env)
+	if tokenEnv != "" {
+		cmd.Env = append(cmd.Env, tokenEnv)
 	}
 
 	out, _, err := e.executor.ExecStderrAndGetCombinedOutput(cmd)
-	if err == nil {
-		return nil
-	}
+	return out, err //nolint:wrapcheck
+}
 
-	if fromStore && isBadCredentials(out) {
-		// The token from the keyring or ghtkn is invalid (e.g. revoked or expired).
-		// Before aqua passed the token, GitHub CLI was run without a token,
-		// so fall back to that instead of failing the installation.
-		slogerr.WithError(logger, err).Warn("the GitHub access token from the keyring or ghtkn is invalid, so run GitHub CLI without it")
-		e.disableToken()
-		return e.exec(ctx, logger, args)
-	}
-
+// toAuthError converts err to AuthError if GitHub CLI fails because of the authentication.
+func toAuthError(out string, err error) error {
 	// https://github.com/aquaproj/aqua/issues/3157
 	// Ignore error if authentifaction fails
 	if strings.Contains(out, "gh auth login") || strings.Contains(out, "set the GH_TOKEN environment variable") {
 		return &AuthError{err: err}
 	}
-	return err //nolint:wrapcheck
+	return err
 }

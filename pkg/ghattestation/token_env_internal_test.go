@@ -128,26 +128,128 @@ func TestExecutorImpl_tokenEnv(t *testing.T) {
 	}
 }
 
-// badCredentialsExecutor fails with "Bad credentials" if GH_TOKEN is passed.
-type badCredentialsExecutor struct {
-	envs [][]string
+type fakeResult struct {
+	out string
+	err error
 }
 
-func (b *badCredentialsExecutor) ExecStderrAndGetCombinedOutput(cmd *exec.Cmd) (string, int, error) {
-	b.envs = append(b.envs, cmd.Env)
+// fakeExecutor returns withToken if GH_TOKEN is passed, otherwise withoutToken.
+type fakeExecutor struct {
+	withToken    fakeResult
+	withoutToken fakeResult
+	count        int
+}
+
+func (f *fakeExecutor) ExecStderrAndGetCombinedOutput(cmd *exec.Cmd) (string, int, error) {
+	f.count++
+	r := f.withoutToken
 	if slices.ContainsFunc(cmd.Env, func(s string) bool { return strings.HasPrefix(s, "GH_TOKEN=") }) {
-		return "HTTP 401: Bad credentials (https://api.github.com/repos/foo/bar/attestations)", 1, errors.New("exit status 1")
+		r = f.withToken
 	}
-	return "", 0, nil
+	if r.err != nil {
+		return r.out, 1, r.err
+	}
+	return r.out, 0, nil
 }
 
-func TestExecutorImpl_exec_badCredentials(t *testing.T) {
+type execTestCase struct {
+	name         string
+	withToken    fakeResult
+	withoutToken fakeResult
+	// errWithToken is true if the error with the token must be returned.
+	errWithToken bool
+	authError    bool
+	disabled     bool
+	count        int
+}
+
+func execTestCases() []*execTestCase {
+	errExit := errors.New("exit status 1")
+	authOut := "To get started with GitHub CLI, please run:  gh auth login"
+	return []*execTestCase{
+		{
+			name:  "succeed with the token",
+			count: 1,
+		},
+		{
+			name:      "bad credentials, then succeed without the token",
+			withToken: fakeResult{out: "HTTP 401: Bad credentials", err: errExit},
+			disabled:  true,
+			count:     2,
+		},
+		{
+			name:      "no permission, then succeed without the token",
+			withToken: fakeResult{out: "HTTP 403: Resource protected by organization SAML enforcement", err: errExit},
+			disabled:  true,
+			count:     2,
+		},
+		{
+			name:         "bad credentials, then the authentication error without the token",
+			withToken:    fakeResult{out: "HTTP 401: Bad credentials", err: errExit},
+			withoutToken: fakeResult{out: authOut, err: errExit},
+			authError:    true,
+			disabled:     true,
+			count:        2,
+		},
+		{
+			// the verification failure must not be skipped as the authentication error
+			name:         "verification failure with the token, then the authentication error without the token",
+			withToken:    fakeResult{out: "verification failed", err: errExit},
+			withoutToken: fakeResult{out: authOut, err: errors.New("exit status 4")},
+			errWithToken: true,
+			count:        2,
+		},
+	}
+}
+
+func TestExecutorImpl_exec(t *testing.T) {
+	t.Parallel()
+	logger := slog.New(slog.DiscardHandler)
+	for _, d := range execTestCases() {
+		t.Run(d.name, func(t *testing.T) {
+			t.Parallel()
+			created := 0
+			e := newTestExecutor(nil, &countTokenSource{token: "xxx"}, nil, &created)
+			exe := &fakeExecutor{withToken: d.withToken, withoutToken: d.withoutToken}
+			e.executor = exe
+			e.exePath = "gh"
+			err := e.exec(t.Context(), logger, []string{"attestation", "verify"})
+			checkExecError(t, d, err)
+			if e.tokenDisabled != d.disabled {
+				t.Fatalf("tokenDisabled: wanted %v, got %v", d.disabled, e.tokenDisabled)
+			}
+			if exe.count != d.count {
+				t.Fatalf("gh must be executed %d times, but executed %d times", d.count, exe.count)
+			}
+		})
+	}
+}
+
+func checkExecError(t *testing.T, d *execTestCase, err error) {
+	t.Helper()
+	ae := &AuthError{}
+	isAuthError := errors.As(err, &ae)
+	switch {
+	case d.authError:
+		if !isAuthError {
+			t.Fatalf("AuthError must be returned, but got %v", err)
+		}
+	case d.errWithToken:
+		if isAuthError || !errors.Is(err, d.withToken.err) {
+			t.Fatalf("the error with the token must be returned, but got %v", err)
+		}
+	case err != nil:
+		t.Fatal(err)
+	}
+}
+
+func TestExecutorImpl_exec_disabledToken(t *testing.T) {
 	t.Parallel()
 	logger := slog.New(slog.DiscardHandler)
 	created := 0
 	ts := &countTokenSource{token: "revoked"}
 	e := newTestExecutor(nil, ts, nil, &created)
-	exe := &badCredentialsExecutor{}
+	exe := &fakeExecutor{withToken: fakeResult{out: "HTTP 401: Bad credentials", err: errors.New("exit status 1")}}
 	e.executor = exe
 	e.exePath = "gh"
 	for range 2 {
@@ -157,8 +259,8 @@ func TestExecutorImpl_exec_badCredentials(t *testing.T) {
 	}
 	// 1st call: with the token (fails), then without the token (succeeds)
 	// 2nd call: without the token, because the token is disabled
-	if len(exe.envs) != 3 {
-		t.Fatalf("gh must be executed 3 times, but executed %d times", len(exe.envs))
+	if exe.count != 3 {
+		t.Fatalf("gh must be executed 3 times, but executed %d times", exe.count)
 	}
 	if ts.count != 1 {
 		t.Fatalf("token source must be called once, but called %d times", ts.count)
