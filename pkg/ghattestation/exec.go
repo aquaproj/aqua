@@ -198,8 +198,12 @@ func (e *ExecutorImpl) tokenEnv(logger *slog.Logger) (env string, fromStore bool
 	return "GH_TOKEN=" + token, true
 }
 
-func isBadCredentials(out string) bool {
-	return strings.Contains(out, "HTTP 401") || strings.Contains(out, "Bad credentials")
+// isTokenError returns true if GitHub CLI fails because of the token itself.
+// 401 means the token is invalid (e.g. revoked or expired).
+// 403 means the token lacks the permission (e.g. SAML SSO enforcement).
+// 404 isn't included because it can't be distinguished from the case where attestations don't exist.
+func isTokenError(out string) bool {
+	return strings.Contains(out, "HTTP 401") || strings.Contains(out, "HTTP 403") || strings.Contains(out, "Bad credentials")
 }
 
 func (e *ExecutorImpl) exec(ctx context.Context, logger *slog.Logger, args []string) error {
@@ -208,35 +212,20 @@ func (e *ExecutorImpl) exec(ctx context.Context, logger *slog.Logger, args []str
 	if err == nil {
 		return nil
 	}
-	if fromStore {
-		return e.retryWithoutToken(ctx, logger, args, out, err)
-	}
-	return toAuthError(out, err)
-}
-
-// retryWithoutToken reruns GitHub CLI without the token from the keyring or ghtkn
-// after it failed with the token.
-// GH_TOKEN takes precedence over the credential stored by `gh auth login`,
-// so the token may lack the permission that GitHub CLI had before aqua passed the token,
-// or it may be invalid (e.g. revoked or expired).
-func (e *ExecutorImpl) retryWithoutToken(ctx context.Context, logger *slog.Logger, args []string, out string, err error) error {
-	badCredentials := isBadCredentials(out)
-	out2, err2 := e.run(ctx, args, "")
-	if err2 == nil || badCredentials {
-		// GitHub CLI works without the token, or the token is invalid.
+	if fromStore && isTokenError(out) {
+		// GH_TOKEN takes precedence over the credential stored by `gh auth login`,
+		// so the token from the keyring or ghtkn may be invalid or lack the permission GitHub CLI had before.
 		// Run GitHub CLI without the token from now on, as aqua did before it passed the token.
+		// Other errors (e.g. verification failures and temporary errors) are retried with the token by Verify.
 		if e.disableToken() {
 			slogerr.WithError(logger, err).Warn("gh attestation verify failed with the GitHub access token from the keyring or ghtkn, so run GitHub CLI without it")
 		}
-		if err2 == nil {
+		out, err = e.run(ctx, args, "")
+		if err == nil {
 			return nil
 		}
-		return toAuthError(out2, err2)
 	}
-	// Both failed. Return the error with the token.
-	// Don't return the error without the token, because it may be an authentication error,
-	// which makes aqua skip the verification even though the verification failed.
-	return err
+	return toAuthError(out, err)
 }
 
 // run runs GitHub CLI and returns the combined output and the error.

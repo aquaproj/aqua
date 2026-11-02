@@ -192,12 +192,22 @@ func execTestCases() []*execTestCase {
 			count:        2,
 		},
 		{
-			// the verification failure must not be skipped as the authentication error
-			name:         "verification failure with the token, then the authentication error without the token",
+			// same as before aqua passed the token
+			name:         "no permission, then the authentication error without the token",
+			withToken:    fakeResult{out: "HTTP 403: Resource not accessible by integration", err: errExit},
+			withoutToken: fakeResult{out: authOut, err: errExit},
+			authError:    true,
+			disabled:     true,
+			count:        2,
+		},
+		{
+			// the verification failure must not be retried without the token,
+			// because it may be skipped as the authentication error
+			name:         "verification failure with the token",
 			withToken:    fakeResult{out: "verification failed", err: errExit},
 			withoutToken: fakeResult{out: authOut, err: errors.New("exit status 4")},
 			errWithToken: true,
-			count:        2,
+			count:        1,
 		},
 	}
 }
