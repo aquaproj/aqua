@@ -9,7 +9,7 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - uses: suzuki-shunsuke/actionlint-action@83c4a4a3b228afcf6dbf79d793c742de182de31e # v0.2.2
+      - uses: suzuki-shunsuke/actionlint-action@v0.2.2

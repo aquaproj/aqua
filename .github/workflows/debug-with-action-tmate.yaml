@@ -16,7 +16,7 @@ jobs:
     timeout-minutes: 360
     runs-on: ${{inputs.runs-on}}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           ref: ${{inputs.ref}}
           persist-credentials: false
@@ -25,19 +25,19 @@ jobs:
         if: inputs.pr_number != ''
         env:
           GITHUB_TOKEN: ${{github.token}}
-      - uses: aquaproj/aqua-installer@611554c6f0137ba41c8dd15aca8bee82504ea461 # v4.1.1
+      - uses: aquaproj/aqua-installer@v4.1.1
         with:
-          aqua_version: v2.65.2
+          aqua_version: v2.66.0
         env:
           AQUA_GITHUB_TOKEN: ${{github.token}}
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      - uses: actions/setup-go@v7.0.0
         with:
           go-version-file: go.mod
 
       # The default vim doesn't work well, so we install the latest vim ourselves.
-      - uses: rhysd/action-setup-vim@febef33995d6649302e9d88dda81e071b68f16a7 # v1.6.1
+      - uses: rhysd/action-setup-vim@v1.6.1
 
-      - uses: mxschmitt/action-tmate@7b6a61a73bbb9793cb80ad69b8dd8ac19261834c # v3.22
+      - uses: mxschmitt/action-tmate@v3.22
         with:
           limit-access-to-actor: true # SSH Key is required
         env:
