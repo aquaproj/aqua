@@ -30,7 +30,7 @@ require (
 	github.com/suzuki-shunsuke/urfave-cli-v3-util v0.2.4
 	github.com/urfave/cli/v3 v3.14.0
 	go.yaml.in/yaml/v2 v2.4.4
-	go.yaml.in/yaml/v3 v3.0.5
+	go.yaml.in/yaml/v3 v3.0.6
 	golang.org/x/crypto/x509roots/fallback v0.0.0-20260714033321-10b54ffa51b1
 	golang.org/x/oauth2 v0.37.0
 	golang.org/x/sync v0.24.0
