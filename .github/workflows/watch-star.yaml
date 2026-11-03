@@ -11,6 +11,6 @@ jobs:
     permissions:
       issues: write
     steps:
-      - uses: suzuki-shunsuke/watch-star-action@2b3d259ce2ea06d53270dfe33a66d5642c8010ca # v0.1.1
+      - uses: suzuki-shunsuke/watch-star-action@v0.1.1
         with:
           number: 2139 # https://github.com/aquaproj/aqua/issues/2139
