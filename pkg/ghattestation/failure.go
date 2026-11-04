@@ -65,8 +65,6 @@ func classify(out string) failure {
 		return failureNoAttestation
 	case strings.Contains(out, "verifying with issuer"), certExtensionMismatch.MatchString(out):
 		return failureVerification
-	case strings.Contains(out, "gh auth login"), strings.Contains(out, "set the GH_TOKEN environment variable"):
-		return failureAuth
 	default:
 		return classifyHTTP(out)
 	}
@@ -84,6 +82,9 @@ func classifyHTTP(out string) failure {
 		return failurePermission
 	case strings.Contains(out, "HTTP 404"):
 		return failureNotFound
+	// This is checked after HTTP errors, because GitHub CLI may output the hint `gh auth login` with them.
+	case strings.Contains(out, "gh auth login"), strings.Contains(out, "set the GH_TOKEN environment variable"):
+		return failureAuth
 	default:
 		return failureTemporary
 	}

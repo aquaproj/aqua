@@ -115,6 +115,7 @@ func TestClassify(t *testing.T) {
 		{outTemporary, failureTemporary},
 		{"dial tcp: lookup api.github.com: no such host", failureTemporary},
 		{outAuth, failureAuth},
+		{outInvalidToken + "\nTry authenticating with:  gh auth login", failureInvalidToken},
 	}
 	for _, d := range data {
 		if got := classify(d.out); got != d.exp {
@@ -244,13 +245,25 @@ func verifyTestCases() []*verifyTestCase { //nolint:funlen
 			},
 		},
 		{
-			name:      "retries are limited",
+			name:      "retries are limited, and then the next token is tried once each",
 			aquaToken: "aqua",
+			ghtkn:     &countTokenSource{token: "ghtkn"},
+			calls: []verifyCall{
+				{
+					outputs: []string{outTemporary, outTemporary, outTemporary, outTemporary, outTemporary, outTemporary, outTemporary},
+					wantErr: true,
+					tokens:  []string{"aqua", "aqua", "aqua", "aqua", "aqua", "ghtkn", noToken},
+				},
+			},
+		},
+		{
+			name:      "the next token is tried after the retries are exhausted",
+			aquaToken: "aqua",
+			ghtkn:     &countTokenSource{token: "ghtkn"},
 			calls: []verifyCall{
 				{
 					outputs: []string{outTemporary, outTemporary, outTemporary, outTemporary, outTemporary},
-					wantErr: true,
-					tokens:  []string{"aqua", "aqua", "aqua", "aqua", "aqua"},
+					tokens:  []string{"aqua", "aqua", "aqua", "aqua", "aqua", "ghtkn"},
 				},
 			},
 		},

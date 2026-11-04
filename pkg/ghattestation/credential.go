@@ -71,6 +71,7 @@ func (c *credential) candidate(logger *slog.Logger) (cand candidate, ok bool) {
 		return candidate{}, false
 	}
 	if t.AccessToken == "" {
+		c.unavailable = true
 		return candidate{}, false
 	}
 	return candidate{name: c.name, token: t.AccessToken, key: hashToken(t.AccessToken)}, true

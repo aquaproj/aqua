@@ -115,6 +115,7 @@ var (
 
 // maxRetries is the maximum number of retries for temporary errors per Verify call.
 // It's shared among credentials so that the number of gh executions is bounded.
+// If it's exhausted, the remaining credentials are tried once each without retries.
 const maxRetries = 4
 
 func (e *ExecutorImpl) Verify(ctx context.Context, logger *slog.Logger, param *ParamVerify) error {
@@ -192,7 +193,8 @@ func (s *verifyState) tried(key string) bool {
 
 // runWithRetry runs gh attestation verify with token, retrying temporary errors.
 // It returns failureNone if the verification succeeds.
-// It returns an error if the retries are exhausted or the wait is canceled.
+// If the retries are exhausted, it returns failureTemporary so that the next credential is tried.
+// It returns an error if the wait is canceled.
 func (e *ExecutorImpl) runWithRetry(ctx context.Context, logger *slog.Logger, args []string, cand candidate, state *verifyState) (failure, error) {
 	for {
 		out, err := e.run(ctx, args, cand.token)
@@ -210,7 +212,7 @@ func (e *ExecutorImpl) runWithRetry(ctx context.Context, logger *slog.Logger, ar
 			return f, nil
 		}
 		if state.retries >= maxRetries {
-			return f, errVerify //nolint:wrapcheck
+			return f, nil
 		}
 		state.retries++
 		if err := e.wait(ctx, logger, state.retries); err != nil {
