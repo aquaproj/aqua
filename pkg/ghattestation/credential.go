@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"log/slog"
+	"strings"
 	"sync"
 
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
@@ -70,9 +71,12 @@ func (c *credential) candidate(logger *slog.Logger) (cand candidate, ok bool) {
 		slogerr.WithError(logger, err).Warn("get a GitHub access token for GitHub CLI", "credential", c.name)
 		return candidate{}, false
 	}
-	if t.AccessToken == "" {
+	// Trim spaces in the same way as GitHub CLI's own access token,
+	// so that the same access token has the same key (e.g. a token read from a file with a trailing newline).
+	token := strings.TrimSpace(t.AccessToken)
+	if token == "" {
 		c.unavailable = true
 		return candidate{}, false
 	}
-	return candidate{name: c.name, token: t.AccessToken, key: hashToken(t.AccessToken)}, true
+	return candidate{name: c.name, token: token, key: hashToken(token)}, true
 }

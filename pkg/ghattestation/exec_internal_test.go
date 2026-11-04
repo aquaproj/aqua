@@ -128,6 +128,13 @@ func TestClassify(t *testing.T) {
 		{"Error: HTTP 429: Too Many Requests (https://api.github.com/...)", failureRateLimit},
 		{"unknown flag: --foo", failureUnknown},
 		{"Error: context deadline exceeded", failureTemporary},
+		{"Error: attestation bundle with URL https://example.com/bundle returned status code 503", failureTemporary},
+		{"Error: failed to fetch bundle with URL: request to fetch bundle from URL failed: dial tcp", failureTemporary},
+		{`Error: Get "https://api.github.com/...": net/http: request canceled (Client.Timeout exceeded while awaiting headers)`, failureTemporary},
+		{"Error: http2: server sent GOAWAY and closed the connection", failureTemporary},
+		{"Error: Get \"https://api.github.com/...\": EOF\n", failureTemporary},
+		{"Error: unexpected EOF", failureTemporary},
+		{"Error: the EOF marker is invalid", failureUnknown},
 		{outInvalidToken + "\nTry authenticating with:  gh auth login", failureInvalidToken},
 	}
 	for _, d := range data {
@@ -288,6 +295,16 @@ func verifyTestCases() []*verifyTestCase { //nolint:funlen
 			keyring:   &countTokenSource{token: "same"},
 			calls: []verifyCall{
 				{private: true, outputs: []string{outNotFound, outNotFound}, wantErr: true, tokens: []string{"same", noToken}},
+			},
+		},
+		{
+			name:          "spaces around tokens are trimmed",
+			authenticated: true,
+			ghToken:       "same",
+			aquaToken:     "same\n",
+			ghtkn:         &countTokenSource{token: "ghtkn"},
+			calls: []verifyCall{
+				{outputs: []string{outSAML}, tokens: []string{noToken, "ghtkn"}},
 			},
 		},
 		{

@@ -167,7 +167,8 @@ func (e *ExecutorImpl) verify(ctx context.Context, logger *slog.Logger, args []s
 		}
 		// Try the next credential.
 	}
-	if !state.executed {
+	if len(state.outputs) == 0 {
+		// gh attestation verify has never been run.
 		return errNoCredential //nolint:wrapcheck
 	}
 	// The verification isn't skipped even if all credentials fail because of the authentication.
@@ -199,8 +200,6 @@ type verifyState struct {
 	retries int
 	// triedKeys are keys of access tokens tried in the Verify call.
 	triedKeys map[string]struct{}
-	// executed is true if gh attestation verify has been run at least once.
-	executed bool
 	// outputs are the outputs of failed attempts.
 	outputs []string
 	// successOutput is the output of the successful attempt.
@@ -231,7 +230,7 @@ func (e *ExecutorImpl) runWithRetry(ctx context.Context, logger *slog.Logger, ar
 		state.outputs = append(state.outputs, out)
 		if ctx.Err() != nil {
 			// GitHub CLI was stopped by the cancellation, so the output doesn't show the result of the verification.
-			return failureNone, fmt.Errorf("run gh attestation verify: %w", ctx.Err())
+			return failureUnknown, fmt.Errorf("run gh attestation verify: %w", ctx.Err())
 		}
 		f := classify(out)
 		slogerr.WithError(logger, err).Warn("execute gh attestation verify",
@@ -239,7 +238,6 @@ func (e *ExecutorImpl) runWithRetry(ctx context.Context, logger *slog.Logger, ar
 			"args", strings.Join(args, " "),
 			"credential", cand.name,
 			"failure", f.String())
-		state.executed = true
 		if f != failureTemporary {
 			return f, nil
 		}

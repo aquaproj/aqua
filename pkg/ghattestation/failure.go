@@ -61,8 +61,12 @@ func (f failure) String() string {
 // temporaryPattern matches temporary failures.
 // e.g.
 // HTTP 502: Bad Gateway (https://api.github.com/...)
+// attestation bundle with URL https://... returned status code 503
+// request to fetch bundle from URL failed: ...
 // dial tcp: lookup api.github.com: no such host
-var temporaryPattern = regexp.MustCompile(`HTTP 5\d\d|dial tcp|i/o timeout|TLS handshake timeout|connection reset|connection refused|no such host|context deadline exceeded|unexpected EOF`)
+// net/http: request canceled (Client.Timeout exceeded while awaiting headers)
+// http2: server sent GOAWAY and closed the connection
+var temporaryPattern = regexp.MustCompile(`(?m)HTTP 5\d\d|status code 5\d\d|request to fetch bundle from URL failed|dial tcp|i/o timeout|TLS handshake timeout|Client\.Timeout exceeded|connection reset|connection refused|no such host|GOAWAY|context deadline exceeded|EOF$`)
 
 // e.g. expected SourceRepositoryURI to be https://github.com/foo/bar, got https://github.com/foo/baz
 var certExtensionMismatch = regexp.MustCompile(`expected \w+ to be .*, got `)
