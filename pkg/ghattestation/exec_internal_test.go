@@ -30,15 +30,21 @@ type fakeExecutor struct {
 }
 
 func (f *fakeExecutor) Exec(cmd *exec.Cmd) (int, error) {
-	f.authCount++
-	if f.authenticated {
-		fmt.Fprintln(cmd.Stdout, f.ghToken)
-		return 0, nil
+	if slices.Equal(cmd.Args[1:3], []string{"auth", "token"}) {
+		f.authCount++
+		if f.authenticated {
+			fmt.Fprintln(cmd.Stdout, f.ghToken)
+			return 0, nil
+		}
+		return 1, errors.New("exit status 1")
 	}
-	return 1, errors.New("exit status 1")
+	out, code, err := f.verify(cmd)
+	fmt.Fprint(cmd.Stdout, out)
+	return code, err
 }
 
-func (f *fakeExecutor) ExecStderrAndGetCombinedOutput(cmd *exec.Cmd) (string, int, error) {
+// verify returns the output of gh attestation verify.
+func (f *fakeExecutor) verify(cmd *exec.Cmd) (string, int, error) {
 	token := noToken
 	for _, env := range cmd.Env {
 		if t, ok := strings.CutPrefix(env, "GH_TOKEN="); ok {
@@ -47,12 +53,12 @@ func (f *fakeExecutor) ExecStderrAndGetCombinedOutput(cmd *exec.Cmd) (string, in
 	}
 	f.tokens = append(f.tokens, token)
 	if len(f.outputs) == 0 {
-		return "", 0, nil
+		return outSuccess, 0, nil
 	}
 	out := f.outputs[0]
 	f.outputs = f.outputs[1:]
 	if out == "" {
-		return "", 0, nil
+		return outSuccess, 0, nil
 	}
 	return out, 1, errors.New("exit status 1")
 }
@@ -95,6 +101,8 @@ const (
 	outSAML         = "Error: HTTP 403: Resource protected by organization SAML enforcement. You must grant your Personal Access token access to this organization. (https://api.github.com/repos/foo/bar/attestations/sha256:xxx)"
 	outTemporary    = "Error: HTTP 502: Bad Gateway (https://api.github.com/repos/foo/bar/attestations/sha256:xxx)"
 	outAuth         = "To get started with GitHub CLI, please run:  gh auth login"
+	outUnknown      = "unknown flag: --foo\n"
+	outSuccess      = "Verification succeeded!\n"
 )
 
 func TestClassify(t *testing.T) {
@@ -115,6 +123,8 @@ func TestClassify(t *testing.T) {
 		{outTemporary, failureTemporary},
 		{"dial tcp: lookup api.github.com: no such host", failureTemporary},
 		{outAuth, failureAuth},
+		{"unknown flag: --foo", failureUnknown},
+		{"Error: context deadline exceeded", failureTemporary},
 		{outInvalidToken + "\nTry authenticating with:  gh auth login", failureInvalidToken},
 	}
 	for _, d := range data {
@@ -126,6 +136,8 @@ func TestClassify(t *testing.T) {
 
 type verifyCall struct {
 	private bool
+	// stderr is the expected output written to stderr. It's checked only if it isn't empty.
+	stderr  string
 	outputs []string
 	wantErr bool
 	// tokens are the expected GH_TOKEN passed to each gh attestation verify.
@@ -316,6 +328,30 @@ func verifyTestCases() []*verifyTestCase { //nolint:funlen
 			},
 		},
 		{
+			name:      "an unknown failure fails immediately",
+			aquaToken: "aqua",
+			ghtkn:     &countTokenSource{token: "ghtkn"},
+			calls: []verifyCall{
+				{outputs: []string{outUnknown}, wantErr: true, tokens: []string{"aqua"}, stderr: outUnknown},
+			},
+		},
+		{
+			name:      "only the output of the successful attempt is written",
+			aquaToken: "aqua",
+			ghtkn:     &countTokenSource{token: "ghtkn"},
+			calls: []verifyCall{
+				{outputs: []string{outRateLimit}, tokens: []string{"aqua", "ghtkn"}, stderr: outSuccess},
+			},
+		},
+		{
+			name:      "all outputs are written if the verification fails",
+			aquaToken: "aqua",
+			ghtkn:     &countTokenSource{token: "ghtkn"},
+			calls: []verifyCall{
+				{outputs: []string{outRateLimit, outVerification}, wantErr: true, tokens: []string{"aqua", "ghtkn"}, stderr: outRateLimit + outVerification},
+			},
+		},
+		{
 			name:       "the failure of the keyring is warned only once",
 			keyringErr: errors.New("keyring is broken"),
 			ghtkn:      &countTokenSource{token: "ghtkn"},
@@ -352,6 +388,22 @@ func TestExecutorImpl_Verify(t *testing.T) {
 	}
 }
 
+func checkVerifyCall(t *testing.T, i int, call *verifyCall, err error, tokens []string, stderr string) {
+	t.Helper()
+	if call.wantErr && err == nil {
+		t.Fatalf("call %d: error must be returned", i)
+	}
+	if !call.wantErr && err != nil {
+		t.Fatalf("call %d: unexpected error: %v", i, err)
+	}
+	if !slices.Equal(tokens, call.tokens) {
+		t.Fatalf("call %d: tokens = %v, wanted %v", i, tokens, call.tokens)
+	}
+	if call.stderr != "" && stderr != call.stderr {
+		t.Fatalf("call %d: stderr = %q, wanted %q", i, stderr, call.stderr)
+	}
+}
+
 func testVerify(t *testing.T, tt *verifyTestCase) {
 	t.Helper()
 	keyringCreated := 0
@@ -362,23 +414,18 @@ func testVerify(t *testing.T, tt *verifyTestCase) {
 		tokenSourceFunc(tt.keyring, tt.keyringErr, &keyringCreated),
 		tokenSourceFunc(tt.ghtkn, nil, &ghtknCreated))
 	e.wait = func(context.Context, *slog.Logger, int) error { return nil }
+	stderr := &strings.Builder{}
+	e.stderr = stderr
 	for i, call := range tt.calls {
 		exe.outputs = call.outputs
 		exe.tokens = nil
+		stderr.Reset()
 		err := e.Verify(t.Context(), slog.New(slog.DiscardHandler), &ParamVerify{
 			ArtifactPath: "foo",
 			Repository:   "foo/bar",
 			Private:      call.private,
 		})
-		if call.wantErr && err == nil {
-			t.Fatalf("call %d: error must be returned", i)
-		}
-		if !call.wantErr && err != nil {
-			t.Fatalf("call %d: unexpected error: %v", i, err)
-		}
-		if !slices.Equal(exe.tokens, call.tokens) {
-			t.Fatalf("call %d: tokens = %v, wanted %v", i, exe.tokens, call.tokens)
-		}
+		checkVerifyCall(t, i, &call, err, exe.tokens, stderr.String())
 	}
 	if exe.authCount > 1 {
 		t.Fatalf("gh auth token must be run at most once, but it was run %d times", exe.authCount)
@@ -403,8 +450,9 @@ func TestFailure_String(t *testing.T) {
 		failureInvalidToken:  "invalid_token",
 		failureRateLimit:     "rate_limit",
 		failurePermission:    "permission",
+		failureUnknown:       "unknown",
 		failureAuth:          "auth",
-		failureAuth + 1:      "unknown",
+		failureAuth + 1:      "invalid",
 	}
 	for f, exp := range data {
 		if got := f.String(); got != exp {

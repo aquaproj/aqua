@@ -25,7 +25,6 @@ import (
 
 type CommandExecutor interface {
 	Exec(cmd *exec.Cmd) (int, error)
-	ExecStderrAndGetCombinedOutput(cmd *exec.Cmd) (string, int, error)
 }
 
 type Executor interface {
@@ -41,6 +40,9 @@ type ExecutorImpl struct {
 	aquaCredential    *credential
 	keyringCredential *credential
 	ghtknCredential   *credential
+
+	// stderr is where the output of GitHub CLI is written. It's replaced in tests.
+	stderr io.Writer
 
 	// wait waits before retrying. It's replaced in tests.
 	wait func(ctx context.Context, logger *slog.Logger, retryCount int) error
@@ -65,7 +67,10 @@ func NewExecutor(executor CommandExecutor, param *config.Param) (*ExecutorImpl, 
 	if err != nil {
 		return nil, fmt.Errorf("get an executable file path of GitHub CLI: %w", err)
 	}
-	return newExecutor(executor, exePath, os.Getenv, os.Environ, github.NewKeyringTokenSource, github.NewGhtknTokenSource), nil
+	newKeyringTokenSource := func(logger *slog.Logger) (oauth2.TokenSource, error) {
+		return github.NewKeyringTokenSource(logger), nil
+	}
+	return newExecutor(executor, exePath, os.Getenv, os.Environ, newKeyringTokenSource, github.NewGhtknTokenSource), nil
 }
 
 type newTokenSource func(logger *slog.Logger) (oauth2.TokenSource, error)
@@ -76,6 +81,7 @@ func newExecutor(executor CommandExecutor, exePath string, getEnv func(string) s
 		exePath:      exePath,
 		getEnv:       getEnv,
 		environ:      environ,
+		stderr:       os.Stderr,
 		wait:         wait,
 		disabledKeys: map[string]struct{}{},
 		aquaCredential: &credential{
@@ -128,6 +134,20 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logger *slog.Logger, param *P
 	args := param.args()
 
 	state := &verifyState{triedKeys: map[string]struct{}{}}
+	err := e.verify(ctx, logger, args, param, state)
+	// The output of GitHub CLI is written after all attempts,
+	// so that the failures of attempts before a successful one aren't shown.
+	if err == nil {
+		fmt.Fprint(e.stderr, state.successOutput)
+		return nil
+	}
+	for _, out := range state.outputs {
+		fmt.Fprint(e.stderr, out)
+	}
+	return err
+}
+
+func (e *ExecutorImpl) verify(ctx context.Context, logger *slog.Logger, args []string, param *ParamVerify, state *verifyState) error {
 	for _, getCandidate := range e.candidates(ctx) {
 		cand, ok := getCandidate(logger)
 		if !ok || e.isDisabled(cand.key) || state.tried(cand.key) {
@@ -179,6 +199,10 @@ type verifyState struct {
 	triedKeys map[string]struct{}
 	// executed is true if gh attestation verify has been run at least once.
 	executed bool
+	// outputs are the outputs of failed attempts.
+	outputs []string
+	// successOutput is the output of the successful attempt.
+	successOutput string
 }
 
 // tried returns true if the access token has already been tried in the Verify call.
@@ -199,8 +223,10 @@ func (e *ExecutorImpl) runWithRetry(ctx context.Context, logger *slog.Logger, ar
 	for {
 		out, err := e.run(ctx, args, cand.token)
 		if err == nil {
+			state.successOutput = out
 			return failureNone, nil
 		}
+		state.outputs = append(state.outputs, out)
 		f := classify(out)
 		slogerr.WithError(logger, err).Warn("execute gh attestation verify",
 			"exe", e.exePath,
@@ -227,6 +253,9 @@ func (e *ExecutorImpl) handleFailure(logger *slog.Logger, cand candidate, f fail
 	switch f { //nolint:exhaustive
 	case failureVerification, failureNoAttestation:
 		// Changing the access token doesn't change the result.
+		return true
+	case failureUnknown:
+		// It may be deterministic, so other credentials aren't tried.
 		return true
 	case failureNotFound:
 		// Attestations of a public repository can be read without any access token,
@@ -336,8 +365,13 @@ func (e *ExecutorImpl) command(ctx context.Context, args []string, token string)
 }
 
 // run runs GitHub CLI and returns the combined output and the error.
+// The output isn't written to the terminal here. Verify writes it after all attempts.
 // token is passed to GitHub CLI as GH_TOKEN. It's ignored if it's empty.
 func (e *ExecutorImpl) run(ctx context.Context, args []string, token string) (string, error) {
-	out, _, err := e.executor.ExecStderrAndGetCombinedOutput(e.command(ctx, args, token))
-	return out, err //nolint:wrapcheck
+	cmd := e.command(ctx, args, token)
+	out := &bytes.Buffer{}
+	cmd.Stdout = out
+	cmd.Stderr = out
+	_, err := e.executor.Exec(cmd)
+	return out.String(), err
 }

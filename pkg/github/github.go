@@ -62,7 +62,7 @@ func getHTTPClientForGitHub(ctx context.Context, logger *slog.Logger, token stri
 			&oauth2.Token{AccessToken: token},
 		)), nil
 	}
-	ts, err := NewTokenSource(logger)
+	ts, err := newTokenSource(logger)
 	if err != nil {
 		return nil, err
 	}
@@ -72,24 +72,24 @@ func getHTTPClientForGitHub(ctx context.Context, logger *slog.Logger, token stri
 	return oauth2.NewClient(ctx, ts), nil
 }
 
-// NewTokenSource returns a token source getting a GitHub access token from the keyring or ghtkn.
+// newTokenSource returns a token source getting a GitHub access token from the keyring or ghtkn.
 // It doesn't read environment variables such as GITHUB_TOKEN.
 // The keyring takes precedence over ghtkn.
 // It returns nil if neither the keyring nor ghtkn is enabled.
-func NewTokenSource(logger *slog.Logger) (oauth2.TokenSource, error) {
-	if ts, err := NewKeyringTokenSource(logger); ts != nil || err != nil {
-		return ts, err
+func newTokenSource(logger *slog.Logger) (oauth2.TokenSource, error) {
+	if ts := NewKeyringTokenSource(logger); ts != nil {
+		return ts, nil
 	}
 	return NewGhtknTokenSource(logger)
 }
 
 // NewKeyringTokenSource returns a token source getting a GitHub access token from the keyring.
 // It returns nil if the keyring isn't enabled.
-func NewKeyringTokenSource(logger *slog.Logger) (oauth2.TokenSource, error) {
+func NewKeyringTokenSource(logger *slog.Logger) oauth2.TokenSource {
 	if !keyring.Enabled() {
-		return nil, nil //nolint:nilnil
+		return nil
 	}
-	return ghtoken.NewTokenSource(logger, keyring.KeyService), nil
+	return ghtoken.NewTokenSource(logger, keyring.KeyService)
 }
 
 // NewGhtknTokenSource returns a token source getting a GitHub access token from ghtkn.

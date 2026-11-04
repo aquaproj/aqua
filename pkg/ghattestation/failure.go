@@ -14,7 +14,6 @@ const (
 	failureNone failure = iota
 	// failureTemporary is a temporary failure such as network errors and HTTP 5xx.
 	// GitHub CLI itself retries HTTP 5xx up to 3 times.
-	// Unknown failures are also treated as temporary.
 	failureTemporary
 	// failureVerification means the verification failed. Changing the access token doesn't change the result.
 	failureVerification
@@ -30,6 +29,9 @@ const (
 	// failurePermission is HTTP 403 other than the rate limit (e.g. SAML SSO enforcement).
 	// It may depend on the repository, so the access token is still used for other packages.
 	failurePermission
+	// failureUnknown is an unknown failure.
+	// It may be deterministic (e.g. invalid flags), so it fails immediately without retries and other credentials.
+	failureUnknown
 	// failureAuth means GitHub CLI requires the authentication.
 	// GH_HOST makes GitHub CLI skip the authentication check, so this rarely happens.
 	// The next credential is tried, and the verification fails if all credentials fail.
@@ -47,13 +49,20 @@ func (f failure) String() string {
 		"invalid_token",
 		"rate_limit",
 		"permission",
+		"unknown",
 		"auth",
 	}
 	if f < 0 || int(f) >= len(names) {
-		return "unknown"
+		return "invalid"
 	}
 	return names[f]
 }
+
+// temporaryPattern matches temporary failures.
+// e.g.
+// HTTP 502: Bad Gateway (https://api.github.com/...)
+// dial tcp: lookup api.github.com: no such host
+var temporaryPattern = regexp.MustCompile(`HTTP 5\d\d|dial tcp|i/o timeout|TLS handshake timeout|connection reset|connection refused|no such host|context deadline exceeded|unexpected EOF`)
 
 // e.g. expected SourceRepositoryURI to be https://github.com/foo/bar, got https://github.com/foo/baz
 var certExtensionMismatch = regexp.MustCompile(`expected \w+ to be .*, got `)
@@ -85,7 +94,9 @@ func classifyHTTP(out string) failure {
 	// This is checked after HTTP errors, because GitHub CLI may output the hint `gh auth login` with them.
 	case strings.Contains(out, "gh auth login"), strings.Contains(out, "set the GH_TOKEN environment variable"):
 		return failureAuth
-	default:
+	case temporaryPattern.MatchString(out):
 		return failureTemporary
+	default:
+		return failureUnknown
 	}
 }
