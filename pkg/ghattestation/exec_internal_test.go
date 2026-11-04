@@ -312,10 +312,10 @@ func verifyTestCases() []*verifyTestCase { //nolint:funlen
 			},
 		},
 		{
-			name:      "the authentication error at last skips the verification",
+			name:      "the authentication error doesn't skip the verification",
 			aquaToken: "aqua",
 			calls: []verifyCall{
-				{outputs: []string{outInvalidToken, outAuth}, tokens: []string{"aqua", noToken}},
+				{outputs: []string{outInvalidToken, outAuth}, wantErr: true, tokens: []string{"aqua", noToken}},
 			},
 		},
 		{

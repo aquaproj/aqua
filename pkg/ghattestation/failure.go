@@ -31,6 +31,8 @@ const (
 	// It may depend on the repository, so the access token is still used for other packages.
 	failurePermission
 	// failureAuth means GitHub CLI requires the authentication.
+	// GH_HOST makes GitHub CLI skip the authentication check, so this rarely happens.
+	// The next credential is tried, and the verification fails if all credentials fail.
 	failureAuth
 )
 

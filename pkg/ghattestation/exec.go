@@ -104,21 +104,13 @@ func wait(ctx context.Context, logger *slog.Logger, retryCount int) error {
 	return nil
 }
 
-type AuthError struct {
-	err error
-}
-
-func (e *AuthError) Error() string {
-	return e.err.Error()
-}
-
-func (e *AuthError) Unwrap() error {
-	return e.err
-}
+// docVerify is the document of errors of the verification.
+// It describes how to solve them, such as passing a GitHub access token.
+const docVerify = "https://aquaproj.github.io/docs/reference/codes/008"
 
 var (
-	errVerify       = errors.New("verify GitHub Artifact Attestations")
-	errNoCredential = errors.New("no GitHub access token is available for gh attestation verify")
+	errVerify       = slogerr.With(errors.New("verify GitHub Artifact Attestations"), "doc", docVerify)
+	errNoCredential = slogerr.With(errors.New("no GitHub access token is available for gh attestation verify"), "doc", docVerify)
 )
 
 // maxRetries is the maximum number of retries for temporary errors per Verify call.
@@ -148,20 +140,16 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logger *slog.Logger, param *P
 			return nil
 		}
 		if stop := e.handleFailure(logger, cand, f, param.Private); stop {
-			return errVerify
+			return errVerify //nolint:wrapcheck
 		}
 		// Try the next credential.
 	}
-	if state.lastErr == nil {
-		return errNoCredential
+	if !state.executed {
+		return errNoCredential //nolint:wrapcheck
 	}
-	if state.lastFailure == failureAuth {
-		// https://github.com/aquaproj/aqua/issues/3157
-		// Ignore error if authentifaction fails
-		slogerr.WithError(logger, &AuthError{err: state.lastErr}).Warn("skip verifying GitHub Artifact Attestations because of the authentication error")
-		return nil
-	}
-	return errVerify
+	// The verification isn't skipped even if all credentials fail because of the authentication.
+	// Otherwise, packages would be installed without the verification.
+	return errVerify //nolint:wrapcheck
 }
 
 // args returns the arguments of gh attestation verify.
@@ -187,9 +175,9 @@ type verifyState struct {
 	// retries is the number of retries for temporary errors.
 	retries int
 	// triedKeys are keys of access tokens tried in the Verify call.
-	triedKeys   map[string]struct{}
-	lastErr     error
-	lastFailure failure
+	triedKeys map[string]struct{}
+	// executed is true if gh attestation verify has been run at least once.
+	executed bool
 }
 
 // tried returns true if the access token has already been tried in the Verify call.
@@ -217,13 +205,12 @@ func (e *ExecutorImpl) runWithRetry(ctx context.Context, logger *slog.Logger, ar
 			"args", strings.Join(args, " "),
 			"credential", cand.name,
 			"failure", f.String())
-		state.lastErr = err
-		state.lastFailure = f
+		state.executed = true
 		if f != failureTemporary {
 			return f, nil
 		}
 		if state.retries >= maxRetries {
-			return f, errVerify
+			return f, errVerify //nolint:wrapcheck
 		}
 		state.retries++
 		if err := e.wait(ctx, logger, state.retries); err != nil {
