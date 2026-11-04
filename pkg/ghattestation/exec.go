@@ -34,7 +34,6 @@ type Executor interface {
 type ExecutorImpl struct {
 	executor CommandExecutor
 	exePath  string
-	getEnv   func(string) string
 	environ  func() []string
 
 	aquaCredential    *credential
@@ -81,7 +80,6 @@ func newExecutor(executor CommandExecutor, exePath string, getEnv func(string) s
 	return &ExecutorImpl{
 		executor:     executor,
 		exePath:      exePath,
-		getEnv:       getEnv,
 		environ:      environ,
 		stderr:       os.Stderr,
 		wait:         wait,

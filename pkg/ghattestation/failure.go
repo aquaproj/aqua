@@ -66,7 +66,11 @@ func (f failure) String() string {
 // dial tcp: lookup api.github.com: no such host
 // net/http: request canceled (Client.Timeout exceeded while awaiting headers)
 // http2: server sent GOAWAY and closed the connection
-var temporaryPattern = regexp.MustCompile(`(?m)HTTP 5\d\d|status code 5\d\d|request to fetch bundle from URL failed|dial tcp|i/o timeout|TLS handshake timeout|Client\.Timeout exceeded|connection reset|connection refused|no such host|GOAWAY|context deadline exceeded|EOF$`)
+// Failures of initializing Sigstore verifiers, which fetch the trusted root via TUF:
+// error creating Sigstore verifier: no valid Sigstore verifiers could be initialized
+// public good verifier is not available (initialization may have failed)
+// failed to create TUF client: ...
+var temporaryPattern = regexp.MustCompile(`(?m)HTTP 5\d\d|status code 5\d\d|request to fetch bundle from URL failed|dial tcp|i/o timeout|TLS handshake timeout|Client\.Timeout exceeded|connection reset|connection refused|no such host|GOAWAY|context deadline exceeded|EOF$|error creating Sigstore verifier|no valid Sigstore verifiers could be initialized|initialization may have failed|failed to create TUF client`)
 
 // e.g. expected SourceRepositoryURI to be https://github.com/foo/bar, got https://github.com/foo/baz
 var certExtensionMismatch = regexp.MustCompile(`expected \w+ to be .*, got `)

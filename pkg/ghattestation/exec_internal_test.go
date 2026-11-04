@@ -134,6 +134,9 @@ func TestClassify(t *testing.T) {
 		{"Error: http2: server sent GOAWAY and closed the connection", failureTemporary},
 		{"Error: Get \"https://api.github.com/...\": EOF\n", failureTemporary},
 		{"Error: unexpected EOF", failureTemporary},
+		{"Error: error creating Sigstore verifier: no valid Sigstore verifiers could be initialized", failureTemporary},
+		{"Error: failed to choose verifier based on provided bundle issuer: public good verifier is not available (initialization may have failed)", failureTemporary},
+		{"Error: failed to create TUF client: connection failed", failureTemporary},
 		{"Error: the EOF marker is invalid", failureUnknown},
 		{outInvalidToken + "\nTry authenticating with:  gh auth login", failureInvalidToken},
 	}
