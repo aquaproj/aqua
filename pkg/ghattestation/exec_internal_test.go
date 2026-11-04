@@ -178,7 +178,7 @@ func verifyTestCases() []*verifyTestCase { //nolint:funlen
 			aquaToken:     "aqua",
 			ghtkn:         &countTokenSource{token: "ghtkn"},
 			calls: []verifyCall{
-				{tokens: []string{noToken}},
+				{tokens: []string{noToken}, stderr: outSuccess},
 			},
 		},
 		{
