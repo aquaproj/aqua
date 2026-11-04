@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"math/rand/v2"
 	"os"
@@ -22,6 +23,7 @@ import (
 )
 
 type CommandExecutor interface {
+	Exec(cmd *exec.Cmd) (int, error)
 	ExecStderrAndGetCombinedOutput(cmd *exec.Cmd) (string, int, error)
 }
 
@@ -34,15 +36,19 @@ type ExecutorImpl struct {
 	exePath  string
 	getEnv   func(string) string
 	environ  func() []string
-	// newTokenSource creates a token source getting a GitHub access token from the keyring or ghtkn.
-	newTokenSource func(logger *slog.Logger) (oauth2.TokenSource, error)
-	tokenMutex     sync.Mutex
-	tokenSource    oauth2.TokenSource
-	// tokenSourceCreated is true if newTokenSource has already been called.
-	tokenSourceCreated bool
-	// tokenDisabled is true if the token from the keyring or ghtkn is unavailable or invalid.
-	// Then GitHub CLI is run without the token for the rest of the process.
-	tokenDisabled bool
+
+	// ghCredential is GitHub CLI's own credential (GH_TOKEN, GITHUB_TOKEN, or `gh auth login`).
+	ghCredential      *credential
+	aquaCredential    *credential
+	keyringCredential *credential
+	ghtknCredential   *credential
+
+	// wait waits before retrying. It's replaced in tests.
+	wait func(ctx context.Context, logger *slog.Logger, retryCount int) error
+
+	authOnce sync.Once
+	// authenticated is true if GitHub CLI has its own credential.
+	authenticated bool
 }
 
 func NewExecutor(executor CommandExecutor, param *config.Param) (*ExecutorImpl, error) {
@@ -53,13 +59,32 @@ func NewExecutor(executor CommandExecutor, param *config.Param) (*ExecutorImpl, 
 	if err != nil {
 		return nil, fmt.Errorf("get an executable file path of GitHub CLI: %w", err)
 	}
+	return newExecutor(executor, exePath, os.Getenv, os.Environ, github.NewKeyringTokenSource, github.NewGhtknTokenSource), nil
+}
+
+type newTokenSource func(logger *slog.Logger) (oauth2.TokenSource, error)
+
+func newExecutor(executor CommandExecutor, exePath string, getEnv func(string) string, environ func() []string, newKeyringTokenSource, newGhtknTokenSource newTokenSource) *ExecutorImpl {
 	return &ExecutorImpl{
-		executor:       executor,
-		exePath:        exePath,
-		getEnv:         os.Getenv,
-		environ:        os.Environ,
-		newTokenSource: github.NewTokenSource,
-	}, nil
+		executor:     executor,
+		exePath:      exePath,
+		getEnv:       getEnv,
+		environ:      environ,
+		wait:         wait,
+		ghCredential: &credential{name: "gh"},
+		aquaCredential: &credential{
+			name: "AQUA_GITHUB_TOKEN",
+			newTokenSource: func(_ *slog.Logger) (oauth2.TokenSource, error) {
+				token := getEnv("AQUA_GITHUB_TOKEN")
+				if token == "" {
+					return nil, nil
+				}
+				return oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token}), nil
+			},
+		},
+		keyringCredential: &credential{name: "keyring", newTokenSource: newKeyringTokenSource},
+		ghtknCredential:   &credential{name: "ghtkn", newTokenSource: newGhtknTokenSource},
+	}
 }
 
 func wait(ctx context.Context, logger *slog.Logger, retryCount int) error {
@@ -85,7 +110,14 @@ func (e *AuthError) Unwrap() error {
 	return e.err
 }
 
-var errVerify = errors.New("verify GitHub Artifact Attestations")
+var (
+	errVerify       = errors.New("verify GitHub Artifact Attestations")
+	errNoCredential = errors.New("no GitHub access token is available for gh attestation verify")
+)
+
+// maxRetries is the maximum number of retries for temporary errors per Verify call.
+// It's shared among credentials so that the number of gh executions is bounded.
+const maxRetries = 4
 
 func (e *ExecutorImpl) Verify(ctx context.Context, logger *slog.Logger, param *ParamVerify) error {
 	/*
@@ -94,143 +126,160 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logger *slog.Logger, param *P
 		  --signer-workflow suzuki-shunsuke/test-github-artifact-attestation/.github/workflows/release.yaml
 	*/
 
-	args := []string{
-		"attestation",
-		"verify",
-		param.ArtifactPath,
-		"-R",
-		param.Repository,
-	}
-	if param.SignerWorkflow != "" {
-		args = append(args, "--signer-workflow", unescapeSignerWorkflow(param.SignerWorkflow))
-	}
-	if param.PredicateType != "" {
-		args = append(args, "--predicate-type", param.PredicateType)
-	}
-	args = append(args, param.certificateArgs()...)
-	for i := range 5 {
-		err := e.exec(ctx, logger, args)
-		if err == nil {
-			return nil
+	args := param.args()
+
+	state := &verifyState{triedTokens: map[string]struct{}{}}
+	for _, cred := range e.credentials(ctx) {
+		token, ok := cred.token(logger)
+		if !ok || state.tried(token) {
+			continue
 		}
-		ae := &AuthError{}
-		if errors.As(err, &ae) {
-			slogerr.WithError(logger, err).Warn("skip verifying GitHub Artifact Attestations because of the authentication error")
-			return nil
-		}
-		slogerr.WithError(logger, err).Warn("execute gh attestation verify",
-			"exe", e.exePath,
-			"args", strings.Join(args, " "))
-		if i == 4 { //nolint:mnd
-			break
-		}
-		if err := wait(ctx, logger, i+1); err != nil {
+		f, err := e.runWithRetry(ctx, logger, args, cred, token, state)
+		if err != nil {
 			return err
 		}
+		if f == failureNone {
+			return nil
+		}
+		if stop := e.handleFailure(logger, cred, f, param.Private); stop {
+			return errVerify
+		}
+		// Try the next credential.
+	}
+	if state.lastErr == nil {
+		return errNoCredential
+	}
+	if state.lastFailure == failureAuth {
+		// https://github.com/aquaproj/aqua/issues/3157
+		// Ignore error if authentifaction fails
+		slogerr.WithError(logger, &AuthError{err: state.lastErr}).Warn("skip verifying GitHub Artifact Attestations because of the authentication error")
+		return nil
 	}
 	return errVerify
 }
 
-// getToken returns a GitHub access token from the keyring or ghtkn.
-// It returns an empty string if neither the keyring nor ghtkn is enabled.
-// If it fails to get a token, it outputs a warning and disables the token for the rest of the process,
-// so that it doesn't try to get a token and output the same warning for every package and retry.
-func (e *ExecutorImpl) getToken(logger *slog.Logger) string {
-	e.tokenMutex.Lock()
-	defer e.tokenMutex.Unlock()
-	if e.tokenDisabled || e.newTokenSource == nil {
-		return ""
+// args returns the arguments of gh attestation verify.
+func (p *ParamVerify) args() []string {
+	args := []string{
+		"attestation",
+		"verify",
+		p.ArtifactPath,
+		"-R",
+		p.Repository,
 	}
-	if !e.tokenSourceCreated {
-		e.tokenSourceCreated = true
-		ts, err := e.newTokenSource(logger)
-		if err != nil {
-			e.tokenDisabled = true
-			slogerr.WithError(logger, err).Warn("create a token source for GitHub CLI")
-			return ""
-		}
-		e.tokenSource = ts
+	if p.SignerWorkflow != "" {
+		args = append(args, "--signer-workflow", unescapeSignerWorkflow(p.SignerWorkflow))
 	}
-	if e.tokenSource == nil {
-		return ""
+	if p.PredicateType != "" {
+		args = append(args, "--predicate-type", p.PredicateType)
 	}
-	// Both the keyring and ghtkn token sources cache the token, so this doesn't call any API every time.
-	token, err := e.tokenSource.Token()
-	if err != nil {
-		e.tokenDisabled = true
-		slogerr.WithError(logger, err).Warn("get a GitHub access token for GitHub CLI")
-		return ""
-	}
-	return token.AccessToken
+	return append(args, p.certificateArgs()...)
 }
 
-// disableToken disables the token from the keyring or ghtkn for the rest of the process.
-// It returns true if the token has been enabled until now.
-// The return value is used to output a warning only once even if gh is run concurrently.
-func (e *ExecutorImpl) disableToken() bool {
-	e.tokenMutex.Lock()
-	defer e.tokenMutex.Unlock()
-	if e.tokenDisabled {
+// verifyState is the state of a Verify call.
+type verifyState struct {
+	// retries is the number of retries for temporary errors.
+	retries     int
+	triedTokens map[string]struct{}
+	lastErr     error
+	lastFailure failure
+}
+
+// tried returns true if token has already been tried in the Verify call.
+// It records token otherwise.
+// An empty token (GitHub CLI's own credential) is never regarded as tried.
+func (s *verifyState) tried(token string) bool {
+	if token == "" {
 		return false
 	}
-	e.tokenDisabled = true
-	return true
+	if _, ok := s.triedTokens[token]; ok {
+		return true
+	}
+	s.triedTokens[token] = struct{}{}
+	return false
 }
 
-// tokenEnv returns an environment variable to pass a GitHub access token to GitHub CLI.
-// It returns an empty string if GITHUB_TOKEN or GH_TOKEN is set, because GitHub CLI reads them.
-// fromStore is true if the token is got from the keyring or ghtkn.
-func (e *ExecutorImpl) tokenEnv(logger *slog.Logger) (env string, fromStore bool) {
-	if e.getEnv("GITHUB_TOKEN") != "" || e.getEnv("GH_TOKEN") != "" {
-		return "", false
-	}
-	if token := e.getEnv("AQUA_GITHUB_TOKEN"); token != "" {
-		return "GITHUB_TOKEN=" + token, false
-	}
-	// Pass a GitHub access token from the keyring or ghtkn.
-	// Otherwise, GitHub CLI calls GitHub API without an access token
-	// (GH_HOST makes GitHub CLI skip the authentication check),
-	// which easily hits the rate limit of unauthenticated requests.
-	token := e.getToken(logger)
-	if token == "" {
-		return "", false
-	}
-	return "GH_TOKEN=" + token, true
-}
-
-// isTokenError returns true if GitHub CLI fails because of the token itself.
-// 401 means the token is invalid (e.g. revoked or expired).
-// 403 means the token lacks the permission (e.g. SAML SSO enforcement).
-// 404 isn't included because it can't be distinguished from the case where attestations don't exist.
-func isTokenError(out string) bool {
-	return strings.Contains(out, "HTTP 401") || strings.Contains(out, "HTTP 403") || strings.Contains(out, "Bad credentials")
-}
-
-func (e *ExecutorImpl) exec(ctx context.Context, logger *slog.Logger, args []string) error {
-	env, fromStore := e.tokenEnv(logger)
-	out, err := e.run(ctx, args, env)
-	if err == nil {
-		return nil
-	}
-	if fromStore && isTokenError(out) {
-		// GH_TOKEN takes precedence over the credential stored by `gh auth login`,
-		// so the token from the keyring or ghtkn may be invalid or lack the permission GitHub CLI had before.
-		// Run GitHub CLI without the token from now on, as aqua did before it passed the token.
-		// Other errors (e.g. verification failures and temporary errors) are retried with the token by Verify.
-		if e.disableToken() {
-			slogerr.WithError(logger, err).Warn("gh attestation verify failed with the GitHub access token from the keyring or ghtkn, so run GitHub CLI without it")
-		}
-		out, err = e.run(ctx, args, "")
+// runWithRetry runs gh attestation verify with token, retrying temporary errors.
+// It returns failureNone if the verification succeeds.
+// It returns an error if the retries are exhausted or the wait is canceled.
+func (e *ExecutorImpl) runWithRetry(ctx context.Context, logger *slog.Logger, args []string, cred *credential, token string, state *verifyState) (failure, error) {
+	for {
+		out, err := e.run(ctx, args, token)
 		if err == nil {
-			return nil
+			return failureNone, nil
+		}
+		f := classify(out)
+		slogerr.WithError(logger, err).Warn("execute gh attestation verify",
+			"exe", e.exePath,
+			"args", strings.Join(args, " "),
+			"credential", cred.name,
+			"failure", f.String())
+		state.lastErr = err
+		state.lastFailure = f
+		if f != failureTemporary {
+			return f, nil
+		}
+		if state.retries >= maxRetries {
+			return f, errVerify
+		}
+		state.retries++
+		if err := e.wait(ctx, logger, state.retries); err != nil {
+			return f, err
 		}
 	}
-	return toAuthError(out, err)
 }
 
-// run runs GitHub CLI and returns the combined output and the error.
-// tokenEnv is an environment variable to pass a GitHub access token. It's ignored if it's empty.
-func (e *ExecutorImpl) run(ctx context.Context, args []string, tokenEnv string) (string, error) {
+// handleFailure handles a failure with a credential.
+// It returns true if the verification should fail without trying other credentials.
+func (e *ExecutorImpl) handleFailure(logger *slog.Logger, cred *credential, f failure, private bool) bool {
+	switch f { //nolint:exhaustive
+	case failureVerification, failureNoAttestation:
+		// Changing the access token doesn't change the result.
+		return true
+	case failureNotFound:
+		// Attestations of a public repository can be read without any access token,
+		// so changing the access token doesn't change the result.
+		// For a private package, 404 may be caused by the lack of the permission.
+		return !private
+	case failureInvalidToken, failureRateLimit:
+		// The credential would fail for other packages too.
+		if cred.disable() {
+			logger.Warn("stop using the GitHub access token for gh attestation verify",
+				"credential", cred.name,
+				"failure", f.String())
+		}
+	}
+	return false
+}
+
+// credentials returns credentials in the order of precedence.
+// If GitHub CLI has its own credential, it's used first as is.
+// Otherwise, GitHub CLI is run without any access token at last.
+// Then GitHub CLI calls GitHub API without an access token
+// (GH_HOST makes GitHub CLI skip the authentication check),
+// which works for public repositories but easily hits the rate limit.
+func (e *ExecutorImpl) credentials(ctx context.Context) []*credential {
+	if e.isAuthenticated(ctx) {
+		return []*credential{e.ghCredential, e.aquaCredential, e.keyringCredential, e.ghtknCredential}
+	}
+	return []*credential{e.aquaCredential, e.keyringCredential, e.ghtknCredential, e.ghCredential}
+}
+
+// isAuthenticated returns true if GitHub CLI has its own credential.
+// It runs `gh auth token`, which doesn't call any API, only once.
+// The output is discarded so that the access token isn't leaked.
+func (e *ExecutorImpl) isAuthenticated(ctx context.Context) bool {
+	e.authOnce.Do(func() {
+		cmd := e.command(ctx, []string{"auth", "token", "--hostname", "github.com"}, "")
+		cmd.Stdout = io.Discard
+		cmd.Stderr = io.Discard
+		_, err := e.executor.Exec(cmd)
+		e.authenticated = err == nil
+	})
+	return e.authenticated
+}
+
+func (e *ExecutorImpl) command(ctx context.Context, args []string, token string) *exec.Cmd {
 	cmd := osexec.Command(ctx, e.exePath, args...)
 	cmd.Args[0] = "gh"
 
@@ -242,20 +291,17 @@ func (e *ExecutorImpl) run(ctx context.Context, args []string, tokenEnv string) 
 		cmd.Env = e.environ()
 	}
 	cmd.Env = append(cmd.Env, "GH_HOST=github.com")
-	if tokenEnv != "" {
-		cmd.Env = append(cmd.Env, tokenEnv)
+	if token != "" {
+		// GH_TOKEN takes precedence over GITHUB_TOKEN and the credential stored by `gh auth login`.
+		// If the same key is set multiple times, the last one is used.
+		cmd.Env = append(cmd.Env, "GH_TOKEN="+token)
 	}
-
-	out, _, err := e.executor.ExecStderrAndGetCombinedOutput(cmd)
-	return out, err //nolint:wrapcheck
+	return cmd
 }
 
-// toAuthError converts err to AuthError if GitHub CLI fails because of the authentication.
-func toAuthError(out string, err error) error {
-	// https://github.com/aquaproj/aqua/issues/3157
-	// Ignore error if authentifaction fails
-	if strings.Contains(out, "gh auth login") || strings.Contains(out, "set the GH_TOKEN environment variable") {
-		return &AuthError{err: err}
-	}
-	return err
+// run runs GitHub CLI and returns the combined output and the error.
+// token is passed to GitHub CLI as GH_TOKEN. It's ignored if it's empty.
+func (e *ExecutorImpl) run(ctx context.Context, args []string, token string) (string, error) {
+	out, _, err := e.executor.ExecStderrAndGetCombinedOutput(e.command(ctx, args, token))
+	return out, err //nolint:wrapcheck
 }

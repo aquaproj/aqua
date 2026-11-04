@@ -1,0 +1,354 @@
+package ghattestation
+
+import (
+	"context"
+	"errors"
+	"log/slog"
+	"os/exec"
+	"slices"
+	"strings"
+	"testing"
+
+	"golang.org/x/oauth2"
+)
+
+// noToken means gh is run without GH_TOKEN.
+const noToken = "<none>"
+
+type fakeExecutor struct {
+	authenticated bool
+	authCount     int
+	// outputs are returned by gh attestation verify in order.
+	// An empty string means success.
+	outputs []string
+	// tokens are GH_TOKEN passed to each gh attestation verify.
+	tokens []string
+}
+
+func (f *fakeExecutor) Exec(_ *exec.Cmd) (int, error) {
+	f.authCount++
+	if f.authenticated {
+		return 0, nil
+	}
+	return 1, errors.New("exit status 1")
+}
+
+func (f *fakeExecutor) ExecStderrAndGetCombinedOutput(cmd *exec.Cmd) (string, int, error) {
+	token := noToken
+	for _, env := range cmd.Env {
+		if t, ok := strings.CutPrefix(env, "GH_TOKEN="); ok {
+			token = t
+		}
+	}
+	f.tokens = append(f.tokens, token)
+	if len(f.outputs) == 0 {
+		return "", 0, nil
+	}
+	out := f.outputs[0]
+	f.outputs = f.outputs[1:]
+	if out == "" {
+		return "", 0, nil
+	}
+	return out, 1, errors.New("exit status 1")
+}
+
+type countTokenSource struct {
+	token string
+	err   error
+	count int
+}
+
+func (c *countTokenSource) Token() (*oauth2.Token, error) {
+	c.count++
+	if c.err != nil {
+		return nil, c.err
+	}
+	return &oauth2.Token{AccessToken: c.token}, nil
+}
+
+// tokenSourceFunc returns newTokenSource returning ts.
+// nil ts means the credential isn't enabled.
+func tokenSourceFunc(ts *countTokenSource, err error, count *int) newTokenSource {
+	return func(_ *slog.Logger) (oauth2.TokenSource, error) {
+		*count++
+		if err != nil {
+			return nil, err
+		}
+		if ts == nil {
+			return nil, nil
+		}
+		return ts, nil
+	}
+}
+
+const (
+	outInvalidToken = "Error: HTTP 401: Bad credentials (https://api.github.com/repos/foo/bar/attestations/sha256:xxx)" //nolint:gosec // This is an output of GitHub CLI, not a credential.
+	outNotFound     = "Error: HTTP 404: Not Found (https://api.github.com/repos/foo/bar/attestations/sha256:xxx)"
+	outNoAtt        = "Error: no attestations found"
+	outVerification = `Error: verifying with issuer "sigstore.dev"`
+	outRateLimit    = "Error: HTTP 403: API rate limit exceeded for 192.0.2.1. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.) (https://api.github.com/repos/foo/bar/attestations/sha256:xxx)"
+	outSAML         = "Error: HTTP 403: Resource protected by organization SAML enforcement. You must grant your Personal Access token access to this organization. (https://api.github.com/repos/foo/bar/attestations/sha256:xxx)"
+	outTemporary    = "Error: HTTP 502: Bad Gateway (https://api.github.com/repos/foo/bar/attestations/sha256:xxx)"
+	outAuth         = "To get started with GitHub CLI, please run:  gh auth login"
+)
+
+func TestClassify(t *testing.T) {
+	t.Parallel()
+	data := []struct {
+		out string
+		exp failure
+	}{
+		{outInvalidToken, failureInvalidToken},
+		{outNotFound, failureNotFound},
+		{outNoAtt, failureNoAttestation},
+		{outVerification, failureVerification},
+		{"Error: expected SourceRepositoryURI to be https://github.com/foo/bar, got https://github.com/foo/baz", failureVerification},
+		{outRateLimit, failureRateLimit},
+		{"Error: HTTP 429: You have exceeded a secondary rate limit. (https://api.github.com/...)", failureRateLimit},
+		{"Error: HTTP 403: You have exceeded a secondary rate limit. (https://api.github.com/...)", failureRateLimit},
+		{outSAML, failurePermission},
+		{outTemporary, failureTemporary},
+		{"dial tcp: lookup api.github.com: no such host", failureTemporary},
+		{outAuth, failureAuth},
+	}
+	for _, d := range data {
+		if got := classify(d.out); got != d.exp {
+			t.Errorf("classify(%q) = %s, wanted %s", d.out, got, d.exp)
+		}
+	}
+}
+
+type verifyCall struct {
+	private bool
+	outputs []string
+	wantErr bool
+	// tokens are the expected GH_TOKEN passed to each gh attestation verify.
+	tokens []string
+}
+
+type verifyTestCase struct {
+	name          string
+	authenticated bool
+	aquaToken     string
+	keyring       *countTokenSource
+	keyringErr    error
+	ghtkn         *countTokenSource
+	// calls are Verify calls run in order with the same executor.
+	calls []verifyCall
+}
+
+func verifyTestCases() []*verifyTestCase { //nolint:funlen
+	return []*verifyTestCase{
+		{
+			name:          "authenticated: gh's own credential is used first",
+			authenticated: true,
+			aquaToken:     "aqua",
+			ghtkn:         &countTokenSource{token: "ghtkn"},
+			calls: []verifyCall{
+				{tokens: []string{noToken}},
+			},
+		},
+		{
+			name:          "authenticated: invalid gh's own credential falls back to AQUA_GITHUB_TOKEN",
+			authenticated: true,
+			aquaToken:     "aqua",
+			calls: []verifyCall{
+				{outputs: []string{outInvalidToken}, tokens: []string{noToken, "aqua"}},
+				// gh's own credential isn't used anymore.
+				{tokens: []string{"aqua"}},
+			},
+		},
+		{
+			name:      "not authenticated: AQUA_GITHUB_TOKEN > keyring > ghtkn > none",
+			aquaToken: "aqua",
+			keyring:   &countTokenSource{token: "keyring"},
+			ghtkn:     &countTokenSource{token: "ghtkn"},
+			calls: []verifyCall{
+				{
+					private: true,
+					outputs: []string{outNotFound, outNotFound, outNotFound, outNotFound},
+					wantErr: true,
+					tokens:  []string{"aqua", "keyring", "ghtkn", noToken},
+				},
+			},
+		},
+		{
+			name:  "not authenticated without any token: gh is run as is",
+			calls: []verifyCall{{tokens: []string{noToken}}},
+		},
+		{
+			name:      "404 for a public package fails immediately",
+			aquaToken: "aqua",
+			ghtkn:     &countTokenSource{token: "ghtkn"},
+			calls: []verifyCall{
+				{outputs: []string{outNotFound}, wantErr: true, tokens: []string{"aqua"}},
+			},
+		},
+		{
+			name:      "404 for a private package tries the next token",
+			aquaToken: "aqua",
+			ghtkn:     &countTokenSource{token: "ghtkn"},
+			calls: []verifyCall{
+				{private: true, outputs: []string{outNotFound}, tokens: []string{"aqua", "ghtkn"}},
+				// 404 doesn't disable the token.
+				{tokens: []string{"aqua"}},
+			},
+		},
+		{
+			name:      "no attestations fails immediately",
+			aquaToken: "aqua",
+			ghtkn:     &countTokenSource{token: "ghtkn"},
+			calls: []verifyCall{
+				{private: true, outputs: []string{outNoAtt}, wantErr: true, tokens: []string{"aqua"}},
+			},
+		},
+		{
+			name:      "verification failure fails immediately",
+			aquaToken: "aqua",
+			ghtkn:     &countTokenSource{token: "ghtkn"},
+			calls: []verifyCall{
+				{outputs: []string{outVerification}, wantErr: true, tokens: []string{"aqua"}},
+			},
+		},
+		{
+			name:      "rate limit disables the token",
+			aquaToken: "aqua",
+			ghtkn:     &countTokenSource{token: "ghtkn"},
+			calls: []verifyCall{
+				{outputs: []string{outRateLimit}, tokens: []string{"aqua", "ghtkn"}},
+				{tokens: []string{"ghtkn"}},
+			},
+		},
+		{
+			name:      "permission error doesn't disable the token",
+			aquaToken: "aqua",
+			ghtkn:     &countTokenSource{token: "ghtkn"},
+			calls: []verifyCall{
+				{outputs: []string{outSAML}, tokens: []string{"aqua", "ghtkn"}},
+				{tokens: []string{"aqua"}},
+			},
+		},
+		{
+			name:      "temporary errors are retried with the same token",
+			aquaToken: "aqua",
+			ghtkn:     &countTokenSource{token: "ghtkn"},
+			calls: []verifyCall{
+				{outputs: []string{outTemporary, outTemporary}, tokens: []string{"aqua", "aqua", "aqua"}},
+			},
+		},
+		{
+			name:      "retries are limited",
+			aquaToken: "aqua",
+			calls: []verifyCall{
+				{
+					outputs: []string{outTemporary, outTemporary, outTemporary, outTemporary, outTemporary},
+					wantErr: true,
+					tokens:  []string{"aqua", "aqua", "aqua", "aqua", "aqua"},
+				},
+			},
+		},
+		{
+			name:      "the same token isn't tried twice",
+			aquaToken: "same",
+			keyring:   &countTokenSource{token: "same"},
+			calls: []verifyCall{
+				{private: true, outputs: []string{outNotFound, outNotFound}, wantErr: true, tokens: []string{"same", noToken}},
+			},
+		},
+		{
+			name:       "the failure of the keyring is warned only once",
+			keyringErr: errors.New("keyring is broken"),
+			ghtkn:      &countTokenSource{token: "ghtkn"},
+			calls: []verifyCall{
+				{tokens: []string{"ghtkn"}},
+				{tokens: []string{"ghtkn"}},
+			},
+		},
+		{
+			name:      "the authentication error at last skips the verification",
+			aquaToken: "aqua",
+			calls: []verifyCall{
+				{outputs: []string{outInvalidToken, outAuth}, tokens: []string{"aqua", noToken}},
+			},
+		},
+		{
+			name:          "all tokens are disabled",
+			authenticated: true,
+			calls: []verifyCall{
+				{outputs: []string{outInvalidToken}, wantErr: true, tokens: []string{noToken}},
+				{wantErr: true},
+			},
+		},
+	}
+}
+
+func TestExecutorImpl_Verify(t *testing.T) {
+	t.Parallel()
+	for _, tt := range verifyTestCases() {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			testVerify(t, tt)
+		})
+	}
+}
+
+func testVerify(t *testing.T, tt *verifyTestCase) {
+	t.Helper()
+	keyringCreated := 0
+	ghtknCreated := 0
+	exe := &fakeExecutor{authenticated: tt.authenticated}
+	envs := map[string]string{"AQUA_GITHUB_TOKEN": tt.aquaToken}
+	e := newExecutor(exe, "gh", func(k string) string { return envs[k] }, func() []string { return nil },
+		tokenSourceFunc(tt.keyring, tt.keyringErr, &keyringCreated),
+		tokenSourceFunc(tt.ghtkn, nil, &ghtknCreated))
+	e.wait = func(context.Context, *slog.Logger, int) error { return nil }
+	for i, call := range tt.calls {
+		exe.outputs = call.outputs
+		exe.tokens = nil
+		err := e.Verify(t.Context(), slog.New(slog.DiscardHandler), &ParamVerify{
+			ArtifactPath: "foo",
+			Repository:   "foo/bar",
+			Private:      call.private,
+		})
+		if call.wantErr && err == nil {
+			t.Fatalf("call %d: error must be returned", i)
+		}
+		if !call.wantErr && err != nil {
+			t.Fatalf("call %d: unexpected error: %v", i, err)
+		}
+		if !slices.Equal(exe.tokens, call.tokens) {
+			t.Fatalf("call %d: tokens = %v, wanted %v", i, exe.tokens, call.tokens)
+		}
+	}
+	if exe.authCount > 1 {
+		t.Fatalf("gh auth token must be run at most once, but it was run %d times", exe.authCount)
+	}
+	// Token sources are created at most once even if they fail.
+	if keyringCreated > 1 {
+		t.Fatalf("the keyring token source was created %d times", keyringCreated)
+	}
+	if ghtknCreated > 1 {
+		t.Fatalf("the ghtkn token source was created %d times", ghtknCreated)
+	}
+}
+
+func TestFailure_String(t *testing.T) {
+	t.Parallel()
+	data := map[failure]string{
+		failureNone:          "none",
+		failureTemporary:     "temporary",
+		failureVerification:  "verification",
+		failureNoAttestation: "no_attestation",
+		failureNotFound:      "not_found",
+		failureInvalidToken:  "invalid_token",
+		failureRateLimit:     "rate_limit",
+		failurePermission:    "permission",
+		failureAuth:          "auth",
+		failureAuth + 1:      "unknown",
+	}
+	for f, exp := range data {
+		if got := f.String(); got != exp {
+			t.Errorf("failure(%d).String() = %s, wanted %s", f, got, exp)
+		}
+	}
+}
