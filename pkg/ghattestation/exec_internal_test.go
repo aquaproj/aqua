@@ -22,6 +22,8 @@ type fakeExecutor struct {
 	// ghToken is output by gh auth token.
 	ghToken   string
 	authCount int
+	// authFailures is the number of the first gh auth token calls which fail.
+	authFailures int
 	// outputs are returned by gh attestation verify in order.
 	// An empty string means success.
 	outputs []string
@@ -32,7 +34,7 @@ type fakeExecutor struct {
 func (f *fakeExecutor) Exec(cmd *exec.Cmd) (int, error) {
 	if slices.Equal(cmd.Args[1:3], []string{"auth", "token"}) {
 		f.authCount++
-		if f.authenticated {
+		if f.authenticated && f.authCount > f.authFailures {
 			fmt.Fprintln(cmd.Stdout, f.ghToken)
 			return 0, nil
 		}
@@ -123,6 +125,7 @@ func TestClassify(t *testing.T) {
 		{outTemporary, failureTemporary},
 		{"dial tcp: lookup api.github.com: no such host", failureTemporary},
 		{outAuth, failureAuth},
+		{"Error: HTTP 429: Too Many Requests (https://api.github.com/...)", failureRateLimit},
 		{"unknown flag: --foo", failureUnknown},
 		{"Error: context deadline exceeded", failureTemporary},
 		{outInvalidToken + "\nTry authenticating with:  gh auth login", failureInvalidToken},
@@ -458,5 +461,49 @@ func TestFailure_String(t *testing.T) {
 		if got := f.String(); got != exp {
 			t.Errorf("failure(%d).String() = %s, wanted %s", f, got, exp)
 		}
+	}
+}
+
+func TestExecutorImpl_Verify_canceled(t *testing.T) {
+	t.Parallel()
+	// gh auth token fails because of the cancellation at first.
+	exe := &fakeExecutor{authenticated: true, ghToken: "gh", authFailures: 1}
+	e := newExecutor(exe, "gh", func(string) string { return "" }, func() []string { return nil },
+		tokenSourceFunc(nil, nil, new(int)), tokenSourceFunc(nil, nil, new(int)))
+	e.wait = func(context.Context, *slog.Logger, int) error { return nil }
+	e.stderr = &strings.Builder{}
+	logger := slog.New(slog.DiscardHandler)
+	param := &ParamVerify{ArtifactPath: "foo", Repository: "foo/bar"}
+
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+	exe.outputs = []string{outUnknown}
+	err := e.Verify(ctx, logger, param)
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("the context error must be returned, but got %v", err)
+	}
+	if errors.Is(err, errVerify) {
+		t.Fatal("the cancellation must not be reported as the verification failure")
+	}
+
+	// The result of gh auth token isn't cached if the context is canceled.
+	exe.outputs = nil
+	exe.tokens = nil
+	if err := e.Verify(t.Context(), logger, param); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if exe.authCount != 2 {
+		t.Fatalf("gh auth token must be run again, but it was run %d times", exe.authCount)
+	}
+	// gh's own credential is used first, because gh is authenticated.
+	if !slices.Equal(exe.tokens, []string{noToken}) {
+		t.Fatalf("tokens = %v, wanted [%s]", exe.tokens, noToken)
+	}
+	// The successful result is cached.
+	if err := e.Verify(t.Context(), logger, param); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if exe.authCount != 2 {
+		t.Fatalf("the result of gh auth token must be cached, but it was run %d times", exe.authCount)
 	}
 }

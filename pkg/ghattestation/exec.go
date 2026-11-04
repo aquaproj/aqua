@@ -47,7 +47,9 @@ type ExecutorImpl struct {
 	// wait waits before retrying. It's replaced in tests.
 	wait func(ctx context.Context, logger *slog.Logger, retryCount int) error
 
-	authOnce sync.Once
+	authMutex sync.Mutex
+	// authChecked is true if `gh auth token` has been run and its result is cached.
+	authChecked bool
 	// authenticated is true if GitHub CLI has its own credential (GH_TOKEN, GITHUB_TOKEN, or `gh auth login`).
 	authenticated bool
 	// ghTokenKey is the key of GitHub CLI's own access token.
@@ -227,6 +229,10 @@ func (e *ExecutorImpl) runWithRetry(ctx context.Context, logger *slog.Logger, ar
 			return failureNone, nil
 		}
 		state.outputs = append(state.outputs, out)
+		if ctx.Err() != nil {
+			// GitHub CLI was stopped by the cancellation, so the output doesn't show the result of the verification.
+			return failureNone, fmt.Errorf("run gh attestation verify: %w", ctx.Err())
+		}
 		f := classify(out)
 		slogerr.WithError(logger, err).Warn("execute gh attestation verify",
 			"exe", e.exePath,
@@ -304,9 +310,9 @@ type getCandidate func(logger *slog.Logger) (candidate, bool)
 // (GH_HOST makes GitHub CLI skip the authentication check),
 // which works for public repositories but easily hits the rate limit.
 func (e *ExecutorImpl) candidates(ctx context.Context) []getCandidate {
-	authenticated := e.isAuthenticated(ctx)
+	authenticated, ghTokenKey := e.checkAuth(ctx)
 	gh := func(_ *slog.Logger) (candidate, bool) {
-		return candidate{name: "gh", key: e.ghTokenKey}, true
+		return candidate{name: "gh", key: ghTokenKey}, true
 	}
 	if authenticated {
 		return []getCandidate{gh, e.aquaCredential.candidate, e.keyringCredential.candidate, e.ghtknCredential.candidate}
@@ -317,31 +323,41 @@ func (e *ExecutorImpl) candidates(ctx context.Context) []getCandidate {
 // ghKeyAnonymous is the key of running GitHub CLI without any access token.
 const ghKeyAnonymous = "gh:anonymous"
 
-// isAuthenticated returns true if GitHub CLI has its own credential.
+// checkAuth returns true if GitHub CLI has its own credential, and the key of the access token.
 // It runs `gh auth token`, which doesn't call any API, only once.
 // It also records the hash of the access token to compare it with access tokens from other sources.
 // The access token is read into memory instead of the terminal, and it isn't output.
-func (e *ExecutorImpl) isAuthenticated(ctx context.Context) bool {
-	e.authOnce.Do(func() {
-		cmd := e.command(ctx, []string{"auth", "token", "--hostname", "github.com"}, "")
-		// osexec's helpers output stdout to the terminal, so replace stdout.
-		stdout := &bytes.Buffer{}
-		cmd.Stdout = stdout
-		cmd.Stderr = io.Discard
-		if _, err := e.executor.Exec(cmd); err != nil {
-			e.ghTokenKey = ghKeyAnonymous
-			return
+// The result is cached, but it isn't cached if the context is canceled,
+// so that the cancellation of a package doesn't affect other packages.
+func (e *ExecutorImpl) checkAuth(ctx context.Context) (authenticated bool, ghTokenKey string) {
+	e.authMutex.Lock()
+	defer e.authMutex.Unlock()
+	if e.authChecked {
+		return e.authenticated, e.ghTokenKey
+	}
+	cmd := e.command(ctx, []string{"auth", "token", "--hostname", "github.com"}, "")
+	// osexec's helpers output stdout to the terminal, so replace stdout.
+	stdout := &bytes.Buffer{}
+	cmd.Stdout = stdout
+	cmd.Stderr = io.Discard
+	if _, err := e.executor.Exec(cmd); err != nil {
+		if ctx.Err() != nil {
+			return false, ghKeyAnonymous
 		}
-		e.authenticated = true
-		token := strings.TrimSpace(stdout.String())
-		if token == "" {
-			// It's unexpected, but the access token can't be compared.
-			e.ghTokenKey = "gh:unknown"
-			return
-		}
-		e.ghTokenKey = hashToken(token)
-	})
-	return e.authenticated
+		e.authChecked = true
+		e.ghTokenKey = ghKeyAnonymous
+		return false, e.ghTokenKey
+	}
+	e.authChecked = true
+	e.authenticated = true
+	token := strings.TrimSpace(stdout.String())
+	if token == "" {
+		// It's unexpected, but the access token can't be compared.
+		e.ghTokenKey = "gh:unknown"
+		return true, e.ghTokenKey
+	}
+	e.ghTokenKey = hashToken(token)
+	return true, e.ghTokenKey
 }
 
 func (e *ExecutorImpl) command(ctx context.Context, args []string, token string) *exec.Cmd {

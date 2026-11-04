@@ -85,7 +85,8 @@ func classifyHTTP(out string) failure {
 	switch {
 	case strings.Contains(out, "HTTP 401"), strings.Contains(out, "Bad credentials"):
 		return failureInvalidToken
-	case (strings.Contains(out, "HTTP 403") || strings.Contains(out, "HTTP 429")) && strings.Contains(strings.ToLower(out), "rate limit"):
+	case strings.Contains(out, "HTTP 429"), strings.Contains(out, "HTTP 403") && strings.Contains(strings.ToLower(out), "rate limit"):
+		// HTTP 429 means Too Many Requests regardless of the message.
 		return failureRateLimit
 	case strings.Contains(out, "HTTP 403"):
 		return failurePermission
