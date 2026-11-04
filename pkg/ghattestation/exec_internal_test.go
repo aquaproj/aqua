@@ -1,8 +1,10 @@
 package ghattestation
 
 import (
+	"cmp"
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"os/exec"
 	"slices"
@@ -17,7 +19,9 @@ const noToken = "<none>"
 
 type fakeExecutor struct {
 	authenticated bool
-	authCount     int
+	// ghToken is output by gh auth token.
+	ghToken   string
+	authCount int
 	// outputs are returned by gh attestation verify in order.
 	// An empty string means success.
 	outputs []string
@@ -25,9 +29,10 @@ type fakeExecutor struct {
 	tokens []string
 }
 
-func (f *fakeExecutor) Exec(_ *exec.Cmd) (int, error) {
+func (f *fakeExecutor) Exec(cmd *exec.Cmd) (int, error) {
 	f.authCount++
 	if f.authenticated {
+		fmt.Fprintln(cmd.Stdout, f.ghToken)
 		return 0, nil
 	}
 	return 1, errors.New("exit status 1")
@@ -129,10 +134,12 @@ type verifyCall struct {
 type verifyTestCase struct {
 	name          string
 	authenticated bool
-	aquaToken     string
-	keyring       *countTokenSource
-	keyringErr    error
-	ghtkn         *countTokenSource
+	// ghToken is GitHub CLI's own access token. It's "gh" if it's empty.
+	ghToken    string
+	aquaToken  string
+	keyring    *countTokenSource
+	keyringErr error
+	ghtkn      *countTokenSource
 	// calls are Verify calls run in order with the same executor.
 	calls []verifyCall
 }
@@ -256,6 +263,46 @@ func verifyTestCases() []*verifyTestCase { //nolint:funlen
 			},
 		},
 		{
+			name:          "the same token as gh's own access token is skipped",
+			authenticated: true,
+			ghToken:       "same",
+			aquaToken:     "same",
+			ghtkn:         &countTokenSource{token: "ghtkn"},
+			calls: []verifyCall{
+				{outputs: []string{outSAML}, tokens: []string{noToken, "ghtkn"}},
+			},
+		},
+		{
+			name:          "an invalid token is disabled regardless of its source",
+			authenticated: true,
+			ghToken:       "same",
+			aquaToken:     "same",
+			ghtkn:         &countTokenSource{token: "ghtkn"},
+			calls: []verifyCall{
+				{outputs: []string{outInvalidToken}, tokens: []string{noToken, "ghtkn"}},
+				// Neither gh's own access token nor AQUA_GITHUB_TOKEN is used.
+				{tokens: []string{"ghtkn"}},
+			},
+		},
+		{
+			name:      "a rate limited token is disabled regardless of its source",
+			aquaToken: "same",
+			keyring:   &countTokenSource{token: "same"},
+			ghtkn:     &countTokenSource{token: "ghtkn"},
+			calls: []verifyCall{
+				{outputs: []string{outRateLimit}, tokens: []string{"same", "ghtkn"}},
+				{tokens: []string{"ghtkn"}},
+			},
+		},
+		{
+			name:  "running gh without any token is disabled by the rate limit",
+			ghtkn: &countTokenSource{token: "ghtkn"},
+			calls: []verifyCall{
+				{outputs: []string{outRateLimit, outRateLimit}, wantErr: true, tokens: []string{"ghtkn", noToken}},
+				{wantErr: true},
+			},
+		},
+		{
 			name:       "the failure of the keyring is warned only once",
 			keyringErr: errors.New("keyring is broken"),
 			ghtkn:      &countTokenSource{token: "ghtkn"},
@@ -296,7 +343,7 @@ func testVerify(t *testing.T, tt *verifyTestCase) {
 	t.Helper()
 	keyringCreated := 0
 	ghtknCreated := 0
-	exe := &fakeExecutor{authenticated: tt.authenticated}
+	exe := &fakeExecutor{authenticated: tt.authenticated, ghToken: cmp.Or(tt.ghToken, "gh")}
 	envs := map[string]string{"AQUA_GITHUB_TOKEN": tt.aquaToken}
 	e := newExecutor(exe, "gh", func(k string) string { return envs[k] }, func() []string { return nil },
 		tokenSourceFunc(tt.keyring, tt.keyringErr, &keyringCreated),

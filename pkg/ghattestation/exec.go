@@ -1,6 +1,7 @@
 package ghattestation
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -37,8 +38,6 @@ type ExecutorImpl struct {
 	getEnv   func(string) string
 	environ  func() []string
 
-	// ghCredential is GitHub CLI's own credential (GH_TOKEN, GITHUB_TOKEN, or `gh auth login`).
-	ghCredential      *credential
 	aquaCredential    *credential
 	keyringCredential *credential
 	ghtknCredential   *credential
@@ -47,8 +46,15 @@ type ExecutorImpl struct {
 	wait func(ctx context.Context, logger *slog.Logger, retryCount int) error
 
 	authOnce sync.Once
-	// authenticated is true if GitHub CLI has its own credential.
+	// authenticated is true if GitHub CLI has its own credential (GH_TOKEN, GITHUB_TOKEN, or `gh auth login`).
 	authenticated bool
+	// ghTokenKey is the key of GitHub CLI's own access token.
+	ghTokenKey string
+
+	disabledMutex sync.Mutex
+	// disabledKeys are keys of access tokens which would fail for other packages too (e.g. invalid tokens and rate limits).
+	// They aren't used for the rest of the process regardless of their sources.
+	disabledKeys map[string]struct{}
 }
 
 func NewExecutor(executor CommandExecutor, param *config.Param) (*ExecutorImpl, error) {
@@ -71,7 +77,7 @@ func newExecutor(executor CommandExecutor, exePath string, getEnv func(string) s
 		getEnv:       getEnv,
 		environ:      environ,
 		wait:         wait,
-		ghCredential: &credential{name: "gh"},
+		disabledKeys: map[string]struct{}{},
 		aquaCredential: &credential{
 			name: "AQUA_GITHUB_TOKEN",
 			newTokenSource: func(_ *slog.Logger) (oauth2.TokenSource, error) {
@@ -128,20 +134,20 @@ func (e *ExecutorImpl) Verify(ctx context.Context, logger *slog.Logger, param *P
 
 	args := param.args()
 
-	state := &verifyState{triedTokens: map[string]struct{}{}}
-	for _, cred := range e.credentials(ctx) {
-		token, ok := cred.token(logger)
-		if !ok || state.tried(token) {
+	state := &verifyState{triedKeys: map[string]struct{}{}}
+	for _, getCandidate := range e.candidates(ctx) {
+		cand, ok := getCandidate(logger)
+		if !ok || e.isDisabled(cand.key) || state.tried(cand.key) {
 			continue
 		}
-		f, err := e.runWithRetry(ctx, logger, args, cred, token, state)
+		f, err := e.runWithRetry(ctx, logger, args, cand, state)
 		if err != nil {
 			return err
 		}
 		if f == failureNone {
 			return nil
 		}
-		if stop := e.handleFailure(logger, cred, f, param.Private); stop {
+		if stop := e.handleFailure(logger, cand, f, param.Private); stop {
 			return errVerify
 		}
 		// Try the next credential.
@@ -179,32 +185,29 @@ func (p *ParamVerify) args() []string {
 // verifyState is the state of a Verify call.
 type verifyState struct {
 	// retries is the number of retries for temporary errors.
-	retries     int
-	triedTokens map[string]struct{}
+	retries int
+	// triedKeys are keys of access tokens tried in the Verify call.
+	triedKeys   map[string]struct{}
 	lastErr     error
 	lastFailure failure
 }
 
-// tried returns true if token has already been tried in the Verify call.
-// It records token otherwise.
-// An empty token (GitHub CLI's own credential) is never regarded as tried.
-func (s *verifyState) tried(token string) bool {
-	if token == "" {
-		return false
-	}
-	if _, ok := s.triedTokens[token]; ok {
+// tried returns true if the access token has already been tried in the Verify call.
+// It records the key otherwise.
+func (s *verifyState) tried(key string) bool {
+	if _, ok := s.triedKeys[key]; ok {
 		return true
 	}
-	s.triedTokens[token] = struct{}{}
+	s.triedKeys[key] = struct{}{}
 	return false
 }
 
 // runWithRetry runs gh attestation verify with token, retrying temporary errors.
 // It returns failureNone if the verification succeeds.
 // It returns an error if the retries are exhausted or the wait is canceled.
-func (e *ExecutorImpl) runWithRetry(ctx context.Context, logger *slog.Logger, args []string, cred *credential, token string, state *verifyState) (failure, error) {
+func (e *ExecutorImpl) runWithRetry(ctx context.Context, logger *slog.Logger, args []string, cand candidate, state *verifyState) (failure, error) {
 	for {
-		out, err := e.run(ctx, args, token)
+		out, err := e.run(ctx, args, cand.token)
 		if err == nil {
 			return failureNone, nil
 		}
@@ -212,7 +215,7 @@ func (e *ExecutorImpl) runWithRetry(ctx context.Context, logger *slog.Logger, ar
 		slogerr.WithError(logger, err).Warn("execute gh attestation verify",
 			"exe", e.exePath,
 			"args", strings.Join(args, " "),
-			"credential", cred.name,
+			"credential", cand.name,
 			"failure", f.String())
 		state.lastErr = err
 		state.lastFailure = f
@@ -231,7 +234,7 @@ func (e *ExecutorImpl) runWithRetry(ctx context.Context, logger *slog.Logger, ar
 
 // handleFailure handles a failure with a credential.
 // It returns true if the verification should fail without trying other credentials.
-func (e *ExecutorImpl) handleFailure(logger *slog.Logger, cred *credential, f failure, private bool) bool {
+func (e *ExecutorImpl) handleFailure(logger *slog.Logger, cand candidate, f failure, private bool) bool {
 	switch f { //nolint:exhaustive
 	case failureVerification, failureNoAttestation:
 		// Changing the access token doesn't change the result.
@@ -242,39 +245,83 @@ func (e *ExecutorImpl) handleFailure(logger *slog.Logger, cred *credential, f fa
 		// For a private package, 404 may be caused by the lack of the permission.
 		return !private
 	case failureInvalidToken, failureRateLimit:
-		// The credential would fail for other packages too.
-		if cred.disable() {
+		// The access token would fail for other packages too.
+		if e.disable(cand.key) {
 			logger.Warn("stop using the GitHub access token for gh attestation verify",
-				"credential", cred.name,
+				"credential", cand.name,
 				"failure", f.String())
 		}
 	}
 	return false
 }
 
-// credentials returns credentials in the order of precedence.
+// isDisabled returns true if the access token is disabled for the rest of the process.
+func (e *ExecutorImpl) isDisabled(key string) bool {
+	e.disabledMutex.Lock()
+	defer e.disabledMutex.Unlock()
+	_, ok := e.disabledKeys[key]
+	return ok
+}
+
+// disable disables the access token for the rest of the process.
+// It returns true if the access token has been enabled until now.
+// The return value is used to output a warning only once even if gh is run concurrently.
+func (e *ExecutorImpl) disable(key string) bool {
+	e.disabledMutex.Lock()
+	defer e.disabledMutex.Unlock()
+	if _, ok := e.disabledKeys[key]; ok {
+		return false
+	}
+	e.disabledKeys[key] = struct{}{}
+	return true
+}
+
+type getCandidate func(logger *slog.Logger) (candidate, bool)
+
+// candidates returns functions getting candidates in the order of precedence.
+// They are called lazily, so later sources such as ghtkn aren't touched if an earlier one succeeds.
 // If GitHub CLI has its own credential, it's used first as is.
 // Otherwise, GitHub CLI is run without any access token at last.
 // Then GitHub CLI calls GitHub API without an access token
 // (GH_HOST makes GitHub CLI skip the authentication check),
 // which works for public repositories but easily hits the rate limit.
-func (e *ExecutorImpl) credentials(ctx context.Context) []*credential {
-	if e.isAuthenticated(ctx) {
-		return []*credential{e.ghCredential, e.aquaCredential, e.keyringCredential, e.ghtknCredential}
+func (e *ExecutorImpl) candidates(ctx context.Context) []getCandidate {
+	authenticated := e.isAuthenticated(ctx)
+	gh := func(_ *slog.Logger) (candidate, bool) {
+		return candidate{name: "gh", key: e.ghTokenKey}, true
 	}
-	return []*credential{e.aquaCredential, e.keyringCredential, e.ghtknCredential, e.ghCredential}
+	if authenticated {
+		return []getCandidate{gh, e.aquaCredential.candidate, e.keyringCredential.candidate, e.ghtknCredential.candidate}
+	}
+	return []getCandidate{e.aquaCredential.candidate, e.keyringCredential.candidate, e.ghtknCredential.candidate, gh}
 }
+
+// ghKeyAnonymous is the key of running GitHub CLI without any access token.
+const ghKeyAnonymous = "gh:anonymous"
 
 // isAuthenticated returns true if GitHub CLI has its own credential.
 // It runs `gh auth token`, which doesn't call any API, only once.
-// The output is discarded so that the access token isn't leaked.
+// It also records the hash of the access token to compare it with access tokens from other sources.
+// The access token is read into memory instead of the terminal, and it isn't output.
 func (e *ExecutorImpl) isAuthenticated(ctx context.Context) bool {
 	e.authOnce.Do(func() {
 		cmd := e.command(ctx, []string{"auth", "token", "--hostname", "github.com"}, "")
-		cmd.Stdout = io.Discard
+		// osexec's helpers output stdout to the terminal, so replace stdout.
+		stdout := &bytes.Buffer{}
+		cmd.Stdout = stdout
 		cmd.Stderr = io.Discard
-		_, err := e.executor.Exec(cmd)
-		e.authenticated = err == nil
+		if _, err := e.executor.Exec(cmd); err != nil {
+			e.ghTokenKey = ghKeyAnonymous
+			return
+		}
+		e.authenticated = true
+		token := strings.TrimSpace(stdout.String())
+		if token == "" {
+			// It's unexpected, but the access token can't be compared.
+			e.ghTokenKey = "gh:unknown"
+			return
+		}
+		e.ghTokenKey = hashToken(token)
 	})
 	return e.authenticated
 }
