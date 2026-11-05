@@ -33,7 +33,7 @@ jobs:
       contents: read
       id-token: write
     with:
-      aqua_version: v2.66.0
+      aqua_version: v2.66.1
       aqua_packages: go-licenses
     secrets:
       TAKUMI_GUARD_BOT_ID: ${{secrets.TAKUMI_GUARD_BOT_ID}}
@@ -42,7 +42,7 @@ jobs:
     uses: suzuki-shunsuke/go-test-workflow/.github/workflows/test.yaml@ff8934b3958ec0c1b0a6fce445052e2d2a42e8c9 # v3.2.4
     needs: gomodule
     with:
-      aqua_version: v2.66.0
+      aqua_version: v2.66.1
       golangci-lint-timeout: 120s
       go-version-file: go.mod
       gomodule_artifact_name: gomodule
@@ -122,7 +122,7 @@ jobs:
   test-workflow:
     uses: suzuki-shunsuke/test-workflow/.github/workflows/test.yaml@0b89b9b4314282810bc944364380568708208eaa # v0.0.2
     with:
-      aqua_version: v2.66.0
+      aqua_version: v2.66.1
     permissions:
       contents: read
       pull-requests: read
