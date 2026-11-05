@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/suzuki-shunsuke/flute/flute"
+	"github.com/suzuki-shunsuke/flute/v2/flute"
 )
 
 func Test_fromURL(t *testing.T) { //nolint:funlen
