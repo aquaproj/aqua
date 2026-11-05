@@ -9,7 +9,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/github"
-	"github.com/suzuki-shunsuke/flute/flute"
+	"github.com/suzuki-shunsuke/flute/v2/flute"
 )
 
 func TestGitHubContentFileDownloader_DownloadGitHubContentFile(t *testing.T) { //nolint:funlen
