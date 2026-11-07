@@ -28,7 +28,16 @@ type MockRepositoriesService struct {
 	Tags     []*github.RepositoryTag
 	Asset    string
 	Assets   []*github.ReleaseAsset
-	URL      *url.URL
+	// Attestations maps a subject digest to the attestations of the asset.
+	Attestations map[string]*github.AttestationsResponse
+	URL          *url.URL
+}
+
+func (m *MockRepositoriesService) ListAttestations(ctx context.Context, owner, repo, subjectDigest string, opts *github.ListOptions) (*github.AttestationsResponse, *github.Response, error) {
+	if resp, ok := m.Attestations[subjectDigest]; ok {
+		return resp, nil, nil
+	}
+	return &github.AttestationsResponse{}, nil, nil
 }
 
 func (m *MockRepositoriesService) GetLatestRelease(ctx context.Context, repoOwner, repoName string) (*github.RepositoryRelease, *github.Response, error) {
