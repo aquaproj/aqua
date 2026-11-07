@@ -6,7 +6,7 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/expr"
 	"github.com/expr-lang/expr/vm"
-	"go.yaml.in/yaml/v3"
+	"go.yaml.in/yaml/v4"
 )
 
 type Config struct {
