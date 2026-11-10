@@ -169,6 +169,8 @@ github.com/suzuki-shunsuke/gen-go-jsonschema v0.1.0 h1:g7askc+nskCkKRWTVOdsAT8nM
 github.com/suzuki-shunsuke/gen-go-jsonschema v0.1.0/go.mod h1:yFO7h5wwFejxi6jbtazqmk7b/JSBxHcit8DGwb1bhg0=
 github.com/suzuki-shunsuke/ghtkn-go-sdk v0.6.1 h1:IDvTocqxIfZVMK8Km/5Zk4/bMjDKKY9Z1bPK0mqX71s=
 github.com/suzuki-shunsuke/ghtkn-go-sdk v0.6.1/go.mod h1:HzPUgGvdUg/TFZM2U0ih81zk2y0fflbFZBzHT70AN0w=
+github.com/suzuki-shunsuke/ghtkn-go-sdk v0.6.2 h1:SEUuMVC46lGT1kDHMUSg3rN84RBs4T81yYvtJxsNoak=
+github.com/suzuki-shunsuke/ghtkn-go-sdk v0.6.2/go.mod h1:pG70R7WVhlB2sW5ecuYBmZIkaSf+xDEZztQenNFEk2Q=
 github.com/suzuki-shunsuke/go-cliutil v0.0.0-20181211154308-176f852d9bca/go.mod h1:Vq3NkhgmA9DT/2UZ08x/3A34xxvzQ/vTMABnTWKoMbY=
 github.com/suzuki-shunsuke/go-error-with-exit-code v1.0.0 h1:oVXrrYNGBq4POyITQNWKzwsYz7B2nUcqtDbeX4BfeEc=
 github.com/suzuki-shunsuke/go-error-with-exit-code v1.0.0/go.mod h1:kDFtLeftDiIUUHXGI3xq5eJ+uAOi50FPrxPENTHktJ0=
@@ -176,6 +178,8 @@ github.com/suzuki-shunsuke/go-findconfig v1.2.0 h1:PWHIyKZEsVmZVh6+K+rHVw0/XjTFm
 github.com/suzuki-shunsuke/go-findconfig v1.2.0/go.mod h1:lXzJUZQXrgsMmpHxXMVrWUAQpE4EopgDEJbwslvKbzs=
 github.com/suzuki-shunsuke/go-github-device-flow v0.0.2 h1:5O17Yay7cpf9XN0JaP4vyZ7FVm2KcyQjnkgTekURwpc=
 github.com/suzuki-shunsuke/go-github-device-flow v0.0.2/go.mod h1:6a3G2e2J7jo2vVe0n3cYmG8K/QQSelSikc5U/CR9b/4=
+github.com/suzuki-shunsuke/go-github-device-flow v0.0.3 h1:KSXO8yDfQw2wHmThJ38QJbEQXLr2SQ+MmMufsRvpONw=
+github.com/suzuki-shunsuke/go-github-device-flow v0.0.3/go.mod h1:6a3G2e2J7jo2vVe0n3cYmG8K/QQSelSikc5U/CR9b/4=
 github.com/suzuki-shunsuke/go-jsoneq v0.1.2 h1:A4czEbmFqSELTbrEtXVo4dSgfz2e2Z0y6G3OpExUML8=
 github.com/suzuki-shunsuke/go-jsoneq v0.1.2/go.mod h1:ETXAwfruZTqMMKDxc9CYoS34CNSsnzcdcVIAW3+RujI=
 github.com/suzuki-shunsuke/go-osenv v0.1.0 h1:hBQ7yaeO1WBZsEWuDj1wrOWF+N7HSWSOpEiEZqfCjjk=
@@ -241,6 +245,8 @@ golang.org/x/term v0.0.0-20210927222741-03fcf44c2211/go.mod h1:jbD1KX2456YbFQfuX
 golang.org/x/term v0.5.0/go.mod h1:jMB1sMXY+tzblOD4FWmEbocvup2/aLOaQEp7JmGp78k=
 golang.org/x/term v0.45.0 h1:NwWyBmoJCbfTHpxrWoZ9C6/VxOf7ic219I8xZZFdrf0=
 golang.org/x/term v0.45.0/go.mod h1:9aqxs0blBcrm/n0L9QW0aRVD+ktan8ssZromtqJC43w=
+golang.org/x/term v0.47.0 h1:cpyOwQkr2Nzxe2p6KnrTG7Ei2wtzjsuSjhpXXepZ/BM=
+golang.org/x/term v0.47.0/go.mod h1:efAfAuG6RKABvg1ArGebRkvX6LXul14SM67o2e4mUCY=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/text v0.3.3/go.mod h1:5Zoc/QRtKVWzQhOtBMvqHzDpF6irO9z98xDceosuGiQ=
 golang.org/x/text v0.3.7/go.mod h1:u+2+/6zg+i71rQMx5EYifcz6MCKuco9NR6JIITiCfzQ=
