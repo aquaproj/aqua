@@ -11,7 +11,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/domain"
-	"go.yaml.in/yaml/v2"
+	"go.yaml.in/yaml/v4"
 )
 
 const registryFilePermission = 0o600
