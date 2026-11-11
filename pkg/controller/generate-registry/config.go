@@ -10,7 +10,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/expr"
 	"github.com/expr-lang/expr/vm"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
-	"go.yaml.in/yaml/v3"
+	"go.yaml.in/yaml/v4"
 )
 
 type Config struct {

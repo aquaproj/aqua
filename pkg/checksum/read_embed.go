@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
-	"go.yaml.in/yaml/v3"
+	"go.yaml.in/yaml/v4"
 )
 
 // ReadEmbeddedTool reads embedded tool configuration and checksums from byte arrays.

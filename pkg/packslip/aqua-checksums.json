@@ -1,33 +1,33 @@
 {
   "checksums": [
     {
-      "id": "github_release/github.com/jdx/packslip/v1.6.0/packslip-v1.6.0-darwin-arm64.tar.xz",
-      "checksum": "B6175F62648584127BB59C136F482DE65D96644FD3E9274930C347D81538E39A",
+      "id": "github_release/github.com/jdx/packslip/v1.11.3/packslip-v1.11.3-darwin-arm64.tar.xz",
+      "checksum": "25985ECE3E3AB5AD2D0F9D7C1DA03218507E9D0C170392D72B830E02348C27CC",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/jdx/packslip/v1.6.0/packslip-v1.6.0-linux-arm64.tar.xz",
-      "checksum": "2037C3A4C7C4B66F67DECB8EA17AE0571894CBE98DD351D69FB5C0020EF96ACD",
+      "id": "github_release/github.com/jdx/packslip/v1.11.3/packslip-v1.11.3-linux-arm64.tar.xz",
+      "checksum": "32A7698F499B270327832D62869E9EAA0449FA689EED7941AC2668F36C130389",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/jdx/packslip/v1.6.0/packslip-v1.6.0-linux-x64.tar.xz",
-      "checksum": "B57BC18667039138FD23ADA4A6B650A6E1D8C4B8C3A6E3695DAFC010F8E25537",
+      "id": "github_release/github.com/jdx/packslip/v1.11.3/packslip-v1.11.3-linux-x64.tar.xz",
+      "checksum": "26EFECA080B011C310F90BCD2F57CD78B4A364552831ED84F5216C7CBA0932AD",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/jdx/packslip/v1.6.0/packslip-v1.6.0-windows-arm64.zip",
-      "checksum": "F5F0F4BEC3DC26605142F0039D77B212EBB5A3032DE975A339E06F5E20F0FAB5",
+      "id": "github_release/github.com/jdx/packslip/v1.11.3/packslip-v1.11.3-windows-arm64.zip",
+      "checksum": "FC91EA9040D0EFBBC6190FE5AFF648EB39658DCC12FEC1352EFCB5188EACEAC3",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/jdx/packslip/v1.6.0/packslip-v1.6.0-windows-x64.zip",
-      "checksum": "30FB9998B6C2DE65EC54593A8BE0923501ACE1FC8DB468F143919BB3B79FD9DF",
+      "id": "github_release/github.com/jdx/packslip/v1.11.3/packslip-v1.11.3-windows-x64.zip",
+      "checksum": "6DE57A9E75EC895074C1B7B4F2A692E77B7E929F4F2A3DAED247E1C2E7046A7C",
       "algorithm": "sha256"
     },
     {
-      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.574.1/registry.yaml",
-      "checksum": "B4F0E425BC813721E1BD4CD7DECA9FDEA64BE0AFD759F529E3122AE5E1B584F3",
+      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.584.0/registry.yaml",
+      "checksum": "2850916D8E46BCB75075F4CCE621C713C4BC8EDEF33D616E84426F428BBB6EA8",
       "algorithm": "sha256"
     }
   ]

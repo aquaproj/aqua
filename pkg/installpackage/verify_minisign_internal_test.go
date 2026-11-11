@@ -34,11 +34,11 @@ func TestMinisignVerifier_Enabled(t *testing.T) {
 			exp:      true,
 		},
 		{
-			// minisign provides no linux/arm64 asset, so the verification must be
+			// minisign provides no freebsd asset, so the verification must be
 			// skipped even if the target platform is linux/amd64.
 			name:     "the host platform isn't supported",
 			rt:       &runtime.Runtime{GOOS: "linux", GOARCH: "amd64"},
-			realRT:   &runtime.Runtime{GOOS: "linux", GOARCH: "arm64"},
+			realRT:   &runtime.Runtime{GOOS: "freebsd", GOARCH: "arm64"},
 			minisign: &registry.Minisign{},
 			exp:      false,
 		},

@@ -31,7 +31,7 @@ func Package() *config.Package { //nolint:funlen
 				},
 				Overrides: []*registry.Override{
 					{
-						GOOS:   "linux",
+						GOOS:   osLinux,
 						Format: "tar.gz",
 						Files: []*registry.File{
 							{
@@ -82,7 +82,7 @@ func Package() *config.Package { //nolint:funlen
 			},
 			Overrides: []*registry.Override{
 				{
-					GOOS:   "linux",
+					GOOS:   osLinux,
 					Format: "tar.gz",
 				},
 				{
@@ -97,7 +97,7 @@ func Package() *config.Package { //nolint:funlen
 			SupportedEnvs: []string{
 				"darwin/arm64",
 				osWindows,
-				"linux/amd64",
+				osLinux,
 			},
 		},
 	}
