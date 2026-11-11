@@ -7,7 +7,7 @@ import (
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/google/go-cmp/cmp"
-	"go.yaml.in/yaml/v3"
+	"go.yaml.in/yaml/v4"
 )
 
 func TestPackageInfo_GetName(t *testing.T) {
