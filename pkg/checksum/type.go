@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -118,6 +119,27 @@ type Checksum struct {
 	ID        string `json:"id"`
 	Checksum  string `json:"checksum"`
 	Algorithm string `json:"algorithm"`
+	// Verified lists the kinds of signature verification passed before this
+	// checksum was recorded: the asset's own (e.g. "cosign",
+	// "github_artifact_attestations") or the checksum file's that listed it (e.g.
+	// "checksum.cosign"). An install whose registry asks for nothing outside this
+	// list can trust the checksum in their place. An entry without it says nothing
+	// about the signatures, so they are verified at install as before.
+	Verified []string `json:"verified,omitempty"`
+}
+
+// HasVerified reports whether every kind in kinds was verified before the checksum
+// was recorded.
+func (c *Checksum) HasVerified(kinds []string) bool {
+	if c == nil {
+		return false
+	}
+	for _, kind := range kinds {
+		if !slices.Contains(c.Verified, kind) {
+			return false
+		}
+	}
+	return true
 }
 
 // UnmarshalJSON implements json.Unmarshaler to load checksums from JSON data.

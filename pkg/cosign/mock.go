@@ -17,3 +17,11 @@ type MockVerifier struct {
 func (v *MockVerifier) Verify(ctx context.Context, logger *slog.Logger, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, verifiedFilePath string) error {
 	return v.err
 }
+
+func (v *MockVerifier) Supported() bool {
+	return true
+}
+
+func (v *MockVerifier) VerifyDigest(ctx context.Context, logger *slog.Logger, rt *runtime.Runtime, file *download.File, cos *registry.Cosign, art *template.Artifact, digest string) (bool, error) {
+	return false, v.err
+}

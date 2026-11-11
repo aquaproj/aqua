@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
@@ -71,31 +72,57 @@ func (is *Installer) filterVerifiers(logger *slog.Logger, verifiers []FileVerifi
 	return arr, nil
 }
 
-func (is *Installer) dlAndExtractChecksum(ctx context.Context, logger *slog.Logger, pkg *config.Package, assetName string) (string, error) {
+// dlAndExtractChecksum downloads the checksum file, verifies its signatures and
+// returns the asset's checksum in it, with the kinds verified.
+func (is *Installer) dlAndExtractChecksum(ctx context.Context, logger *slog.Logger, pkg *config.Package, assetName string) (string, []string, error) {
 	file, _, err := is.checksumDownloader.DownloadChecksum(ctx, logger, is.runtime, pkg)
 	if err != nil {
-		return "", fmt.Errorf("download a checksum file: %w", err)
+		return "", nil, fmt.Errorf("download a checksum file: %w", err)
 	}
 	defer file.Close()
 
 	b, err := io.ReadAll(file)
 	if err != nil {
-		return "", fmt.Errorf("read a checksum file: %w", err)
+		return "", nil, fmt.Errorf("read a checksum file: %w", err)
 	}
 
-	if err := is.VerifyChecksumFileContent(ctx, logger, pkg, assetName, b); err != nil {
-		return "", fmt.Errorf("verify the checksum file: %w", err)
+	kinds, err := is.VerifyChecksumFileContent(ctx, logger, pkg, assetName, b)
+	if err != nil {
+		return "", nil, fmt.Errorf("verify the checksum file: %w", err)
 	}
 
-	return checksum.GetChecksum(logger, assetName, string(b), pkg.PackageInfo.Checksum) //nolint:wrapcheck
+	chk, err := checksum.GetChecksum(logger, assetName, string(b), pkg.PackageInfo.Checksum)
+	if err != nil {
+		return "", nil, err //nolint:wrapcheck
+	}
+	return chk, kinds, nil
 }
 
-func (is *Installer) VerifyChecksumFileContent(ctx context.Context, logger *slog.Logger, pkg *config.Package, assetName string, content []byte) error {
+// VerifyChecksumFileContent verifies the signatures over a checksum file and returns
+// the kinds verified, e.g. "checksum.cosign".
+func (is *Installer) VerifyChecksumFileContent(ctx context.Context, logger *slog.Logger, pkg *config.Package, assetName string, content []byte) ([]string, error) {
 	verifiers, err := is.filterVerifiers(logger, is.newChecksumVerifiers(pkg, assetName))
 	if err != nil {
-		return fmt.Errorf("filter verifiers: %w", err)
+		return nil, fmt.Errorf("filter verifiers: %w", err)
 	}
-	return is.verifyChecksumFile(ctx, logger, content, verifiers)
+	if err := is.verifyChecksumFile(ctx, logger, content, verifiers); err != nil {
+		return nil, err
+	}
+	return checksumFileKinds(verifiers), nil
+}
+
+// checksumFileKinds names the kinds of the checksum file's verifiers as
+// aqua-checksums.json records them: "checksum." and the kind, which tells them apart
+// from the same kind of signature over the asset.
+func checksumFileKinds(verifiers []FileVerifier) []string {
+	if len(verifiers) == 0 {
+		return nil
+	}
+	kinds := make([]string, len(verifiers))
+	for i, verifier := range verifiers {
+		kinds[i] = "checksum." + verifier.Kind()
+	}
+	return kinds
 }
 
 func (is *Installer) verifyChecksumFile(ctx context.Context, logger *slog.Logger, b []byte, verifiers []FileVerifier) error {
@@ -136,9 +163,12 @@ type ParamVerifyChecksum struct {
 	AssetName       string
 	TempFilePath    string
 	SkipSetChecksum bool
+	// Verified is the kinds of signature verification the asset passed. A checksum
+	// newly recorded from this asset records them.
+	Verified []string
 }
 
-func (is *Installer) verifyChecksumWrap(ctx context.Context, logger *slog.Logger, param *DownloadParam, bodyFile *download.DownloadedFile) error {
+func (is *Installer) verifyChecksumWrap(ctx context.Context, logger *slog.Logger, param *DownloadParam, bodyFile *download.DownloadedFile, verified []string) error {
 	if param.Checksum == nil && param.Checksums == nil {
 		return nil
 	}
@@ -154,6 +184,7 @@ func (is *Installer) verifyChecksumWrap(ctx context.Context, logger *slog.Logger
 		AssetName:       param.Asset,
 		TempFilePath:    tempFilePath,
 		SkipSetChecksum: true,
+		Verified:        verified,
 	}
 
 	if param.Checksum == nil {
@@ -209,7 +240,7 @@ func (is *Installer) getChecksumFromSource(ctx context.Context, logger *slog.Log
 	if dlAssetName != "" {
 		dlAssetName = filepath.Base(dlAssetName)
 	}
-	c, err := is.dlAndExtractChecksum(ctx, logger, pkg, dlAssetName)
+	c, kinds, err := is.dlAndExtractChecksum(ctx, logger, pkg, dlAssetName)
 	if err != nil {
 		return nil, slogerr.With(err, "asset_name", dlAssetName) //nolint:wrapcheck
 	}
@@ -217,6 +248,7 @@ func (is *Installer) getChecksumFromSource(ctx context.Context, logger *slog.Log
 		ID:        checksumID,
 		Checksum:  c,
 		Algorithm: pkgInfo.Checksum.GetAlgorithm(),
+		Verified:  kinds,
 	}, nil
 }
 
@@ -227,6 +259,9 @@ func (is *Installer) verifyChecksum(ctx context.Context, logger *slog.Logger, pa
 	chksum := param.Checksum
 	checksumID := param.ChecksumID
 	tempFilePath := param.TempFilePath
+	// A checksum already recorded keeps what it records. Only a checksum recorded
+	// here, from this asset, can say which signatures this asset passed.
+	recorded := chksum != nil
 
 	if chksum == nil && pkgInfo.Checksum.GetEnabled() {
 		var err error
@@ -234,7 +269,6 @@ func (is *Installer) verifyChecksum(ctx context.Context, logger *slog.Logger, pa
 		if err != nil {
 			return err
 		}
-		checksums.Set(checksumID, chksum)
 	}
 
 	algorithm := "sha256"
@@ -264,7 +298,23 @@ func (is *Installer) verifyChecksum(ctx context.Context, logger *slog.Logger, pa
 		}
 	}
 	if !param.SkipSetChecksum {
-		checksums.Set(checksumID, chksum)
+		recordChecksum(checksums, checksumID, chksum, recorded, param.Verified)
 	}
 	return nil
+}
+
+// recordChecksum records the checksum the asset matched.
+//
+// It is recorded only once the asset matches it: the signatures were verified
+// against this asset, so recording them for a checksum the asset doesn't have would
+// vouch for something else. A checksum that was already recorded keeps what it
+// records.
+//
+// verified is what the asset passed. A checksum taken from a signed checksum file
+// already carries the checksum file's kinds, and records both.
+func recordChecksum(checksums *checksum.Checksums, checksumID string, chksum *checksum.Checksum, recorded bool, verified []string) {
+	if !recorded {
+		chksum.Verified = slices.Concat(verified, chksum.Verified)
+	}
+	checksums.Set(checksumID, chksum)
 }

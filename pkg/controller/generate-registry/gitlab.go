@@ -72,7 +72,7 @@ func (c *Controller) getGitLabPackageInfo(ctx context.Context, logger *slog.Logg
 func (c *Controller) gitLabVersions(ctx context.Context, logger *slog.Logger, pkgInfo *registry.PackageInfo, pkgName, project, version string, limit int, cfg *Config) []string {
 	if limit != 1 && version == "" {
 		return c.versionOverrides(logger, pkgName, pkgInfo,
-			c.gitLabReleases(ctx, logger, project, limit, cfg))
+			c.gitLabReleases(ctx, logger, project, limit, cfg), cfg)
 	}
 
 	release, err := c.gitlab.GetRelease(ctx, gitLabHost, project, version)
@@ -84,14 +84,14 @@ func (c *Controller) gitLabVersions(ctx context.Context, logger *slog.Logger, pk
 
 	assetNames := make([]string, 0, len(release.Assets))
 	for _, assetName := range release.Assets {
-		if excludeAsset(logger, assetName, cfg) {
+		if excludeAsset(logger, release.TagName, assetName, cfg) {
 			continue
 		}
 		assetNames = append(assetNames, assetName)
 	}
 	logger.Debug("got assets", "num_of_assets", len(assetNames))
 
-	c.patchRelease(logger, pkgInfo, pkgName, release.TagName, assetNames)
+	c.patchRelease(logger, cfg, pkgInfo, pkgName, release.TagName, assetNames)
 	return []string{release.TagName}
 }
 
@@ -140,7 +140,7 @@ func gitLabRelease(logger *slog.Logger, listed *forge.Release, cfg *Config) *Rel
 		VersionPrefix: prefix,
 	}
 	for _, assetName := range listed.Assets {
-		if excludeAsset(logger, assetName, cfg) {
+		if excludeAsset(logger, listed.TagName, assetName, cfg) {
 			continue
 		}
 		release.assets = append(release.assets, assetName)

@@ -1,6 +1,7 @@
 package updatechecksum_test
 
 import (
+	"errors"
 	"io"
 	"log/slog"
 	"os"
@@ -8,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/aquaproj/aqua/v2/pkg/checksumgetter"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	reader "github.com/aquaproj/aqua/v2/pkg/config-reader"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
@@ -19,7 +21,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 )
 
-func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
+func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen,maintidx
 	t.Parallel()
 	data := []struct {
 		name               string
@@ -31,10 +33,13 @@ func TestController_UpdateChecksum(t *testing.T) { //nolint:funlen
 		// expChecksums are IDs that must appear in the checksum file the command
 		// writes next to the configuration file.
 		expChecksums []string
-		rt           *runtime.Runtime
-		chkDL        download.ChecksumDownloader
-		downloader   download.ClientAPI
-		isErr        bool
+		// expContents are strings the checksum file must contain.
+		expContents []string
+		verifier    *checksumgetter.MockChecksumFileVerifier
+		rt          *runtime.Runtime
+		chkDL       download.ChecksumDownloader
+		downloader  download.ClientAPI
+		isErr       bool
 	}{
 		{
 			name: "normal",
@@ -170,6 +175,106 @@ ed2ed654e1afb92e5292a43213e17ecb0fe0ec50c19fe69f0d185316a17d39fa  gh_2.17.0_linu
 			},
 			downloader: &download.Mock{},
 		},
+		{
+			// The asset's signature is verified before the checksum is recorded, and
+			// the entry records it so that an install can skip it.
+			name: "signed asset",
+			param: &config.Param{
+				All: true,
+			},
+			cfgFiles: []string{"aqua.yaml"},
+			expChecksums: []string{
+				"github_release/github.com/aquaproj/ar2/v0.15.14/ar2_darwin_arm64.tar.gz",
+			},
+			expContents: []string{`"verified": [
+        "github_artifact_attestations"
+      ]`},
+			verifier:           &checksumgetter.MockChecksumFileVerifier{Kinds: []string{"github_artifact_attestations"}},
+			cfgReader:          newAr2ConfigReader(),
+			registryInstaller:  newAr2RegistryInstaller(),
+			registryDownloader: &domain.MockGitHubContentFileDownloader{},
+			rt: &runtime.Runtime{
+				GOOS:   "darwin",
+				GOARCH: "arm64",
+			},
+			chkDL: &download.MockChecksumDownloader{},
+			downloader: &download.Mock{
+				RC: io.NopCloser(strings.NewReader("hello")),
+			},
+		},
+		{
+			// A signed checksum file ties the digest to the publisher, so the asset
+			// isn't downloaded, and the entry records the checksum file's verification.
+			name: "signed checksum file",
+			param: &config.Param{
+				All: true,
+			},
+			cfgFiles: []string{"aqua.yaml"},
+			expChecksums: []string{
+				"github_release/github.com/aquaproj/ar2/v0.15.14/ar2_darwin_arm64.tar.gz",
+			},
+			expContents: []string{`"verified": [
+        "checksum.github_artifact_attestations"
+      ]`},
+			verifier: &checksumgetter.MockChecksumFileVerifier{
+				Kinds:         []string{"github_artifact_attestations"},
+				ChecksumKinds: []string{"checksum.github_artifact_attestations"},
+			},
+			cfgReader: newAr2ConfigReader(),
+			registryInstaller: &rgst.MockInstaller{
+				M: map[string]*registry.Config{
+					"standard": {
+						PackageInfos: registry.PackageInfos{
+							{
+								RepoOwner:                  "aquaproj",
+								RepoName:                   "ar2",
+								Type:                       "github_release",
+								Asset:                      "ar2_{{.OS}}_{{.Arch}}.tar.gz",
+								GitHubArtifactAttestations: &registry.GitHubArtifactAttestations{},
+								Checksum: &registry.Checksum{
+									Type:                       "github_release",
+									Asset:                      "ar2_checksums.txt",
+									Algorithm:                  "sha256",
+									GitHubArtifactAttestations: &registry.GitHubArtifactAttestations{},
+								},
+							},
+						},
+					},
+				},
+			},
+			registryDownloader: &domain.MockGitHubContentFileDownloader{},
+			rt: &runtime.Runtime{
+				GOOS:   "darwin",
+				GOARCH: "arm64",
+			},
+			chkDL: &download.MockChecksumDownloader{
+				Body: `cd76fbe5150c06f4928c8c00759bf54237c85c4cff829d4a6a19628709ca2aa7  ar2_darwin_arm64.tar.gz
+`,
+			},
+			downloader: &download.Mock{
+				Err: errors.New("the asset must not be downloaded"),
+			},
+		},
+		{
+			name: "invalid signature",
+			param: &config.Param{
+				All: true,
+			},
+			cfgFiles:           []string{"aqua.yaml"},
+			verifier:           &checksumgetter.MockChecksumFileVerifier{Err: errors.New("invalid signature")},
+			cfgReader:          newAr2ConfigReader(),
+			registryInstaller:  newAr2RegistryInstaller(),
+			registryDownloader: &domain.MockGitHubContentFileDownloader{},
+			rt: &runtime.Runtime{
+				GOOS:   "darwin",
+				GOARCH: "arm64",
+			},
+			chkDL: &download.MockChecksumDownloader{},
+			downloader: &download.Mock{
+				RC: io.NopCloser(strings.NewReader("hello")),
+			},
+			isErr: true,
+		},
 	}
 	logger := slog.New(slog.DiscardHandler)
 	for _, d := range data {
@@ -185,7 +290,12 @@ ed2ed654e1afb92e5292a43213e17ecb0fe0ec50c19fe69f0d185316a17d39fa  gh_2.17.0_linu
 				cfgFiles[i] = filepath.Join(dir, f)
 			}
 			cfgFinder := &updatechecksum.MockConfigFinder{Files: cfgFiles}
-			ctrl := updatechecksum.New(d.param, cfgFinder, d.cfgReader, d.registryInstaller, d.rt, d.chkDL, d.downloader, d.registryDownloader, &updatechecksum.MockChecksumFileVerifier{})
+			verifier := d.verifier
+			if verifier == nil {
+				verifier = &checksumgetter.MockChecksumFileVerifier{}
+			}
+			getter := checksumgetter.New(d.chkDL, d.downloader, verifier)
+			ctrl := updatechecksum.New(d.param, cfgFinder, d.cfgReader, d.registryInstaller, d.rt, getter, d.registryDownloader)
 			if err := ctrl.UpdateChecksum(ctx, logger, d.param); err != nil {
 				if d.isErr {
 					return
@@ -199,17 +309,58 @@ ed2ed654e1afb92e5292a43213e17ecb0fe0ec50c19fe69f0d185316a17d39fa  gh_2.17.0_linu
 			// this the test only checks that the command doesn't fail, which it
 			// also doesn't when every checksum is silently discarded.
 			for _, f := range cfgFiles {
-				p := filepath.Join(filepath.Dir(f), "aqua-checksums.json")
-				b, err := os.ReadFile(p)
-				if err != nil {
-					t.Fatal(err)
-				}
-				for _, id := range d.expChecksums {
-					if !strings.Contains(string(b), id) {
-						t.Fatalf("%s doesn't have the checksum of %s: %s", p, id, string(b))
-					}
-				}
+				assertChecksumFile(t, filepath.Join(filepath.Dir(f), "aqua-checksums.json"), append(d.expChecksums, d.expContents...))
 			}
 		})
+	}
+}
+
+// assertChecksumFile checks that the checksum file contains each string of exp.
+func assertChecksumFile(t *testing.T, p string, exp []string) {
+	t.Helper()
+	b, err := os.ReadFile(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, s := range exp {
+		if !strings.Contains(string(b), s) {
+			t.Fatalf("%s doesn't contain %s: %s", p, s, string(b))
+		}
+	}
+}
+
+func newAr2ConfigReader() *reader.MockConfigReader {
+	return &reader.MockConfigReader{
+		Cfg: &aqua.Config{
+			Checksum: &aqua.Checksum{
+				Enabled:       new(true),
+				SupportedEnvs: []string{"darwin/arm64"},
+			},
+			Packages: []*aqua.Package{
+				{
+					Name:     "aquaproj/ar2",
+					Version:  "v0.15.14",
+					Registry: "standard",
+				},
+			},
+		},
+	}
+}
+
+func newAr2RegistryInstaller() *rgst.MockInstaller {
+	return &rgst.MockInstaller{
+		M: map[string]*registry.Config{
+			"standard": {
+				PackageInfos: registry.PackageInfos{
+					{
+						RepoOwner:                  "aquaproj",
+						RepoName:                   "ar2",
+						Type:                       "github_release",
+						Asset:                      "ar2_{{.OS}}_{{.Arch}}.tar.gz",
+						GitHubArtifactAttestations: &registry.GitHubArtifactAttestations{},
+					},
+				},
+			},
+		},
 	}
 }

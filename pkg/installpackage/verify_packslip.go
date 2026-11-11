@@ -24,6 +24,10 @@ type packslipVerifier struct {
 	packslip    *registry.Packslip
 }
 
+func (*packslipVerifier) Kind() string {
+	return "packslip"
+}
+
 func (s *packslipVerifier) Enabled(logger *slog.Logger) (bool, error) {
 	if !s.packslip.GetEnabled() {
 		return false, nil

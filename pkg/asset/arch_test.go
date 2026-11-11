@@ -27,6 +27,7 @@ func Test_SetArch(t *testing.T) { //nolint:funlen
 				Template: assetFOOTarGz,
 				Arch:     archAmd64,
 				Score:    -2,
+				NoArch:   true,
 			},
 		},
 		{

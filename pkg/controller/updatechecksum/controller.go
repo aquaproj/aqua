@@ -5,43 +5,35 @@ import (
 	"log/slog"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
+	"github.com/aquaproj/aqua/v2/pkg/checksumgetter"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/domain"
-	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 )
 
-type ChecksumFileVerifier interface {
-	VerifyChecksumFileContent(ctx context.Context, logger *slog.Logger, pkg *config.Package, assetName string, content []byte) error
-}
-
 type Controller struct {
-	rootDir              string
-	configFinder         ConfigFinder
-	configReader         ConfigReader
-	registryInstaller    RegistryInstaller
-	registryDownloader   GitHubContentFileDownloader
-	runtime              *runtime.Runtime
-	chkDL                download.ChecksumDownloader
-	downloader           download.ClientAPI
-	checksumFileVerifier ChecksumFileVerifier
-	prune                bool
+	rootDir            string
+	configFinder       ConfigFinder
+	configReader       ConfigReader
+	registryInstaller  RegistryInstaller
+	registryDownloader GitHubContentFileDownloader
+	runtime            *runtime.Runtime
+	checksumGetter     *checksumgetter.Getter
+	prune              bool
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, rt *runtime.Runtime, chkDL download.ChecksumDownloader, pkgDownloader download.ClientAPI, registryDownloader GitHubContentFileDownloader, checksumFileVerifier ChecksumFileVerifier) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, rt *runtime.Runtime, checksumGetter *checksumgetter.Getter, registryDownloader GitHubContentFileDownloader) *Controller {
 	return &Controller{
-		rootDir:              param.RootDir,
-		configFinder:         configFinder,
-		configReader:         configReader,
-		registryInstaller:    registryInstaller,
-		registryDownloader:   registryDownloader,
-		runtime:              rt,
-		chkDL:                chkDL,
-		downloader:           pkgDownloader,
-		checksumFileVerifier: checksumFileVerifier,
-		prune:                param.Prune,
+		rootDir:            param.RootDir,
+		configFinder:       configFinder,
+		configReader:       configReader,
+		registryInstaller:  registryInstaller,
+		registryDownloader: registryDownloader,
+		runtime:            rt,
+		checksumGetter:     checksumGetter,
+		prune:              param.Prune,
 	}
 }
 

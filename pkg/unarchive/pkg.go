@@ -21,6 +21,12 @@ type pkgUnarchiver struct {
 }
 
 func (u *pkgUnarchiver) Unarchive(ctx context.Context, _ *slog.Logger, src *File) error {
+	if u.executor == nil {
+		// The caller built an Unarchiver without one, which is how something that
+		// only handles archives it can open declines this format. Saying so is the
+		// point; running pkgutil without an executor would be a nil dereference.
+		return errNoExecutor
+	}
 	if err := osfile.MkdirAll(filepath.Dir(u.dest)); err != nil {
 		return fmt.Errorf("create a directory: %w", err)
 	}

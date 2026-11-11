@@ -60,6 +60,7 @@ func SetParam(args *cliargs.GlobalArgs, logger *slogutil.Logger, param *config.P
 	homeDir, _ := os.UserHomeDir()
 	param.HomeDir = homeDir
 	param.RootDir = config.GetRootDir(osEnv, st.RootDir)
+	param.CacheDir = config.GetCacheDir(osEnv)
 	param.MaxParallelism = config.GetMaxParallelism(os.Getenv("AQUA_MAX_PARALLELISM"), st.MaxParallelism, logger.Logger)
 	param.GlobalConfigFilePaths = finder.ParseGlobalConfigFilePaths(wd, getEnv("AQUA_GLOBAL_CONFIG", st.GlobalConfig))
 	param.ProgressBar = getBoolEnv("AQUA_PROGRESS_BAR", st.GetProgressBar())
@@ -118,6 +119,7 @@ func setBools(param *config.Param, st *settings.Settings) error {
 		{"AQUA_REQUIRE_CHECKSUM", &param.RequireChecksum},
 		{"AQUA_ENFORCE_CHECKSUM", &param.EnforceChecksum},
 		{"AQUA_ENFORCE_REQUIRE_CHECKSUM", &param.EnforceRequireChecksum},
+		{"AQUA_VERIFY_SIGNATURES", &param.VerifySignatures},
 	} {
 		if err := parseBoolEnv(e.envName, e.target); err != nil {
 			return err
