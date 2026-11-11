@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-26.04
     permissions: {}
     steps:
-      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+      - uses: dorny/paths-filter@v4.0.3
         id: changes
         with:
           filters: |
@@ -23,18 +23,33 @@ jobs:
               - Dockerfile
               - .github/workflows/wc-test-docker.yaml
 
-  test:
-    uses: suzuki-shunsuke/go-test-workflow/.github/workflows/test.yaml@8400b0e4fd3f85098d210765b78790079ea6d29e # v3.2.3
+  # Download Go modules through Takumi Guard once, which requires id-token: write,
+  # and share them with the jobs below via the artifact gomodule,
+  # so that the jobs running the code of aqua and its dependencies don't have id-token: write.
+  # go-test-workflow requires go-licenses in the artifact.
+  gomodule:
+    uses: suzuki-shunsuke/download-go-module-action/.github/workflows/download.yaml@e03acd0c9d3d230019ebb7bd4a62507431fe4316 # v0.0.10
+    permissions:
+      contents: read
+      id-token: write
     with:
-      aqua_version: v2.64.0
-      golangci-lint-timeout: 120s
-      go-version-file: go.mod
+      aqua_version: v2.66.1
+      aqua_packages: go-licenses
     secrets:
       TAKUMI_GUARD_BOT_ID: ${{secrets.TAKUMI_GUARD_BOT_ID}}
+
+  test:
+    uses: suzuki-shunsuke/go-test-workflow/.github/workflows/test.yaml@ff8934b3958ec0c1b0a6fce445052e2d2a42e8c9 # v3.2.4
+    needs: gomodule
+    with:
+      aqua_version: v2.66.1
+      golangci-lint-timeout: 120s
+      go-version-file: go.mod
+      gomodule_artifact_name: gomodule
     permissions:
       pull-requests: write
       contents: read
-      id-token: write
+      id-token: write # The skipped gomodule job of go-test-workflow still requires this permission
 
   # The unit tests must not write anything into the working tree. They used to:
   # while afero was being removed, a package created a directory for real while
@@ -44,20 +59,22 @@ jobs:
   test-no-side-effect:
     timeout-minutes: 30
     runs-on: ubuntu-26.04
+    needs: gomodule
     permissions:
-      id-token: write
+      contents: read
+    env:
+      # Use only the modules downloaded in the gomodule job.
+      GOPROXY: "off"
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      - uses: actions/setup-go@v7.0.0
         with:
           go-version-file: go.mod
-          cache: true
+          cache: false
 
-      - uses: flatt-security/setup-takumi-guard-golang@2e3c7c40b538cd68b2ac483def12982ebc8bc02e # v1
-        with:
-          bot-id: ${{secrets.TAKUMI_GUARD_BOT_ID}}
+      - uses: suzuki-shunsuke/download-go-module-action/restore@v0.0.10
 
       - run: go test ./... > /dev/null
       - name: Check that the tests left nothing behind
@@ -76,39 +93,36 @@ jobs:
 
   test-docker:
     uses: ./.github/workflows/wc-test-docker.yaml
-    needs: path-filter
+    needs: [path-filter, gomodule]
     if: needs.path-filter.outputs.test-docker == 'true'
-    secrets:
-      TAKUMI_GUARD_BOT_ID: ${{secrets.TAKUMI_GUARD_BOT_ID}}
     permissions:
       contents: read
-      id-token: write
 
   integration-test:
     uses: ./.github/workflows/wc-integration-test.yaml
+    needs: gomodule
+    permissions:
+      contents: read
+
+  test_doc:
+    uses: suzuki-shunsuke/release-doc-action/.github/workflows/test.yaml@1cb15eb99aa8f0ae05ae28174430e49579e878fa # v0.2.0
+    with:
+      # Build the document only if these files are changed
+      paths: |
+        website/**
+        .github/workflows/test.yaml
+        .github/workflows/workflow_call_test.yaml
     secrets:
       TAKUMI_GUARD_BOT_ID: ${{secrets.TAKUMI_GUARD_BOT_ID}}
     permissions:
+      pull-requests: read
       contents: read
       id-token: write
 
-  test_doc:
-    uses: ./.github/workflows/workflow_call_deploy_doc.yaml
-    secrets:
-      TAKUMI_GUARD_BOT_ID: ${{secrets.TAKUMI_GUARD_BOT_ID}}
-    permissions:
-      contents: write
-      issues: write
-      id-token: write
-
-  typos:
-    uses: ./.github/workflows/workflow_call_typos.yaml
-    permissions: {}
-
   test-workflow:
-    uses: suzuki-shunsuke/test-workflow/.github/workflows/test.yaml@51ece8dcaabff59820bfb2053c56e3cb281cf7b2 # v0.0.1
+    uses: suzuki-shunsuke/test-workflow/.github/workflows/test.yaml@0b89b9b4314282810bc944364380568708208eaa # v0.0.2
     with:
-      aqua_version: v2.64.0
+      aqua_version: v2.66.1
     permissions:
       contents: read
       pull-requests: read

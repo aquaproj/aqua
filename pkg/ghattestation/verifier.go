@@ -26,6 +26,10 @@ type ParamVerify struct {
 	SourceDigest          string
 	CertOIDCIssuer        string
 	DenySelfHostedRunners bool
+	// Private is true if the package is private.
+	// HTTP 404 for a private package may be caused by the lack of the permission,
+	// so another GitHub access token is tried.
+	Private bool
 }
 
 var errSignerRepoAndWorkflow = errors.New("signer_repo and signer_workflow can't be set together, because gh attestation verify accepts only one of them")

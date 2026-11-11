@@ -47,6 +47,14 @@ suzuki-shunsuke/go-release-workflow  https://slsa.dev/provenance/v1  .github/wor
 ...
 ```
 
+### GitHub access token
+
+GitHub CLI calls GitHub API to get attestations.
+aqua passes a GitHub access token to GitHub CLI from GitHub CLI's own credential, `AQUA_GITHUB_TOKEN`, [the keyring](/docs/reference/security/keyring), or [ghtkn](/docs/reference/security/ghtkn).
+Without an access token, the verification may fail because of the rate limit of unauthenticated requests.
+
+If the verification fails, please see [the error code 008](/docs/reference/codes/008).
+
 ### Disable the verification of GitHub Artifact Attestations
 
 We recommend enabling the verification for security, but you can disable the verification by the environment variable.

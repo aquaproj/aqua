@@ -137,10 +137,10 @@ func (is *Installer) checkFileSrc(ctx context.Context, logger *slog.Logger, pkg 
 	}
 
 	logger.Debug("check the permission")
-	if mode := finfo.Mode().Perm(); !osfile.IsOwnerExecutable(mode) {
+	if mode := finfo.Mode(); !osfile.IsExecutable(is.realRuntime.GOOS, mode) {
 		logger.Debug("add the permission to execute the command")
-		if err := os.Chmod(exePath, osfile.AllowOwnerExec(mode)); err != nil {
-			return "", errChmod
+		if err := os.Chmod(exePath, osfile.AllowOwnerExec(mode.Perm())); err != nil {
+			return "", fmt.Errorf("%w: %w", errChmod, err)
 		}
 	}
 

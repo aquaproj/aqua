@@ -1,48 +1,48 @@
 {
   "checksums": [
     {
-      "id": "github_release/github.com/pnpm/pnpm/v12.11.2/pnpm-darwin-arm64.tar.gz",
-      "checksum": "2F4701DBD4A7B81827789E94225272355FCC17C4EB9F5ADD08ED26F943003B67",
+      "id": "github_release/github.com/pnpm/pnpm/v12.18.0/pnpm-darwin-arm64.tar.gz",
+      "checksum": "9B647F634D7E8F23162C9D3D1D0E0950D1152402CA0F4C331583ED7C75CD3706",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/pnpm/pnpm/v12.11.2/pnpm-darwin-x64.tar.gz",
-      "checksum": "409F9754F68500719DB9B17BD750D091790F1D846F61707B4716C73110F5DE52",
+      "id": "github_release/github.com/pnpm/pnpm/v12.18.0/pnpm-darwin-x64.tar.gz",
+      "checksum": "34CC90FBAA060C458B587FBDB1F3F9477E97E3FD3F8E9FFB2D43CA45C0C9B005",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/pnpm/pnpm/v12.11.2/pnpm-linux-arm64-musl.tar.gz",
-      "checksum": "ABF111D90E1AB8BC1485F853BF83F6E86B028AB5BADC393203014E50C4A1CF7D",
+      "id": "github_release/github.com/pnpm/pnpm/v12.18.0/pnpm-linux-arm64-musl.tar.gz",
+      "checksum": "86C80EB744B1FF41CA7400BB1F8CA5FB522B2101DA39AC93BD45F3BC652E5CFB",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/pnpm/pnpm/v12.11.2/pnpm-linux-arm64.tar.gz",
-      "checksum": "AD444FA06D7FF344D74BA1E4933F2ED71CC6357CC2D33707A5C60958B7D83085",
+      "id": "github_release/github.com/pnpm/pnpm/v12.18.0/pnpm-linux-arm64.tar.gz",
+      "checksum": "700BD1AA4028465B80E62B7C5BEC8455BE60BBAFAF53A3262A4AB8E2057712AC",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/pnpm/pnpm/v12.11.2/pnpm-linux-x64-musl.tar.gz",
-      "checksum": "64E35FE0854494DC56C24311D97F13CFE73FCFD8E3CB65B7C0F5C359DA6A0FD8",
+      "id": "github_release/github.com/pnpm/pnpm/v12.18.0/pnpm-linux-x64-musl.tar.gz",
+      "checksum": "FAAED5856527E4F1E8D5E16EDF797C6E643CBE1521E3D15E2D791E8295489FB1",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/pnpm/pnpm/v12.11.2/pnpm-linux-x64.tar.gz",
-      "checksum": "358F30541B42371360C0D48A8DADDC0C0850A90C36FCBEA598032A9850E2C9AB",
+      "id": "github_release/github.com/pnpm/pnpm/v12.18.0/pnpm-linux-x64.tar.gz",
+      "checksum": "3726060E236C0DB3E7124C0A5AF123C840BA0CB76682149B63EA0BAF290017C2",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/pnpm/pnpm/v12.11.2/pnpm-win32-arm64.zip",
-      "checksum": "550C8167A14C7F25E156C6FD14196CB440C0F05210CCB618AD904DC42DC90F6C",
+      "id": "github_release/github.com/pnpm/pnpm/v12.18.0/pnpm-win32-arm64.zip",
+      "checksum": "942765D3D900F2C586874011169489DB9983285DF6E033A0C930ADA8498A572D",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/pnpm/pnpm/v12.11.2/pnpm-win32-x64.zip",
-      "checksum": "66CAC6B725BFC75FADAC959FC435821048558ADB50B89C82D0D2D5E57465A1DD",
+      "id": "github_release/github.com/pnpm/pnpm/v12.18.0/pnpm-win32-x64.zip",
+      "checksum": "DFE2123AFFD2ED4BE280BA7AB4678C0FAE130B4936FABEFA9B1675B60514EF7C",
       "algorithm": "sha256"
     },
     {
-      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.574.1/registry.yaml",
-      "checksum": "B4F0E425BC813721E1BD4CD7DECA9FDEA64BE0AFD759F529E3122AE5E1B584F3",
+      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.584.0/registry.yaml",
+      "checksum": "2850916D8E46BCB75075F4CCE621C713C4BC8EDEF33D616E84426F428BBB6EA8",
       "algorithm": "sha256"
     }
   ]
