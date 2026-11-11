@@ -27,7 +27,7 @@ jobs:
     env:
       GITHUB_TOKEN: ${{github.token}}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           ref: ${{inputs.ref}}
           persist-credentials: false
@@ -36,12 +36,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{github.token}}
 
-      - uses: aquaproj/aqua-installer@82d0e83878a8657c4a6f2ff1755d3bfbfc67f329 # v4.1.0
+      - uses: aquaproj/aqua-installer@v4.1.1
         if: inputs.aqua_version != ''
         with:
           aqua_version: ${{inputs.aqua_version}}
 
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      - uses: actions/setup-go@v7.0.0
         if: inputs.aqua_version == ''
         with:
           go-version-file: go.mod
@@ -116,7 +116,7 @@ jobs:
     env:
       GITHUB_TOKEN: ${{github.token}}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           ref: ${{inputs.ref}}
           persist-credentials: false
@@ -125,12 +125,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{github.token}}
 
-      - uses: aquaproj/aqua-installer@82d0e83878a8657c4a6f2ff1755d3bfbfc67f329 # v4.1.0
+      - uses: aquaproj/aqua-installer@v4.1.1
         if: inputs.aqua_version != ''
         with:
           aqua_version: ${{inputs.aqua_version}}
 
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      - uses: actions/setup-go@v7.0.0
         if: inputs.aqua_version == ''
         with:
           go-version-file: go.mod

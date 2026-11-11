@@ -3,7 +3,6 @@ package installpackage
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log/slog"
 	"slices"
 	"testing"
@@ -12,7 +11,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
-	"github.com/aquaproj/aqua/v2/pkg/ghattestation"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 )
 
@@ -187,37 +185,10 @@ func TestInstaller_runVerifiers(t *testing.T) {
 	if !slices.Equal(kinds, []string{"github_artifact_attestations", "cosign"}) {
 		t.Fatalf("kinds = %v", kinds)
 	}
-	// gh couldn't authenticate: the install goes on, but the attestations weren't
-	// verified, so they must not be recorded.
-	kinds, err = is.runVerifiers(t.Context(), logger, []FileVerifier{
-		&fakeVerifier{kind: "github_artifact_attestations", err: fmt.Errorf("verify a package with gh attestation: %w", ghattestation.ErrSkipped)},
-		&fakeVerifier{kind: "cosign"},
-	}, path)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !slices.Equal(kinds, []string{"cosign"}) {
-		t.Fatalf("kinds = %v", kinds)
-	}
 	if _, err := is.runVerifiers(t.Context(), logger, []FileVerifier{
 		&fakeVerifier{kind: "cosign", err: errors.New("invalid signature")},
 	}, path); err == nil {
 		t.Fatal("an invalid signature must fail")
-	}
-}
-
-func TestInstaller_verifyChecksumFile_skipped(t *testing.T) {
-	t.Parallel()
-	is := &Installer{}
-	verified, err := is.verifyChecksumFile(t.Context(), slog.New(slog.DiscardHandler), []byte("checksums"), []FileVerifier{
-		&fakeVerifier{kind: "github_artifact_attestations", err: ghattestation.ErrSkipped},
-		&fakeVerifier{kind: "cosign"},
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if kinds := checksumFileKinds(verified); !slices.Equal(kinds, []string{"checksum.cosign"}) {
-		t.Fatalf("kinds = %v", kinds)
 	}
 }
 

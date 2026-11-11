@@ -54,6 +54,7 @@ func (g *gitHubArtifactAttestationsVerifier) Verify(ctx context.Context, logger 
 		SourceDigest:          g.gaa.SourceDigest,
 		CertOIDCIssuer:        g.gaa.CertOIDCIssuer,
 		DenySelfHostedRunners: g.gaa.DenySelfHostedRunners,
+		Private:               g.pkg.PackageInfo.Private,
 	}); err != nil {
 		return fmt.Errorf("verify a package with gh attestation: %w", err)
 	}

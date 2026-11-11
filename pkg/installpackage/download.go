@@ -2,7 +2,6 @@ package installpackage
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -14,7 +13,6 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/download"
-	"github.com/aquaproj/aqua/v2/pkg/ghattestation"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
@@ -322,30 +320,12 @@ func (is *Installer) runVerifiers(ctx context.Context, logger *slog.Logger, veri
 	if err != nil {
 		return nil, fmt.Errorf("get the path of the asset to verify: %w", err)
 	}
-	verified, err := runEachVerifier(ctx, logger, verifiers, filePath)
-	if err != nil {
-		return nil, fmt.Errorf("verify the asset: %w", err)
-	}
-	return verifierKinds(verified), nil
-}
-
-// runEachVerifier runs the verifiers against the file and returns those that verified
-// it. A verifier that skipped the verification without failing it, as gh does when it
-// can't authenticate (ghattestation.ErrSkipped), lets the install go on, but isn't
-// returned: aqua-checksums.json must not record it as verified, or no install would
-// ever verify it again.
-func runEachVerifier(ctx context.Context, logger *slog.Logger, verifiers []FileVerifier, file string) ([]FileVerifier, error) {
-	verified := make([]FileVerifier, 0, len(verifiers))
 	for _, verifier := range verifiers {
-		if err := verifier.Verify(ctx, logger, file); err != nil {
-			if errors.Is(err, ghattestation.ErrSkipped) {
-				continue
-			}
-			return nil, fmt.Errorf("verify with %s: %w", verifier.Kind(), err)
+		if err := verifier.Verify(ctx, logger, filePath); err != nil {
+			return nil, fmt.Errorf("verify the asset: %w", err)
 		}
-		verified = append(verified, verifier)
 	}
-	return verified, nil
+	return verifierKinds(verifiers), nil
 }
 
 // VerifyAsset verifies the signatures over an asset that has already been downloaded,

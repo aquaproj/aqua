@@ -105,11 +105,10 @@ func (is *Installer) VerifyChecksumFileContent(ctx context.Context, logger *slog
 	if err != nil {
 		return nil, fmt.Errorf("filter verifiers: %w", err)
 	}
-	verified, err := is.verifyChecksumFile(ctx, logger, content, verifiers)
-	if err != nil {
+	if err := is.verifyChecksumFile(ctx, logger, content, verifiers); err != nil {
 		return nil, err
 	}
-	return checksumFileKinds(verified), nil
+	return checksumFileKinds(verifiers), nil
 }
 
 // checksumFileKinds names the kinds of the checksum file's verifiers as
@@ -126,15 +125,13 @@ func checksumFileKinds(verifiers []FileVerifier) []string {
 	return kinds
 }
 
-// verifyChecksumFile verifies the signatures over the checksum file and returns the
-// verifiers that verified it.
-func (is *Installer) verifyChecksumFile(ctx context.Context, logger *slog.Logger, b []byte, verifiers []FileVerifier) ([]FileVerifier, error) {
+func (is *Installer) verifyChecksumFile(ctx context.Context, logger *slog.Logger, b []byte, verifiers []FileVerifier) error {
 	if len(verifiers) == 0 {
-		return nil, nil
+		return nil
 	}
 	f, err := os.CreateTemp("", "")
 	if err != nil {
-		return nil, fmt.Errorf("create a temporary file: %w", err)
+		return fmt.Errorf("create a temporary file: %w", err)
 	}
 	tempFilePath := f.Name()
 	// Close before removing: deferred calls run in reverse order, and Windows
@@ -148,13 +145,14 @@ func (is *Installer) verifyChecksumFile(ctx context.Context, logger *slog.Logger
 		}
 	}()
 	if _, err := f.Write(b); err != nil {
-		return nil, fmt.Errorf("write a checksum to a temporary file: %w", err)
+		return fmt.Errorf("write a checksum to a temporary file: %w", err)
 	}
-	verified, err := runEachVerifier(ctx, logger, verifiers, tempFilePath)
-	if err != nil {
-		return nil, fmt.Errorf("verify the checksum file: %w", err)
+	for _, verifier := range verifiers {
+		if err := verifier.Verify(ctx, logger, tempFilePath); err != nil {
+			return fmt.Errorf("verify the checksum file: %w", err)
+		}
 	}
-	return verified, nil
+	return nil
 }
 
 type ParamVerifyChecksum struct {
