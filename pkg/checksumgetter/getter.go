@@ -12,6 +12,7 @@ import (
 	"io"
 	"log/slog"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
@@ -308,7 +309,7 @@ func (g *Getter) dlAndVerifyChecksumFile(ctx context.Context, logger *slog.Logge
 	}
 	// Every checksum the file lists is vouched for by the file's signature.
 	for _, c := range cs {
-		c.Verified = kinds
+		c.Verified = slices.Clone(kinds)
 	}
 	return cs, nil
 }

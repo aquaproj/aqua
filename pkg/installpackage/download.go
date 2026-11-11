@@ -6,9 +6,11 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
+	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
@@ -259,28 +261,41 @@ func (is *Installer) skipRecordedVerifiers(logger *slog.Logger, param *DownloadP
 		logger.Debug("skip verifying signatures because aqua-checksums.json records that they were verified when the checksum was recorded")
 		return nil, nil
 	}
-	checksumKinds, err := is.configuredChecksumFileKinds(logger, param.Package, param.Asset)
+	recorded, err := is.checksumFileVerified(logger, param.Package, param.Asset, entry)
 	if err != nil {
 		return nil, err
 	}
-	if len(checksumKinds) != 0 && entry.HasVerified(checksumKinds) {
+	if recorded {
 		logger.Debug("skip verifying signatures because aqua-checksums.json records that the checksum file's signatures were verified when the checksum was recorded")
 		return nil, nil
 	}
 	return verifiers, nil
 }
 
-// configuredChecksumFileKinds returns the kinds of signature over the checksum file that the
-// registry configures and that are enabled here.
-func (is *Installer) configuredChecksumFileKinds(logger *slog.Logger, pkg *config.Package, assetName string) ([]string, error) {
-	if !pkg.PackageInfo.Checksum.GetEnabled() {
-		return nil, nil
+// checksumFileVerified reports whether the entry records every kind of signature over
+// the checksum file that the registry configures and that is enabled here.
+func (is *Installer) checksumFileVerified(logger *slog.Logger, pkg *config.Package, assetName string, entry *checksum.Checksum) (bool, error) {
+	// Filtering the checksum file's verifiers logs a warning for each one the host
+	// doesn't support, so it is done only if the entry may skip by them.
+	if !pkg.PackageInfo.Checksum.GetEnabled() || !hasChecksumFileRecord(entry) {
+		return false, nil
 	}
 	verifiers, err := is.filterVerifiers(logger, is.newChecksumVerifiers(pkg, assetName))
 	if err != nil {
-		return nil, err
+		return false, err
 	}
-	return checksumFileKinds(verifiers), nil
+	return len(verifiers) != 0 && entry.HasVerified(checksumFileKinds(verifiers)), nil
+}
+
+// hasChecksumFileRecord reports whether the entry records a verification of the
+// checksum file's signature.
+func hasChecksumFileRecord(entry *checksum.Checksum) bool {
+	if entry == nil {
+		return false
+	}
+	return slices.ContainsFunc(entry.Verified, func(kind string) bool {
+		return strings.HasPrefix(kind, "checksum.")
+	})
 }
 
 func verifierKinds(verifiers []FileVerifier) []string {

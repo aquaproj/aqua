@@ -2,6 +2,7 @@ package installpackage
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"slices"
 	"testing"
@@ -15,6 +16,7 @@ import (
 
 type fakeVerifier struct {
 	kind string
+	err  error
 }
 
 func (v *fakeVerifier) Kind() string {
@@ -26,7 +28,7 @@ func (v *fakeVerifier) Enabled(_ *slog.Logger) (bool, error) {
 }
 
 func (v *fakeVerifier) Verify(_ context.Context, _ *slog.Logger, _ string) error {
-	return nil
+	return v.err
 }
 
 func newVerifiedTestPackage() *config.Package {
@@ -182,6 +184,33 @@ func TestInstaller_runVerifiers(t *testing.T) {
 	}
 	if !slices.Equal(kinds, []string{"github_artifact_attestations", "cosign"}) {
 		t.Fatalf("kinds = %v", kinds)
+	}
+	if _, err := is.runVerifiers(t.Context(), logger, []FileVerifier{
+		&fakeVerifier{kind: "cosign", err: errors.New("invalid signature")},
+	}, path); err == nil {
+		t.Fatal("an invalid signature must fail")
+	}
+}
+
+func TestHasChecksumFileRecord(t *testing.T) {
+	t.Parallel()
+	data := []struct {
+		name  string
+		entry *checksum.Checksum
+		exp   bool
+	}{
+		{name: "no entry"},
+		{name: "no record", entry: &checksum.Checksum{}},
+		{name: "the asset's own", entry: &checksum.Checksum{Verified: []string{"cosign"}}},
+		{name: "the checksum file's", entry: &checksum.Checksum{Verified: []string{"cosign", "checksum.cosign"}}, exp: true},
+	}
+	for _, d := range data {
+		t.Run(d.name, func(t *testing.T) {
+			t.Parallel()
+			if got := hasChecksumFileRecord(d.entry); got != d.exp {
+				t.Fatalf("hasChecksumFileRecord = %v, wanted %v", got, d.exp)
+			}
+		})
 	}
 }
 
