@@ -33,6 +33,9 @@ To install tools in global configuration files, you have to set `-a` to `aqua in
 
 ## Environment variables
 
+Most of these can also be set in the [settings file](settings-file.md), which saves
+setting them in every shell. An environment variable overrides the file.
+
 * `AQUA_LOG_LEVEL`: (default: `info`) Log level
 * `AQUA_CONFIG`: configuration file path
 * [AQUA_GLOBAL_CONFIG](/docs/tutorial/global-config): global configuration file paths separated by semicolon `:`
