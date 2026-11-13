@@ -29,7 +29,12 @@ func SetArch(assetName, lowAssetName string, assetInfo *AssetInfo) {
 	}
 	if assetInfo.Arch == "" {
 		assetInfo.Arch = archAmd64
-		assetInfo.Score = -2 //nolint:mnd
+		// win64 names the architecture as well as the OS: it is the x86-64 build, beside
+		// which win32 is the 32-bit one. Scored like a name without an architecture, the
+		// two tied, and protoc and scrcpy got their 32-bit builds for windows/amd64.
+		if assetInfo.OS != osWindows || !strings.Contains(lowAssetName, "win64") {
+			assetInfo.Score = -2 //nolint:mnd
+		}
 	}
 }
 

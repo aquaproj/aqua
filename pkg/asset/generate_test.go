@@ -422,3 +422,22 @@ func TestGetOSArch_order(t *testing.T) {
 		})
 	}
 }
+
+// win64 is the x86-64 build and win32 the 32-bit one, and both name nothing but the OS
+// otherwise, so the template doesn't tell them apart: the replacement does.
+func TestGetOSArch_win64(t *testing.T) {
+	t.Parallel()
+	for _, names := range [][]string{
+		{"protoc-34.2-win32.zip", "protoc-34.2-win64.zip"},
+		{"protoc-34.2-win64.zip", "protoc-34.2-win32.zip"},
+	} {
+		infos := make([]*asset.AssetInfo, 0, len(names))
+		for _, name := range names {
+			infos = append(infos, asset.ParseAssetName(name, "v34.2"))
+		}
+		got := asset.GetOSArch("windows", "amd64", infos)
+		if got == nil || got.Replacements["windows"] != "win64" {
+			t.Errorf("%v: chose %+v, want win64", names, got)
+		}
+	}
+}
