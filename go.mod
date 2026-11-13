@@ -18,7 +18,7 @@ require (
 	github.com/otiai10/copy v1.14.1
 	github.com/pb33f/ordered-map/v2 v2.3.2
 	github.com/schollz/progressbar/v3 v3.19.1
-	github.com/suzuki-shunsuke/flute v1.0.1
+	github.com/suzuki-shunsuke/flute/v2 v2.0.0
 	github.com/suzuki-shunsuke/gen-go-jsonschema v0.1.0
 	github.com/suzuki-shunsuke/ghtkn-go-sdk v0.6.2
 	github.com/suzuki-shunsuke/go-error-with-exit-code v1.0.0
