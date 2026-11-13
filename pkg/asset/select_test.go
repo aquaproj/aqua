@@ -60,6 +60,20 @@ func TestSelect(t *testing.T) { //nolint:funlen
 			},
 		},
 		{
+			name:    "win64 is preferred to win32",
+			pkgName: "protocolbuffers/protobuf",
+			version: "v34.2",
+			assets: []string{
+				"protoc-34.2-win32.zip", "protoc-34.2-win64.zip",
+				"protoc-34.2-linux-x86_64.zip",
+			},
+			want: map[string]picked{
+				"linux/amd64":   {Name: "protoc-34.2-linux-x86_64.zip"},
+				"windows/amd64": {Name: "protoc-34.2-win64.zip"},
+				"windows/arm64": {Name: "protoc-34.2-win64.zip", Emulated: true},
+			},
+		},
+		{
 			name:    "rust target triples give a glibc and a musl build",
 			pkgName: "foo/foo",
 			version: "v1.0.0",
