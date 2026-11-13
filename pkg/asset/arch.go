@@ -33,10 +33,26 @@ func SetArch(assetName, lowAssetName string, assetInfo *AssetInfo, extra ...Spel
 		}
 	}
 	if assetInfo.Arch == "" {
-		assetInfo.Arch = archAmd64
-		assetInfo.Score = -2 //nolint:mnd
-		assetInfo.NoArch = true
+		setNoArch(lowAssetName, assetInfo)
 	}
+}
+
+// setNoArch sets an asset whose name says no architecture to amd64, which is what such a
+// build usually is, and scores it below one whose name says so.
+func setNoArch(lowAssetName string, assetInfo *AssetInfo) {
+	assetInfo.Arch = archAmd64
+	assetInfo.NoArch = true
+	if !win64(lowAssetName, assetInfo) {
+		assetInfo.Score = -2 //nolint:mnd
+	}
+}
+
+// win64 says whether a Windows asset is named win64, which names the architecture as well
+// as the OS: it is the x86-64 build, beside which win32 is the 32-bit one. Scored like a
+// name without an architecture, the two tied, and protoc and scrcpy got their 32-bit builds
+// for windows/amd64.
+func win64(lowAssetName string, assetInfo *AssetInfo) bool {
+	return assetInfo.OS == osWindows && strings.Contains(lowAssetName, "win64")
 }
 
 // knownArchs are the spellings of an architecture the parser recognises on its own.
