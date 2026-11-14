@@ -593,6 +593,9 @@ func ParseAssetName(assetName, version string, extra ...Spellings) *AssetInfo { 
 		assetInfo.Musl = true
 	}
 	assetInfo.Format = getFormat(assetName)
+	if archPackage(lowAssetName) {
+		assetInfo.Score--
+	}
 	if assetInfo.Format != formatRaw {
 		assetInfo.Template = assetInfo.Template[:len(assetInfo.Template)-len(assetInfo.Format)] + "{{.Format}}"
 	}
@@ -604,4 +607,15 @@ func ParseAssetName(assetName, version string, extra ...Spellings) *AssetInfo { 
 		}
 	}
 	return assetInfo
+}
+
+// archPackage says whether an asset is an Arch Linux package, a .pkg.tar.zst. It is a tar
+// archive aqua can open, with the executable under usr/bin, so it isn't excluded like a .deb
+// or an .rpm. But it is built for Arch, against the libraries Arch has, and GoReleaser
+// publishes one beside the tarball of the same build: bearer_2.1.2_linux_amd64.tar.gz and
+// bearer_2.1.2_linux-amd64.pkg.tar.zst. Their names differ by more than the format, so the
+// two tied and Linux was left out. Scored below the tarball, the package is taken only when
+// it is all a release has.
+func archPackage(lowAssetName string) bool {
+	return strings.HasSuffix(lowAssetName, ".pkg.tar.zst")
 }
