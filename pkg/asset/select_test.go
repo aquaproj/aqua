@@ -74,6 +74,28 @@ func TestSelect(t *testing.T) { //nolint:funlen
 			},
 		},
 		{
+			name:    "the tarball is preferred to the Arch Linux package of the same build",
+			pkgName: "Bearer/bearer",
+			version: "v2.1.2",
+			assets: []string{
+				"bearer_2.1.2_linux-amd64.pkg.tar.zst", "bearer_2.1.2_linux_amd64.tar.gz",
+				"bearer_2.1.2_linux-arm64.pkg.tar.zst", "bearer_2.1.2_linux_arm64.tar.gz",
+			},
+			want: map[string]picked{
+				"linux/amd64": {Name: "bearer_2.1.2_linux_amd64.tar.gz"},
+				"linux/arm64": {Name: "bearer_2.1.2_linux_arm64.tar.gz"},
+			},
+		},
+		{
+			name:    "an Arch Linux package that is all a release has is taken",
+			pkgName: "example/tool",
+			version: "v1.0.0",
+			assets:  []string{"tool_1.0.0_linux_amd64.pkg.tar.zst"},
+			want: map[string]picked{
+				"linux/amd64": {Name: "tool_1.0.0_linux_amd64.pkg.tar.zst"},
+			},
+		},
+		{
 			name:    "rust target triples give a glibc and a musl build",
 			pkgName: "foo/foo",
 			version: "v1.0.0",
