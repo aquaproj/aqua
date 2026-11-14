@@ -441,3 +441,26 @@ func TestGetOSArch_win64(t *testing.T) {
 		}
 	}
 }
+
+// An Arch Linux package is taken only when the release has nothing else for the environment:
+// GoReleaser publishes one beside the tarball of the same build, and the two tied.
+func TestGetOSArch_archPackage(t *testing.T) {
+	t.Parallel()
+	for _, names := range [][]string{
+		{"bearer_2.1.2_linux_amd64.tar.gz", "bearer_2.1.2_linux-amd64.pkg.tar.zst"},
+		{"bearer_2.1.2_linux-amd64.pkg.tar.zst", "bearer_2.1.2_linux_amd64.tar.gz"},
+	} {
+		infos := make([]*asset.AssetInfo, 0, len(names))
+		for _, name := range names {
+			infos = append(infos, asset.ParseAssetName(name, "v2.1.2"))
+		}
+		got := asset.GetOSArch("linux", "amd64", infos)
+		if got == nil || got.Format != formatTarGz {
+			t.Errorf("%v: chose %+v, want the tarball", names, got)
+		}
+	}
+	only := []*asset.AssetInfo{asset.ParseAssetName("tool_1.0.0_linux_amd64.pkg.tar.zst", "v1.0.0")}
+	if got := asset.GetOSArch("linux", "amd64", only); got == nil {
+		t.Error("an Arch Linux package that is all a release has wasn't chosen")
+	}
+}
