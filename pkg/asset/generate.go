@@ -599,6 +599,13 @@ func ParseAssetName(assetName, version string, extra ...Spellings) *AssetInfo { 
 	if specialBuild(lowAssetName) {
 		assetInfo.Score--
 	}
+	if assetInfo.OS == osLinux && hasWord(lowAssetName, "static") {
+		// A statically linked build runs on any Linux, whatever libc it has, while the
+		// build beside it may be linked against glibc: dundee/gdu's
+		// gdu_linux_amd64_static.tgz beside gdu_linux_amd64.tgz. Nothing in the plain
+		// one's name says which, so the static one is the one sure to run.
+		assetInfo.Score++
+	}
 	if assetInfo.Format != formatRaw {
 		assetInfo.Template = assetInfo.Template[:len(assetInfo.Template)-len(assetInfo.Format)] + "{{.Format}}"
 	}
