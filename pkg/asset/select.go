@@ -116,8 +116,7 @@ type Selection struct {
 // by Rosetta 2 and on Windows by its emulation.
 func Select(pkgName, version string, names []string, spellings Spellings, opts *SelectOptions) *Selection {
 	o := &SelectOptions{Commands: append(slices.Clone(opts.commands()), path.Base(pkgName)), Format: opts.format}
-	type key struct{ os, arch, libc string }
-	groups := map[key][]*Selected{}
+	groups := map[groupKey][]*Selected{}
 	sel := &Selection{}
 	for _, name := range names {
 		if !installable(pkgName, name, version) {
@@ -135,10 +134,11 @@ func Select(pkgName, version string, names []string, spellings Spellings, opts *
 		}
 		libc := LibcOf(info.OS, name)
 		for _, arch := range archsOf(info) {
-			k := key{info.OS, arch, libc}
+			k := groupKey{info.OS, arch, libc}
 			groups[k] = append(groups[k], &Selected{Name: name, Info: info, OS: info.OS, Arch: arch, Libc: libc})
 		}
 	}
+	splitStatic(groups)
 	for k, candidates := range groups {
 		chosen, tied := Pick(candidates, o)
 		if tied != nil {
@@ -377,6 +377,51 @@ func LibcOf(goos, name string) string {
 		return LibcGlibc
 	}
 	return ""
+}
+
+// groupKey is the environment a set of candidates is for.
+type groupKey struct{ os, arch, libc string }
+
+// splitStatic makes a Linux build and its static build two variants.
+//
+// A Linux build whose name says no libc, published beside the same build named static,
+// is two builds for two kinds of machine rather than rivals: dundee/gdu's
+// gdu_linux_amd64.tgz and gdu_linux_amd64_static.tgz. The static one runs on any libc,
+// so it is the musl variant; the other is the glibc one, which may be the build
+// upstream optimized and tested most. Which a machine installs is decided when it
+// installs, by the libc it has.
+func splitStatic(groups map[groupKey][]*Selected) {
+	for _, k := range slices.Collect(maps.Keys(groups)) {
+		if k.os != osLinux || k.libc != "" {
+			continue
+		}
+		glibc, musl := groupKey{k.os, k.arch, LibcGlibc}, groupKey{k.os, k.arch, LibcMusl}
+		if _, ok := groups[glibc]; ok {
+			continue
+		}
+		if _, ok := groups[musl]; ok {
+			continue
+		}
+		static := slices.DeleteFunc(slices.Clone(groups[k]), func(s *Selected) bool { return !staticBuild(s.Name) })
+		plain := slices.DeleteFunc(slices.Clone(groups[k]), func(s *Selected) bool { return staticBuild(s.Name) })
+		if len(static) == 0 || len(plain) == 0 {
+			continue
+		}
+		for _, s := range static {
+			s.Libc = LibcMusl
+		}
+		for _, s := range plain {
+			s.Libc = LibcGlibc
+		}
+		delete(groups, k)
+		groups[musl] = static
+		groups[glibc] = plain
+	}
+}
+
+// staticBuild says whether an asset's name says it is statically linked.
+func staticBuild(name string) bool {
+	return hasWord(strings.ToLower(name), "static")
 }
 
 // alpine is the word naming a build for Alpine Linux.
