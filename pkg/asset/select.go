@@ -207,6 +207,12 @@ func Pick(candidates []*Selected, opts *SelectOptions) (*Selected, []string) {
 	if len(best) == 1 {
 		return best[0], nil
 	}
+	if versioned := versionedOf(best); versioned != nil {
+		best = versioned
+		if len(best) == 1 {
+			return best[0], nil
+		}
+	}
 	named := slices.DeleteFunc(slices.Clone(best), func(s *Selected) bool { return !namedFor(s.Info, opts.commands()) })
 	if len(named) == 1 {
 		return named[0], nil
@@ -220,6 +226,55 @@ func Pick(candidates []*Selected, opts *SelectOptions) (*Selected, []string) {
 	}
 	slices.Sort(names)
 	return nil, slices.Compact(names)
+}
+
+// versionedOf returns, for candidates some of which are the others without the version in
+// their names, the ones with it, or nil when they are more than that.
+//
+// A release can publish each build twice, once under its version and once under a name
+// that stays the same from release to release so that a link to the latest one keeps
+// working: ko-build/ko's ko_0.15.4_Darwin_x86_64.tar.gz beside ko_Darwin_x86_64.tar.gz,
+// jbangdev/jbang's jbang-0.143.0-linux-x64.zip beside jbang-linux-x64.zip. They are the
+// same file, so either installs the same thing; the one naming the version is the one that
+// says which release it belongs to.
+func versionedOf(candidates []*Selected) []*Selected {
+	hasVersion := func(s *Selected) bool { return strings.Contains(s.Info.Template, "Version}}") }
+	versioned := slices.DeleteFunc(slices.Clone(candidates), func(s *Selected) bool { return !hasVersion(s) })
+	if len(versioned) == 0 || len(versioned) == len(candidates) {
+		return nil
+	}
+	without := map[string]struct{}{}
+	for _, s := range versioned {
+		without[withoutVersion(s.Info.Template)] = struct{}{}
+	}
+	for _, s := range candidates {
+		if hasVersion(s) {
+			continue
+		}
+		if _, ok := without[s.Info.Template]; !ok {
+			return nil
+		}
+	}
+	return versioned
+}
+
+// withoutVersion is a template with its version, and a separator beside it, taken out:
+// ko_{{trimV .Version}}_{{.OS}}_{{.Arch}}.{{.Format}} is ko_{{.OS}}_{{.Arch}}.{{.Format}}.
+func withoutVersion(template string) string {
+	for _, v := range []string{"{{trimV .Version}}", "{{.Version}}"} {
+		before, after, ok := strings.Cut(template, v)
+		if !ok {
+			continue
+		}
+		if after != "" && strings.ContainsRune("_-.", rune(after[0])) {
+			return before + after[1:]
+		}
+		if before != "" && strings.ContainsRune("_-.", rune(before[len(before)-1])) {
+			return before[:len(before)-1] + after
+		}
+		return before + after
+	}
+	return template
 }
 
 // formatPreference is the order archives of the same build are preferred in: the formats
@@ -347,6 +402,9 @@ func installable(pkgName, name, version string) bool {
 	for _, ext := range []string{
 		".sig", ".asc", ".pem", ".cert", ".crt", ".bundle", ".sigstore", ".sigstore.json",
 		".minisig", ".gpg", ".gpgsig", ".intoto.jsonl", ".pub", ".sha256", ".sha512", ".sha1", ".md5",
+		// A checksum named with a dash rather than an extension: grafana/mimir publishes
+		// mimir-darwin-amd64-sha-256 beside mimir-darwin-amd64.
+		"-sha-256", "-sha256", "_sha256", "-sha-512", "-sha512",
 	} {
 		if strings.HasSuffix(low, ext) {
 			return false

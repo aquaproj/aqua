@@ -596,6 +596,9 @@ func ParseAssetName(assetName, version string, extra ...Spellings) *AssetInfo { 
 	if archPackage(lowAssetName) {
 		assetInfo.Score--
 	}
+	if specialBuild(lowAssetName) {
+		assetInfo.Score--
+	}
 	if assetInfo.Format != formatRaw {
 		assetInfo.Template = assetInfo.Template[:len(assetInfo.Template)-len(assetInfo.Format)] + "{{.Format}}"
 	}
@@ -618,4 +621,13 @@ func ParseAssetName(assetName, version string, extra ...Spellings) *AssetInfo { 
 // it is all a release has.
 func archPackage(lowAssetName string) bool {
 	return strings.HasSuffix(lowAssetName, ".pkg.tar.zst")
+}
+
+// specialBuild says whether an asset is a build for a particular need, published beside the
+// ordinary one: a FIPS 140 build, such as static-web-server's
+// static-web-server-v2.43.0-x86_64-unknown-linux-gnu-fips.tar.gz, or a debug build, such as
+// EpicGames/lore's lore-v0.13.0-aarch64-apple-darwin-debug.tar.gz. Scored below the
+// ordinary build, it is taken only when it is all a release has.
+func specialBuild(lowAssetName string) bool {
+	return hasWord(lowAssetName, "fips") || hasWord(lowAssetName, "debug")
 }

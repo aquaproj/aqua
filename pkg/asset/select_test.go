@@ -27,7 +27,7 @@ func summarize(sel *asset.Selection) map[string]picked {
 	return out
 }
 
-func TestSelect(t *testing.T) { //nolint:funlen
+func TestSelect(t *testing.T) { //nolint:funlen,maintidx
 	t.Parallel()
 	data := []struct {
 		name    string
@@ -71,6 +71,48 @@ func TestSelect(t *testing.T) { //nolint:funlen
 				"linux/amd64":   {Name: "protoc-34.2-linux-x86_64.zip"},
 				"windows/amd64": {Name: "protoc-34.2-win64.zip"},
 				"windows/arm64": {Name: "protoc-34.2-win64.zip", Emulated: true},
+			},
+		},
+		{
+			name:    "the versioned name is preferred to the same build under a name for the latest",
+			pkgName: "ko-build/ko",
+			version: "v0.15.4",
+			assets: []string{
+				"ko_0.15.4_Darwin_arm64.tar.gz", "ko_Darwin_arm64.tar.gz",
+				"ko_0.15.4_Linux_x86_64.tar.gz", "ko_Linux_x86_64.tar.gz",
+			},
+			want: map[string]picked{
+				"darwin/arm64": {Name: "ko_0.15.4_Darwin_arm64.tar.gz"},
+				"linux/amd64":  {Name: "ko_0.15.4_Linux_x86_64.tar.gz"},
+			},
+		},
+		{
+			name:    "a package manager's package and a checksum named with a dash are not builds",
+			pkgName: "grafana/mimir/mimir",
+			version: "v2.17.0",
+			assets: []string{
+				"mimir-darwin-amd64", "mimir-darwin-amd64-sha-256",
+				"mimir-2.17.0-linux-amd64.apk", "mimir-linux-amd64",
+			},
+			want: map[string]picked{
+				"darwin/amd64": {Name: "mimir-darwin-amd64"},
+				"darwin/arm64": {Name: "mimir-darwin-amd64", Emulated: true},
+				"linux/amd64":  {Name: "mimir-linux-amd64"},
+			},
+		},
+		{
+			name:    "the ordinary build is preferred to a FIPS or a debug build",
+			pkgName: "static-web-server/static-web-server",
+			version: "v2.43.0",
+			assets: []string{
+				"static-web-server-v2.43.0-x86_64-unknown-linux-gnu.tar.gz",
+				"static-web-server-v2.43.0-x86_64-unknown-linux-gnu-fips.tar.gz",
+				"static-web-server-v2.43.0-aarch64-apple-darwin.tar.gz",
+				"static-web-server-v2.43.0-aarch64-apple-darwin-debug.tar.gz",
+			},
+			want: map[string]picked{
+				"darwin/arm64":      {Name: "static-web-server-v2.43.0-aarch64-apple-darwin.tar.gz"},
+				"linux/amd64/glibc": {Name: "static-web-server-v2.43.0-x86_64-unknown-linux-gnu.tar.gz", Libc: "glibc"},
 			},
 		},
 		{

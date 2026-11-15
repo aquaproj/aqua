@@ -96,6 +96,15 @@ func excludedExt(asset string) bool {
 		".deb",
 		".rpm",
 		".msi",
+		// Packages for a package manager or a runtime rather than a build to unpack:
+		// pranshuparmar/witr's witr-0.2.5-linux-amd64.apk beside witr-linux-amd64,
+		// containers/kubernetes-mcp-server's .mcpb, a Python wheel, and a shared library
+		// published beside the command, such as cachix/secretspec's .dylib and .so.
+		".apk",
+		".whl",
+		".mcpb",
+		".so",
+		".dylib",
 		// SBOMs published beside each binary. regclient/regclient's v0.11.6 Windows
 		// assets include regctl-windows-amd64.cyclonedx.json, which sorts before the
 		// .exe and was taken for the binary.
