@@ -116,6 +116,22 @@ func TestSelect(t *testing.T) { //nolint:funlen,maintidx
 			},
 		},
 		{
+			name:    "a Linux build and its static build are the glibc and the musl variants",
+			pkgName: "dundee/gdu",
+			version: "v5.31.0",
+			assets: []string{
+				"gdu_darwin_arm64.tgz",
+				"gdu_linux_amd64.tgz", "gdu_linux_amd64_static.tgz",
+				"gdu_linux_arm64.tgz",
+			},
+			want: map[string]picked{
+				"darwin/arm64":      {Name: "gdu_darwin_arm64.tgz"},
+				"linux/amd64/glibc": {Name: "gdu_linux_amd64.tgz", Libc: "glibc"},
+				"linux/amd64/musl":  {Name: "gdu_linux_amd64_static.tgz", Libc: "musl"},
+				"linux/arm64":       {Name: "gdu_linux_arm64.tgz"},
+			},
+		},
+		{
 			name:    "the tarball is preferred to the Arch Linux package of the same build",
 			pkgName: "Bearer/bearer",
 			version: "v2.1.2",
