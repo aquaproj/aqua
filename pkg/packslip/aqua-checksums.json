@@ -1,28 +1,28 @@
 {
   "checksums": [
     {
-      "id": "github_release/github.com/jdx/packslip/v1.11.3/packslip-v1.11.3-darwin-arm64.tar.xz",
-      "checksum": "25985ECE3E3AB5AD2D0F9D7C1DA03218507E9D0C170392D72B830E02348C27CC",
+      "id": "github_release/github.com/jdx/packslip/v1.11.4/packslip-v1.11.4-darwin-arm64.tar.xz",
+      "checksum": "A97D048677DE32ADE64EA353D85C4AEEBC8DC1E2ADEE51F83E0CB0311E135E52",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/jdx/packslip/v1.11.3/packslip-v1.11.3-linux-arm64.tar.xz",
-      "checksum": "32A7698F499B270327832D62869E9EAA0449FA689EED7941AC2668F36C130389",
+      "id": "github_release/github.com/jdx/packslip/v1.11.4/packslip-v1.11.4-linux-arm64.tar.xz",
+      "checksum": "0CD0E3F96917DACBC0A993AFFACFC2A838DF2503E3AC2017CEE072C064CB30BC",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/jdx/packslip/v1.11.3/packslip-v1.11.3-linux-x64.tar.xz",
-      "checksum": "26EFECA080B011C310F90BCD2F57CD78B4A364552831ED84F5216C7CBA0932AD",
+      "id": "github_release/github.com/jdx/packslip/v1.11.4/packslip-v1.11.4-linux-x64.tar.xz",
+      "checksum": "011CCC784584A466BD12A96F76C8E7A3FF365A2C99AEE53884140CECF020AADD",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/jdx/packslip/v1.11.3/packslip-v1.11.3-windows-arm64.zip",
-      "checksum": "FC91EA9040D0EFBBC6190FE5AFF648EB39658DCC12FEC1352EFCB5188EACEAC3",
+      "id": "github_release/github.com/jdx/packslip/v1.11.4/packslip-v1.11.4-windows-arm64.zip",
+      "checksum": "E6A901288726D74439FCA90D24AF2ADA0F2766FC60193D8926952EFD82B0AC70",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/jdx/packslip/v1.11.3/packslip-v1.11.3-windows-x64.zip",
-      "checksum": "6DE57A9E75EC895074C1B7B4F2A692E77B7E929F4F2A3DAED247E1C2E7046A7C",
+      "id": "github_release/github.com/jdx/packslip/v1.11.4/packslip-v1.11.4-windows-x64.zip",
+      "checksum": "8D0A3EFEDC68BF9DFFDF4F88946FF4E48E3A6FDAFA52A6889AD18C1479E80F68",
       "algorithm": "sha256"
     },
     {
