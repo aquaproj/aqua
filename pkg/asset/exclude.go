@@ -21,6 +21,10 @@ func Exclude(pkgName, assetName string) bool {
 		"freebsd",
 		"i386",
 		"license",
+		// LoongArch. "loong64" holds "64", which XTLS/Xray-core spells amd64 with, so
+		// Xray-linux-loong64.zip tied with Xray-linux-64.zip for linux/amd64.
+		"loong64",
+		"loongarch64",
 		"mips",
 		"mips64",
 		"mips64le",

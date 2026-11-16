@@ -68,6 +68,18 @@ func Test_Exclude(t *testing.T) { //nolint:funlen
 			exp:       true,
 		},
 		{
+			name:      "loong64",
+			pkgName:   "XTLS/Xray-core",
+			assetName: "Xray-linux-loong64.zip",
+			exp:       true,
+		},
+		{
+			name:      "loongarch64",
+			pkgName:   "junegunn/fzf",
+			assetName: "fzf-0.70.0-linux_loongarch64.tar.gz",
+			exp:       true,
+		},
+		{
 			name:      "armhf",
 			pkgName:   "ahmetb/kubectx",
 			assetName: "kubectx_v0.9.4_windows_armhf.zip",
