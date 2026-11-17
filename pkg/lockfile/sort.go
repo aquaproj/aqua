@@ -12,6 +12,9 @@ import (
 // same order every time or a regenerated lock file produces a diff that says
 // nothing. Nothing in the format depends on the order.
 func (lf *LockFile) Sort() {
+	// A null entry describes nothing and can't be compared, so it isn't written.
+	lf.Packages = slices.DeleteFunc(lf.Packages, func(pkg *Entry) bool { return pkg == nil })
+	lf.Registries = slices.DeleteFunc(lf.Registries, func(r *Registry) bool { return r == nil })
 	slices.SortFunc(lf.Packages, comparePackages)
 	for _, pkg := range lf.Packages {
 		slices.Sort(pkg.Commands)
@@ -37,7 +40,6 @@ func comparePackages(a, b *Entry) int {
 	return cmp.Compare(variantKey(a), variantKey(b))
 }
 
-// variantKey renders the variants as a string that sorts stably.
 func compareRegistries(a, b *Registry) int {
 	for _, d := range []int{
 		cmp.Compare(a.Type, b.Type),
@@ -52,6 +54,7 @@ func compareRegistries(a, b *Registry) int {
 	return cmp.Compare(a.Path, b.Path)
 }
 
+// variantKey renders the variants as a string that sorts stably.
 func variantKey(pkg *Entry) string {
 	if len(pkg.Variants) == 0 {
 		return ""

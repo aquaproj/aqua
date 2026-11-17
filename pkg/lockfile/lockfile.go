@@ -241,12 +241,17 @@ func (p *Package) Entry() *Entry {
 }
 
 // commands are the names of the package's files, sorted and without repeats.
+//
+// A definition without files has one command after all, named after the package, and
+// that is the command the package is installed with. It is recorded the same way, or the
+// entry would have no commands for any run of the lock update command to fill in.
 func (p *Package) commands() []string {
-	if len(p.Files) == 0 {
+	files := p.PackageInfo().GetFiles()
+	if len(files) == 0 {
 		return nil
 	}
-	names := make([]string, 0, len(p.Files))
-	for _, f := range p.Files {
+	names := make([]string, 0, len(files))
+	for _, f := range files {
 		names = append(names, f.Name)
 	}
 	slices.Sort(names)

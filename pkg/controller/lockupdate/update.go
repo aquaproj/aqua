@@ -75,11 +75,9 @@ func (c *Controller) updateFile(ctx context.Context, logger *slog.Logger, cfgFil
 // update brings the packages and the registries in the lock file to what the configuration
 // asks for, and says whether anything changed and whether anything couldn't be resolved.
 func (c *Controller) update(ctx context.Context, logger *slog.Logger, lf *lockfile.LockFile, cfg *aqua.Config, cfgFilePath, rootDir string, args *Args) (bool, bool) {
-	rgsts := lockresolve.NewRecordingRegistries(c.registryInstaller, cfg, cfgFilePath, lf, rootDir)
-	if args.Force {
-		forgetRegistries(lf, cfg, args)
-	}
-	updated, failed := c.updatePackages(ctx, logger, lf, rgsts, cfg, args)
+	rgsts := lockresolve.NewRecordingRegistries(c.registryInstaller, cfg, cfgFilePath, lf, rootDir, args.Force)
+	stale := unrecordedRegistries(lf, cfg, args)
+	updated, failed := c.updatePackages(ctx, logger, lf, rgsts, cfg, stale, args)
 	if c.recordRegistries(ctx, logger, rgsts, cfg, args) {
 		failed = true
 	}
@@ -91,12 +89,12 @@ func (c *Controller) update(ctx context.Context, logger *slog.Logger, lf *lockfi
 
 // updatePackages brings the lock file to what the configuration asks for, and says
 // whether anything changed and whether anything couldn't be resolved.
-func (c *Controller) updatePackages(ctx context.Context, logger *slog.Logger, lf *lockfile.LockFile, rgsts *lockresolve.Registries, cfg *aqua.Config, args *Args) (bool, bool) {
+func (c *Controller) updatePackages(ctx context.Context, logger *slog.Logger, lf *lockfile.LockFile, rgsts *lockresolve.Registries, cfg *aqua.Config, stale map[string]struct{}, args *Args) (bool, bool) {
 	updated := false
 	failed := false
 	for _, pkg := range cfg.Packages {
 		logger := logger.With("package_name", pkg.Name, "package_version", pkg.Version)
-		changed, err := c.updatePackage(ctx, logger, lf, rgsts, pkg, args)
+		changed, err := c.updatePackage(ctx, logger, lf, rgsts, pkg, stale, args)
 		if err != nil {
 			// One package that can't be resolved shouldn't cost the rest their
 			// entries, so the run keeps going and reports at the end.
@@ -129,14 +127,23 @@ func lockedRegistries(cfg *aqua.Config, args *Args, fn func(pkg *aqua.Package, k
 	}
 }
 
-// forgetRegistries drops the recorded checksums of the registries the run's packages come
-// from, so that --force records them again rather than checking against them.
-func forgetRegistries(lf *lockfile.LockFile, cfg *aqua.Config, args *Args) {
-	lockedRegistries(cfg, args, func(_ *aqua.Package, key *lockfile.Registry) {
-		lf.RetainRegistries(func(r *lockfile.Registry) bool {
-			return !r.SameFile(key)
-		})
+// unrecordedRegistries is the names of the registries the run's packages come from whose
+// file the lock file has no checksum of.
+//
+// The entries of a package from such a registry are resolved again even when the lock
+// file has them. A registry with no checksum is usually one whose ref aqua.yaml changed,
+// and the entries were resolved from the file at the old ref: recording the new file's
+// checksum beside them would leave entries that don't match the registry they are now
+// read from. It is taken before anything is resolved, since resolving the first package
+// records the registry for the rest.
+func unrecordedRegistries(lf *lockfile.LockFile, cfg *aqua.Config, args *Args) map[string]struct{} {
+	stale := map[string]struct{}{}
+	lockedRegistries(cfg, args, func(pkg *aqua.Package, key *lockfile.Registry) {
+		if lf.FindRegistry(key) == nil {
+			stale[pkg.Registry] = struct{}{}
+		}
 	})
+	return stale
 }
 
 // recordRegistries records the checksum of every registry file a package of the run comes
@@ -211,7 +218,7 @@ func prune(logger *slog.Logger, lf *lockfile.LockFile, cfg *aqua.Config, args *A
 	return pruned
 }
 
-func (c *Controller) updatePackage(ctx context.Context, logger *slog.Logger, lf *lockfile.LockFile, rgsts *lockresolve.Registries, pkg *aqua.Package, args *Args) (bool, error) {
+func (c *Controller) updatePackage(ctx context.Context, logger *slog.Logger, lf *lockfile.LockFile, rgsts *lockresolve.Registries, pkg *aqua.Package, stale map[string]struct{}, args *Args) (bool, error) {
 	if !match(args.Packages, pkg) {
 		return false, nil
 	}
@@ -222,7 +229,7 @@ func (c *Controller) updatePackage(ctx context.Context, logger *slog.Logger, lf 
 		logger.Warn("skip a package whose version isn't written in aqua.yaml")
 		return false, nil
 	}
-	if !args.Force && lf.Has(pkg.Name, pkg.Version) {
+	if _, ok := stale[pkg.Registry]; !ok && !args.Force && lf.Has(pkg.Name, pkg.Version) {
 		return false, nil
 	}
 

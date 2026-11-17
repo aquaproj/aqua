@@ -47,6 +47,15 @@ func TestSort(t *testing.T) {
 	if names := lf.Packages[0].Commands; len(names) == 2 && names[0] != "a" {
 		t.Errorf("commands should be sorted, got %s then %s", names[0], names[1])
 	}
+	// A null entry or registry can't be compared, and isn't written.
+	withNull := &lockfile.LockFile{
+		Packages:   []*lockfile.Entry{nil, {Name: "a"}},
+		Registries: []*lockfile.Registry{nil, {Type: "github_content"}, nil},
+	}
+	withNull.Sort()
+	if len(withNull.Packages) != 1 || len(withNull.Registries) != 1 {
+		t.Errorf("got %d entries and %d registries", len(withNull.Packages), len(withNull.Registries))
+	}
 }
 
 func TestHasAndRemove(t *testing.T) {
@@ -189,6 +198,13 @@ func TestPackage_Entry(t *testing.T) {
 	}
 	if diff := cmp.Diff(want, pkg.Entry()); diff != "" {
 		t.Errorf("the entry is wrong (-want +got):\n%s", diff)
+	}
+	// A definition without files has the command named after the package, and the
+	// entry records it rather than nothing.
+	noFiles := *pkg
+	noFiles.Files = nil
+	if got := noFiles.Entry().Commands; len(got) != 1 || got[0] != "cli" {
+		t.Errorf("the commands are %v, want the default one", got)
 	}
 	if !want.Describes(pkg) {
 		t.Error("the entry describes the package it came from")

@@ -83,6 +83,7 @@ type Registries struct {
 	// installer checks a file only when it downloads one.
 	rootDir  string
 	record   bool
+	force    bool
 	changed  bool
 	contents map[string]*registry.Config
 }
@@ -101,11 +102,13 @@ func NewRegistries(installer RegistryInstaller, cfg *aqua.Config, cfgFilePath st
 
 // NewRecordingRegistries creates Registries that record the checksum of every
 // github_content registry file in lf, for the lock update command. A checksum lf already
-// has is checked rather than replaced.
-func NewRecordingRegistries(installer RegistryInstaller, cfg *aqua.Config, cfgFilePath string, lf *lockfile.LockFile, rootDir string) *Registries {
+// has is checked rather than replaced, unless force is set: then the file is downloaded
+// again and its checksum replaces the recorded one once it has been read.
+func NewRecordingRegistries(installer RegistryInstaller, cfg *aqua.Config, cfgFilePath string, lf *lockfile.LockFile, rootDir string, force bool) *Registries {
 	r := NewRegistries(installer, cfg, cfgFilePath, lf)
 	r.record = true
 	r.rootDir = rootDir
+	r.force = force
 	return r
 }
 
@@ -157,9 +160,9 @@ func (r *Registries) install(ctx context.Context, logger *slog.Logger, rgst *aqu
 	if key == nil {
 		return r.installer.InstallRegistry(ctx, logger, rgst, r.cfgFilePath, checksum.New()) //nolint:wrapcheck
 	}
-	recorded := r.lf.FindRegistry(key)
-	if recorded == nil && !r.record {
-		return nil, ErrRegistryNotInLockFile
+	recorded, err := r.recorded(rgst, key)
+	if err != nil {
+		return nil, err
 	}
 	// The installer compares a file it downloads with the checksum in the set, and
 	// records one when the set has none. aqua-checksums.json isn't consulted: the lock
@@ -179,6 +182,43 @@ func (r *Registries) install(ctx context.Context, logger *slog.Logger, rgst *aqu
 		}
 	}
 	return content, nil
+}
+
+// recorded is the checksum the registry file is checked against, or nil when it is to be
+// recorded instead.
+func (r *Registries) recorded(rgst *aqua.Registry, key *lockfile.Registry) (*lockfile.Registry, error) {
+	recorded := r.lf.FindRegistry(key)
+	if !r.record {
+		if recorded == nil {
+			return nil, ErrRegistryNotInLockFile
+		}
+		return recorded, nil
+	}
+	if recorded != nil && !r.force {
+		return recorded, nil
+	}
+	// A checksum is recorded only from a file just downloaded. One already on disk may
+	// be stale or edited, and a checksum of it would fail on every machine that
+	// downloads the real one.
+	if err := r.removeCachedFile(rgst); err != nil {
+		return nil, err
+	}
+	return nil, nil //nolint:nilnil
+}
+
+// removeCachedFile removes the registry file installed before, and the JSON made from it,
+// so that the installer downloads it again.
+func (r *Registries) removeCachedFile(rgst *aqua.Registry) error {
+	filePath, err := rgst.FilePath(r.rootDir, r.cfgFilePath)
+	if err != nil {
+		return fmt.Errorf("get the path of the registry file: %w", err)
+	}
+	for _, p := range []string{filePath, filePath + ".json"} {
+		if err := os.Remove(p); err != nil && !errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("remove the installed registry file: %w", err)
+		}
+	}
+	return nil
 }
 
 // recordChecksum records the checksum of the registry file on disk, or checks it against
@@ -214,6 +254,10 @@ func (r *Registries) recordChecksum(rgst *aqua.Registry, key, recorded *lockfile
 	}
 	key.Checksum = sum
 	key.ChecksumAlgorithm = algorithm
+	// Recording again what the lock file already says, as --force does, isn't a change.
+	if old := r.lf.FindRegistry(key); old != nil && old.Checksum == sum && old.ChecksumAlgorithm == algorithm {
+		return nil
+	}
 	r.lf.SetRegistry(key)
 	r.changed = true
 	return nil
@@ -242,7 +286,7 @@ func Resolve(ctx context.Context, logger *slog.Logger, g2 Resolver, rgsts *Regis
 type fetchFunc func(ctx context.Context, logger *slog.Logger, pkgName, version string) ([]*lockfile.Package, error)
 
 func resolveWith(ctx context.Context, logger *slog.Logger, fetch fetchFunc, rgsts *Registries, pkg *aqua.Package) (*Definitions, error) {
-	if isStandard(rgsts.Config().Registries[pkg.Registry]) {
+	if IsStandard(rgsts.Config().Registries[pkg.Registry]) {
 		pkgs, err := fetch(ctx, logger, pkg.Name, pkg.Version)
 		if err != nil {
 			return nil, err
@@ -252,7 +296,7 @@ func resolveWith(ctx context.Context, logger *slog.Logger, fetch fetchFunc, rgst
 	return fromRegistry(ctx, logger, rgsts, pkg)
 }
 
-// isStandard says whether the registry is the standard one, which aqua-registry-g2
+// IsStandard says whether the registry is the standard one, which aqua-registry-g2
 // mirrors.
 //
 // The name alone doesn't say it: a registry named "standard" can be declared with
@@ -262,11 +306,6 @@ func resolveWith(ctx context.Context, logger *slog.Logger, fetch fetchFunc, rgst
 // named "standard" and is aquaproj/aqua-registry. aquaproj/aqua-registry declared under
 // another name is how a configuration keeps using aqua-registry v1, and it is resolved
 // from that registry like any other.
-func isStandard(rgst *aqua.Registry) bool {
-	return IsStandard(rgst)
-}
-
-// IsStandard says whether the registry is the standard one. See isStandard.
 func IsStandard(rgst *aqua.Registry) bool {
 	return rgst != nil &&
 		rgst.Name == aqua.RegistryTypeStandard &&

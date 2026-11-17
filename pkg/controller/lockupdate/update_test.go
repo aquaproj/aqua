@@ -358,9 +358,10 @@ func checkOtherRegistryEntry(t *testing.T, lf *lockfile.LockFile) {
 	}
 }
 
-// A lock file that has a package but not the checksum of the registry it comes from, such
-// as one written before registries were recorded, gets the checksum without the package
-// being resolved again. A registry no package uses any more is dropped.
+// A lock file that has a package but not the checksum of the registry it comes from gets
+// the checksum, and the package is resolved again: the usual reason is a ref aqua.yaml
+// changed, and the entries were resolved from the file at the old ref. A registry no
+// package uses any more is dropped.
 func TestController_Update_recordRegistry(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()
@@ -387,8 +388,15 @@ func TestController_Update_recordRegistry(t *testing.T) {
 	ctrl := lockupdate.New(
 		&fakeFinder{paths: []string{cfgFilePath}},
 		&fakeReader{cfg: cfg},
-		&fakeRegistryInstaller{rootDir: rootDir, pkgInfo: &registry.PackageInfo{Name: "foo/foo"}},
-		&fakeChecksumGetter{},
+		&fakeRegistryInstaller{rootDir: rootDir, pkgInfo: &registry.PackageInfo{
+			Name:          "foo/foo",
+			Type:          "github_release",
+			RepoOwner:     "foo",
+			RepoName:      "foo",
+			Asset:         "foo_{{.OS}}_{{.Arch}}.tar.gz",
+			SupportedEnvs: registry.SupportedEnvs{"linux/amd64"},
+		}},
+		&fakeChecksumGetter{checksum: "new"},
 		&fakeResolver{},
 	)
 	if err := ctrl.Update(t.Context(), slog.New(slog.DiscardHandler), &config.Param{RootDir: rootDir}, &lockupdate.Args{}); err != nil {
@@ -401,8 +409,8 @@ func TestController_Update_recordRegistry(t *testing.T) {
 	if len(got.Registries) != 1 || got.Registries[0].Ref != "v2.0.0" || got.Registries[0].Checksum == "" {
 		t.Errorf("the registries are %+v, want the checksum of v2.0.0 alone", got.Registries)
 	}
-	if len(got.Packages) != 1 || got.Packages[0].Checksum != "abc" {
-		t.Errorf("the package entry changed: %+v", got.Packages)
+	if len(got.Packages) != 1 || got.Packages[0].Checksum != "new" {
+		t.Errorf("the package entry wasn't resolved again: %+v", got.Packages)
 	}
 }
 
