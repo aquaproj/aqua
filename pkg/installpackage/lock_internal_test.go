@@ -48,7 +48,7 @@ func TestInstaller_resolveLockedTargets(t *testing.T) {
 	got, failed := is.resolveLockedTargets(t.Context(), slog.New(slog.DiscardHandler), []*Target{
 		lockedTestTarget("gh"),
 		lockedTestTarget("gh", "git"),
-	}, fakeLockSource{})
+	}, &ParamInstallPackages{LockSource: fakeLockSource{}})
 	if !failed {
 		t.Error("a target the registry doesn't confirm is a failure")
 	}
@@ -57,5 +57,27 @@ func TestInstaller_resolveLockedTargets(t *testing.T) {
 	}
 	if got[0].Entry != nil || got[0].Pkg.PackageInfo.Asset != "gh.tar.gz" || got[0].Checksum == nil {
 		t.Errorf("the target isn't the registry's definition: %+v", got[0].Pkg.PackageInfo)
+	}
+}
+
+// A locked target the tags or the names leave out isn't read from its registry: the run
+// doesn't need it, and a registry it can't reach mustn't fail the run.
+func TestInstaller_resolveLockedTargets_filtered(t *testing.T) {
+	t.Parallel()
+	is := &Installer{runtime: &runtime.Runtime{GOOS: "linux", GOARCH: "amd64"}}
+	private := lockedTestTarget("gh", "git") // the source would fail on it
+	private.Pkg.Package.Tags = []string{"private"}
+	for name, param := range map[string]*ParamInstallPackages{
+		"excluded tag": {ExcludedTags: map[string]struct{}{"private": {}}},
+		"another name": {Names: map[string]struct{}{"fzf": {}}},
+	} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			param.LockSource = fakeLockSource{}
+			got, failed := is.resolveLockedTargets(t.Context(), slog.New(slog.DiscardHandler), []*Target{private}, param)
+			if failed || len(got) != 0 {
+				t.Errorf("got %d targets, failed=%v; want none, not failed", len(got), failed)
+			}
+		})
 	}
 }

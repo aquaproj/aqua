@@ -28,6 +28,7 @@ import (
 
 var (
 	errRegistryNotFound      = errors.New("the registry isn't found")
+	errNoRegistryChecksum    = errors.New("the registry file wasn't downloaded, so its checksum can't be recorded")
 	errPkgNotFoundInRegistry = errors.New("the package isn't found in the registry")
 	// ErrNotInRegistry is an entry for an environment the registry has no build for.
 	ErrNotInRegistry = errors.New("the registry has no build of the package for the environment the lock file has an entry for. Please run \"aqua lock update --force\"")
@@ -84,10 +85,12 @@ type Registries struct {
 	lf          *lockfile.LockFile
 	// rootDir is set when recording, to read a registry file already on disk: the
 	// installer checks a file only when it downloads one.
-	rootDir  string
-	record   bool
-	force    bool
-	changed  bool
+	rootDir string
+	record  bool
+	force   bool
+	// pending holds the checksums recorded this run, by registry name, until Commit
+	// writes them to the lock file.
+	pending  map[string]*lockfile.Registry
 	contents map[string]*registry.Config
 }
 
@@ -112,6 +115,7 @@ func NewRecordingRegistries(installer RegistryInstaller, cfg *aqua.Config, cfgFi
 	r.record = true
 	r.rootDir = rootDir
 	r.force = force
+	r.pending = map[string]*lockfile.Registry{}
 	return r
 }
 
@@ -120,9 +124,27 @@ func (r *Registries) Config() *aqua.Config {
 	return r.cfg
 }
 
-// Changed says whether a checksum was recorded that the lock file didn't have.
-func (r *Registries) Changed() bool {
-	return r.changed
+// Commit writes the checksums recorded this run to the lock file, for the registries ok
+// accepts, and says whether the lock file changed.
+//
+// The caller leaves out a registry a package failed to be resolved from. A checksum
+// recorded for it would sit beside entries resolved from the file it replaced, and the
+// next run would see the registry recorded and leave those entries alone.
+func (r *Registries) Commit(ok func(name string) bool) bool {
+	changed := false
+	for name, key := range r.pending {
+		if !ok(name) {
+			continue
+		}
+		// Recording again what the lock file already says, as --force does, isn't
+		// a change.
+		if old := r.lf.FindRegistry(key); old != nil && old.Checksum == key.Checksum && old.ChecksumAlgorithm == key.ChecksumAlgorithm {
+			continue
+		}
+		r.lf.SetRegistry(key)
+		changed = true
+	}
+	return changed
 }
 
 // LockFileRegistry is what the lock file records of a registry file, without the checksum.
@@ -181,7 +203,7 @@ func (r *Registries) install(ctx context.Context, logger *slog.Logger, rgst *aqu
 		return nil, err //nolint:wrapcheck
 	}
 	if r.record {
-		if err := r.recordChecksum(rgst, key, recorded); err != nil {
+		if err := r.recordChecksum(rgst, key, recorded, chks.Get(id)); err != nil {
 			return nil, err
 		}
 	}
@@ -258,32 +280,34 @@ const setAsideSuffix = ".aqua-lock-update"
 // recordChecksum records the checksum of the registry file on disk, or checks it against
 // the one recorded. The file is read rather than taken from the installer, which computes
 // one only for a file it downloads.
-func (r *Registries) recordChecksum(rgst *aqua.Registry, key, recorded *lockfile.Registry) error {
+//
+// A file just downloaded has been checksummed by the installer, which recorded it in
+// downloaded, and that is the checksum recorded. A file already on disk, which the
+// installer didn't read, is checksummed here to be checked against the recorded one.
+func (r *Registries) recordChecksum(rgst *aqua.Registry, key, recorded *lockfile.Registry, downloaded *checksum.Checksum) error {
+	if recorded == nil {
+		if downloaded == nil {
+			return errNoRegistryChecksum
+		}
+		key.Checksum = strings.ToLower(downloaded.Checksum)
+		key.ChecksumAlgorithm = downloaded.Algorithm
+		r.pending[rgst.Name] = key
+		return nil
+	}
 	algorithm := "sha256"
-	if recorded != nil && strongAlgorithm(recorded.ChecksumAlgorithm) {
+	if strongAlgorithm(recorded.ChecksumAlgorithm) {
 		algorithm = recorded.ChecksumAlgorithm
 	}
 	sum, err := r.fileChecksum(rgst, algorithm)
 	if err != nil {
 		return err
 	}
-	if recorded != nil {
-		if !strings.EqualFold(recorded.Checksum, sum) {
-			return slogerr.With(ErrRegistryChecksumMismatch, //nolint:wrapcheck
-				"lock_file_checksum", recorded.Checksum,
-				"registry_checksum", sum,
-			)
-		}
-		return nil
+	if !strings.EqualFold(recorded.Checksum, sum) {
+		return slogerr.With(ErrRegistryChecksumMismatch, //nolint:wrapcheck
+			"lock_file_checksum", recorded.Checksum,
+			"registry_checksum", sum,
+		)
 	}
-	key.Checksum = sum
-	key.ChecksumAlgorithm = algorithm
-	// Recording again what the lock file already says, as --force does, isn't a change.
-	if old := r.lf.FindRegistry(key); old != nil && old.Checksum == sum && old.ChecksumAlgorithm == algorithm {
-		return nil
-	}
-	r.lf.SetRegistry(key)
-	r.changed = true
 	return nil
 }
 

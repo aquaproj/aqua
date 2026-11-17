@@ -68,8 +68,12 @@ type fakeRegistryInstaller struct {
 	rootDir string
 }
 
-func (i *fakeRegistryInstaller) InstallRegistry(_ context.Context, _ *slog.Logger, rgst *aqua.Registry, cfgFilePath string, _ *checksum.Checksums) (*registry.Config, error) {
+func (i *fakeRegistryInstaller) InstallRegistry(_ context.Context, _ *slog.Logger, rgst *aqua.Registry, cfgFilePath string, chks *checksum.Checksums) (*registry.Config, error) {
 	if i.rootDir != "" && rgst.Type == aqua.RegistryTypeGitHubContent {
+		// The real installer checksums a file it downloads into the set.
+		if err := checksum.CheckRegistry(rgst, chks, []byte("packages: []\n")); err != nil {
+			return nil, err //nolint:wrapcheck
+		}
 		p, err := rgst.FilePath(i.rootDir, cfgFilePath)
 		if err != nil {
 			return nil, err //nolint:wrapcheck
@@ -528,4 +532,48 @@ type recordingChecksumGetter struct {
 func (g *recordingChecksumGetter) GetVerified(ctx context.Context, logger *slog.Logger, checksums *checksum.Checksums, pkg *config.Package, supportedEnvs []string) error {
 	g.asset = pkg.PackageInfo.Asset
 	return g.inner.GetVerified(ctx, logger, checksums, pkg, supportedEnvs)
+}
+
+// A package that fails to be resolved again from a registry whose ref changed leaves the
+// registry unrecorded. Recording the new file's checksum beside entries resolved from the
+// old one would make the next run take the registry as recorded and keep those entries.
+func TestController_Update_recordRegistry_failure(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	rootDir := t.TempDir()
+	lockFilePath := filepath.Join(dir, lockfile.FileName)
+	cfg := &aqua.Config{
+		Registries: aqua.Registries{
+			"foo": {Name: "foo", Type: "github_content", RepoOwner: "suzuki-shunsuke", RepoName: "my-registry", Ref: "v2.0.0", Path: "registry.yaml"},
+		},
+		Packages: []*aqua.Package{{Name: "foo/foo", Version: "v1.0.0", Registry: "foo"}},
+	}
+	lf := lockfile.New()
+	lf.Packages = []*lockfile.Entry{
+		{Name: "foo/foo", Version: "v1.0.0", OS: "linux", Arch: "amd64", Checksum: "abc", Commands: []string{"foo"}},
+	}
+	if err := lockfile.Write(lockFilePath, lf); err != nil {
+		t.Fatal(err)
+	}
+	ctrl := lockupdate.New(
+		&fakeFinder{paths: []string{filepath.Join(dir, "aqua.yaml")}},
+		&fakeReader{cfg: cfg},
+		&fakeRegistryInstaller{rootDir: rootDir, pkgInfo: &registry.PackageInfo{
+			Name: "foo/foo", Type: "github_release", RepoOwner: "foo", RepoName: "foo",
+			Asset: "foo_{{.OS}}_{{.Arch}}.tar.gz", SupportedEnvs: registry.SupportedEnvs{"linux/amd64"},
+		}},
+		// No checksum can be found, so resolving the package fails.
+		&fakeChecksumGetter{},
+		&fakeResolver{},
+	)
+	if err := ctrl.Update(t.Context(), slog.New(slog.DiscardHandler), &config.Param{RootDir: rootDir}, &lockupdate.Args{}); err == nil {
+		t.Fatal("an error must be returned")
+	}
+	got, err := lockfile.ReadFile(lockFilePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Registries) != 0 {
+		t.Errorf("the registry must stay unrecorded, got %+v", got.Registries)
+	}
 }

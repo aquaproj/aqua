@@ -77,28 +77,32 @@ func (c *Controller) updateFile(ctx context.Context, logger *slog.Logger, cfgFil
 func (c *Controller) update(ctx context.Context, logger *slog.Logger, lf *lockfile.LockFile, cfg *aqua.Config, cfgFilePath, rootDir string, args *Args) (bool, bool) {
 	rgsts := lockresolve.NewRecordingRegistries(c.registryInstaller, cfg, cfgFilePath, lf, rootDir, args.Force)
 	stale := unrecordedRegistries(lf, cfg, args)
-	updated, failed := c.updatePackages(ctx, logger, lf, rgsts, cfg, stale, args)
-	if c.recordRegistries(ctx, logger, rgsts, cfg, args) {
-		failed = true
+	updated, failedRegistries := c.updatePackages(ctx, logger, lf, rgsts, cfg, stale, args)
+	failed := len(failedRegistries) > 0
+	if rgsts.Commit(func(name string) bool {
+		_, ng := failedRegistries[name]
+		return !ng
+	}) {
+		updated = true
 	}
-	if pruneRegistries(logger, lf, cfg, args) > 0 || rgsts.Changed() {
+	if pruneRegistries(logger, lf, cfg, args) > 0 {
 		updated = true
 	}
 	return updated, failed
 }
 
 // updatePackages brings the lock file to what the configuration asks for, and says
-// whether anything changed and whether anything couldn't be resolved.
-func (c *Controller) updatePackages(ctx context.Context, logger *slog.Logger, lf *lockfile.LockFile, rgsts *lockresolve.Registries, cfg *aqua.Config, stale map[string]struct{}, args *Args) (bool, bool) {
+// whether anything changed and the registries of the packages that couldn't be resolved.
+func (c *Controller) updatePackages(ctx context.Context, logger *slog.Logger, lf *lockfile.LockFile, rgsts *lockresolve.Registries, cfg *aqua.Config, stale map[string]struct{}, args *Args) (bool, map[string]struct{}) {
 	updated := false
-	failed := false
+	failed := map[string]struct{}{}
 	for _, pkg := range cfg.Packages {
 		logger := logger.With("package_name", pkg.Name, "package_version", pkg.Version)
 		changed, err := c.updatePackage(ctx, logger, lf, rgsts, pkg, stale, args)
 		if err != nil {
 			// One package that can't be resolved shouldn't cost the rest their
 			// entries, so the run keeps going and reports at the end.
-			failed = true
+			failed[pkg.Registry] = struct{}{}
 			slogerr.WithError(logger, err).Error("update the lock file")
 			continue
 		}
@@ -144,23 +148,6 @@ func unrecordedRegistries(lf *lockfile.LockFile, cfg *aqua.Config, args *Args) m
 		}
 	})
 	return stale
-}
-
-// recordRegistries records the checksum of every registry file a package of the run comes
-// from, and says whether one couldn't be.
-//
-// Resolving a package records its registry already. This covers the packages that weren't
-// resolved because the lock file had them, which a lock file written before registries
-// were recorded has nothing for.
-func (c *Controller) recordRegistries(ctx context.Context, logger *slog.Logger, rgsts *lockresolve.Registries, cfg *aqua.Config, args *Args) bool {
-	failed := false
-	lockedRegistries(cfg, args, func(pkg *aqua.Package, _ *lockfile.Registry) {
-		if _, err := rgsts.Get(ctx, logger, pkg.Registry); err != nil {
-			failed = true
-			slogerr.WithError(logger, err).Error("record the checksum of the registry", "registry_name", pkg.Registry)
-		}
-	})
-	return failed
 }
 
 // pruneRegistries drops the checksums of registry files no package of aqua.yaml comes

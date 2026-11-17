@@ -143,7 +143,11 @@ func CommandsPackageInfo(name string, entry *lockfile.Entry) *registry.PackageIn
 // compared with the registry's definition. A lock file listing a command such as git for a
 // package that doesn't have it would otherwise shadow the system's git. The targets are
 // read one at a time, since the registries are installed on first use.
-func (is *Installer) resolveLockedTargets(ctx context.Context, logger *slog.Logger, targets []*Target, src LockSource) ([]*Target, bool) {
+//
+// A locked target the tags or the names leave out is dropped without reading its
+// registry, and gets no links either. Reading it would let a registry the run doesn't
+// need, such as a private one the machine can't reach, fail the run.
+func (is *Installer) resolveLockedTargets(ctx context.Context, logger *slog.Logger, targets []*Target, param *ParamInstallPackages) ([]*Target, bool) {
 	failed := false
 	resolved := make([]*Target, 0, len(targets))
 	for _, t := range targets {
@@ -151,12 +155,15 @@ func (is *Installer) resolveLockedTargets(ctx context.Context, logger *slog.Logg
 			resolved = append(resolved, t)
 			continue
 		}
+		if !aqua.FilterPackageByTag(t.Pkg.Package, param.Tags, param.ExcludedTags) || !filterPackageByNames(t.Pkg, param.Names, nil) {
+			continue
+		}
 		logger := logger.With(
 			"package_name", t.Pkg.Package.Name,
 			"package_version", t.Pkg.Package.Version,
 			"registry", t.Pkg.Package.Registry,
 		)
-		r, err := resolveLocked(ctx, logger, src, t, is.runtime)
+		r, err := resolveLocked(ctx, logger, param.LockSource, t, is.runtime)
 		if err != nil {
 			slogerr.WithError(logger, err).Error("read the package from its registry")
 			failed = true

@@ -319,26 +319,44 @@ func TestRegistries_record(t *testing.T) {
 	if _, err := rgsts.Get(t.Context(), slog.New(slog.DiscardHandler), "private"); err != nil {
 		t.Fatal(err)
 	}
+	// Nothing is written until it is committed, and a registry the caller leaves out
+	// isn't written at all.
+	if lf.FindRegistry(lockresolve.LockFileRegistry(privateRegistry())) != nil {
+		t.Fatal("recorded before Commit")
+	}
+	if rgsts.Commit(func(string) bool { return false }) || len(lf.Registries) != 0 {
+		t.Fatal("a registry left out must not be written")
+	}
+	if !rgsts.Commit(func(string) bool { return true }) {
+		t.Error("recording a checksum is a change to the lock file")
+	}
 	got := lf.FindRegistry(lockresolve.LockFileRegistry(privateRegistry()))
 	if got == nil || got.Checksum != registryChecksum(t) || got.ChecksumAlgorithm != "sha256" {
 		t.Fatalf("recorded %+v", got)
 	}
-	if !rgsts.Changed() {
-		t.Error("recording a checksum is a change to the lock file")
-	}
+}
 
-	// The file on disk no longer matches what was recorded.
-	rgsts = lockresolve.NewRecordingRegistries(installer, standardConfig(), "aqua.yaml", lockFileWithRegistry(privateRegistry(), "0000"), rootDir, false)
+// A recorded checksum is checked against the file on disk, and --force downloads the file
+// again and replaces the checksum once it has read it.
+func TestRegistries_record_recorded(t *testing.T) {
+	t.Parallel()
+	rootDir := t.TempDir()
+	installer := toolInstaller()
+	installer.rootDir = rootDir
+	if err := writeRegistryFile(privateRegistry(), rootDir, "aqua.yaml"); err != nil {
+		t.Fatal(err)
+	}
+	rgsts := lockresolve.NewRecordingRegistries(installer, standardConfig(), "aqua.yaml", lockFileWithRegistry(privateRegistry(), "0000"), rootDir, false)
 	if _, err := rgsts.Get(t.Context(), slog.New(slog.DiscardHandler), "private"); err == nil {
 		t.Fatal("an error must be returned")
 	}
 
-	// --force downloads the file again and replaces the checksum once it has read it.
-	lf = lockFileWithRegistry(privateRegistry(), "0000")
+	lf := lockFileWithRegistry(privateRegistry(), "0000")
 	rgsts = lockresolve.NewRecordingRegistries(installer, standardConfig(), "aqua.yaml", lf, rootDir, true)
 	if _, err := rgsts.Get(t.Context(), slog.New(slog.DiscardHandler), "private"); err != nil {
 		t.Fatal(err)
 	}
+	rgsts.Commit(func(string) bool { return true })
 	if got := lf.FindRegistry(lockresolve.LockFileRegistry(privateRegistry())); got.Checksum != registryChecksum(t) || len(lf.Registries) != 1 {
 		t.Errorf("recorded %+v of %d", got, len(lf.Registries))
 	}
@@ -366,6 +384,7 @@ func TestRegistries_recordDownloaded(t *testing.T) {
 	if _, err := rgsts.Get(t.Context(), slog.New(slog.DiscardHandler), "private"); err != nil {
 		t.Fatal(err)
 	}
+	rgsts.Commit(func(string) bool { return true })
 	if got := lf.FindRegistry(lockresolve.LockFileRegistry(privateRegistry())); got == nil || got.Checksum != registryChecksum(t) {
 		t.Errorf("recorded %+v, want the checksum of the downloaded file", got)
 	}

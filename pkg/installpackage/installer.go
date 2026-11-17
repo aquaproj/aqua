@@ -222,7 +222,7 @@ type DownloadParam struct {
 
 func (is *Installer) InstallPackages(ctx context.Context, logger *slog.Logger, param *ParamInstallPackages) error {
 	targets, failed := is.listTargets(logger, param)
-	targets, failedLocked := is.resolveLockedTargets(ctx, logger, targets, param.LockSource)
+	targets, failedLocked := is.resolveLockedTargets(ctx, logger, targets, param)
 	failed = failed || failedLocked
 	pkgs := targetPackages(targets)
 
