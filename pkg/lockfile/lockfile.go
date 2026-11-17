@@ -317,6 +317,9 @@ func Read(r io.Reader) (*LockFile, error) {
 	if err := json.NewDecoder(r).Decode(lf); err != nil {
 		return nil, fmt.Errorf("read the lock file as JSON: %w", err)
 	}
+	// A null entry describes nothing, and every lookup would have to step around it.
+	lf.Packages = slices.DeleteFunc(lf.Packages, func(pkg *Entry) bool { return pkg == nil })
+	lf.Registries = slices.DeleteFunc(lf.Registries, func(rgst *Registry) bool { return rgst == nil })
 	return lf, nil
 }
 

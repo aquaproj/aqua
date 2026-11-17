@@ -402,3 +402,50 @@ func TestLocked_notStandard(t *testing.T) {
 		})
 	}
 }
+
+// A registry checksum of an algorithm that isn't collision resistant can't stand for the
+// registry file.
+func TestLocked_weakRegistryChecksum(t *testing.T) {
+	t.Parallel()
+	lf := lockFileWithRegistry(privateRegistry(), registryChecksum(t))
+	lf.Registries[0].ChecksumAlgorithm = "md5"
+	rgsts := lockresolve.NewRegistries(toolInstaller(), standardConfig(), "aqua.yaml", lf)
+	if _, err := locked(t, &fakeG2{}, rgsts, toolPkg(), toolEntry()); !errors.Is(err, lockresolve.ErrWeakRegistryChecksum) {
+		t.Errorf("got %v, want ErrWeakRegistryChecksum", err)
+	}
+}
+
+// failingInstaller fails to download any registry, as offline.
+type failingInstaller struct{}
+
+func (failingInstaller) InstallRegistry(context.Context, *slog.Logger, *aqua.Registry, string, *checksum.Checksums) (*registry.Config, error) {
+	return nil, errors.New("offline")
+}
+
+// The registry file on disk is shared by every configuration using the same registry at the
+// same ref. Recording downloads it again, and a download that fails puts the old copy back.
+func TestRegistries_record_failedDownload(t *testing.T) {
+	t.Parallel()
+	rootDir := t.TempDir()
+	if err := writeRegistryFile(privateRegistry(), rootDir, "aqua.yaml"); err != nil {
+		t.Fatal(err)
+	}
+	rgsts := lockresolve.NewRecordingRegistries(failingInstaller{}, standardConfig(), "aqua.yaml", &lockfile.LockFile{}, rootDir, true)
+	if _, err := rgsts.Get(t.Context(), slog.New(slog.DiscardHandler), "private"); err == nil {
+		t.Fatal("an error must be returned")
+	}
+	p, err := privateRegistry().FilePath(rootDir, "aqua.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, err := os.ReadFile(p)
+	if err != nil {
+		t.Fatalf("the registry file must be put back: %v", err)
+	}
+	if string(b) != registryFile {
+		t.Errorf("the registry file is %q", b)
+	}
+	if _, err := os.Stat(p + ".aqua-lock-update"); !os.IsNotExist(err) {
+		t.Error("nothing must be left aside")
+	}
+}

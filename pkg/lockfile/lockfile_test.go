@@ -274,3 +274,16 @@ func TestLockFile_SetRegistry(t *testing.T) {
 		t.Errorf("got %+v of %d", got, len(lf.Registries))
 	}
 }
+
+// A null entry describes nothing, and is dropped when the file is read so that no lookup
+// has to step around it.
+func TestRead_null(t *testing.T) {
+	t.Parallel()
+	lf, err := lockfile.Read(strings.NewReader(`{"packages": [null, {"name": "a", "version": "v1", "os": "linux", "arch": "amd64"}], "registries": [null]}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(lf.Packages) != 1 || len(lf.Registries) != 0 {
+		t.Errorf("got %d entries and %d registries", len(lf.Packages), len(lf.Registries))
+	}
+}

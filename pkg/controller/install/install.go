@@ -161,9 +161,9 @@ func (c *Controller) install(ctx context.Context, logger *slog.Logger, cfgFilePa
 		return err //nolint:wrapcheck
 	}
 
-	// A package the lock file describes is read from its own registry when it is
-	// installed, and only then, so a configuration with a lock file installs no
-	// registry up front. rest is everything when there is no lock file, which is what
+	// A package the lock file describes is read from its own registry by the installer,
+	// so a configuration with a lock file installs only the registries its packages
+	// come from. rest is everything when there is no lock file, which is what
 	// keeps a repository that hasn't adopted one working as before.
 	cfgRest := *cfg
 	cfgRest.Packages = rest

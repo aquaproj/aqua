@@ -32,7 +32,7 @@ var (
 	// ErrNotInRegistry is an entry for an environment the registry has no build for.
 	ErrNotInRegistry = errors.New("the registry has no build of the package for the environment the lock file has an entry for. Please run \"aqua lock update --force\"")
 	// ErrChecksumMismatch is a registry and a lock file disagreeing on a checksum.
-	ErrChecksumMismatch = errors.New("the checksum in the lock file doesn't match the one in the registry")
+	ErrChecksumMismatch = errors.New(`the checksum in the lock file doesn't match the one in the registry. If the registry is right, please run "aqua lock update --force"`)
 	// ErrCommandsMismatch is a registry and a lock file disagreeing on the commands of a
 	// package.
 	ErrCommandsMismatch = errors.New(`the commands in the lock file don't match the ones in the registry. Please run "aqua lock update --force"`)
@@ -43,7 +43,10 @@ var (
 	ErrRegistryNotInLockFile = errors.New(`the lock file has no checksum of the registry. Please run "aqua lock update"`)
 	// ErrRegistryChecksumMismatch is a registry file whose checksum isn't the one the
 	// lock file recorded.
-	ErrRegistryChecksumMismatch = errors.New("the checksum of the registry doesn't match the one in the lock file")
+	ErrRegistryChecksumMismatch = errors.New(`the checksum of the registry doesn't match the one in the lock file. If the registry is right, please run "aqua lock update --force"`)
+	// ErrWeakRegistryChecksum is a registry checksum of an algorithm that isn't
+	// collision resistant.
+	ErrWeakRegistryChecksum = errors.New(`the checksum of the registry in the lock file must be sha256 or sha512. Please run "aqua lock update --force"`)
 )
 
 // Resolver resolves a package of the standard registry from aqua-registry-g2, for the
@@ -160,7 +163,7 @@ func (r *Registries) install(ctx context.Context, logger *slog.Logger, rgst *aqu
 	if key == nil {
 		return r.installer.InstallRegistry(ctx, logger, rgst, r.cfgFilePath, checksum.New()) //nolint:wrapcheck
 	}
-	recorded, err := r.recorded(rgst, key)
+	recorded, restore, err := r.recorded(rgst, key)
 	if err != nil {
 		return nil, err
 	}
@@ -173,6 +176,7 @@ func (r *Registries) install(ctx context.Context, logger *slog.Logger, rgst *aqu
 		chks.Set(id, &checksum.Checksum{ID: id, Checksum: recorded.Checksum, Algorithm: recorded.ChecksumAlgorithm})
 	}
 	content, err := r.installer.InstallRegistry(ctx, logger, rgst, r.cfgFilePath, chks)
+	restore(err != nil)
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}
@@ -185,64 +189,84 @@ func (r *Registries) install(ctx context.Context, logger *slog.Logger, rgst *aqu
 }
 
 // recorded is the checksum the registry file is checked against, or nil when it is to be
-// recorded instead.
-func (r *Registries) recorded(rgst *aqua.Registry, key *lockfile.Registry) (*lockfile.Registry, error) {
+// recorded instead. restore is to be called once the file is installed, with whether that
+// failed.
+func (r *Registries) recorded(rgst *aqua.Registry, key *lockfile.Registry) (*lockfile.Registry, func(failed bool), error) {
+	noop := func(bool) {}
 	recorded := r.lf.FindRegistry(key)
+	if recorded != nil && !strongAlgorithm(recorded.ChecksumAlgorithm) && (!r.record || !r.force) {
+		return nil, noop, slogerr.With(ErrWeakRegistryChecksum, "checksum_algorithm", recorded.ChecksumAlgorithm) //nolint:wrapcheck
+	}
 	if !r.record {
 		if recorded == nil {
-			return nil, ErrRegistryNotInLockFile
+			return nil, noop, ErrRegistryNotInLockFile
 		}
-		return recorded, nil
+		return recorded, noop, nil
 	}
 	if recorded != nil && !r.force {
-		return recorded, nil
+		return recorded, noop, nil
 	}
 	// A checksum is recorded only from a file just downloaded. One already on disk may
 	// be stale or edited, and a checksum of it would fail on every machine that
 	// downloads the real one.
-	if err := r.removeCachedFile(rgst); err != nil {
-		return nil, err
+	restore, err := r.setAsideInstalledFile(rgst)
+	if err != nil {
+		return nil, noop, err
 	}
-	return nil, nil //nolint:nilnil
+	return nil, restore, nil
 }
 
-// removeCachedFile removes the registry file installed before, and the JSON made from it,
-// so that the installer downloads it again.
-func (r *Registries) removeCachedFile(rgst *aqua.Registry) error {
+// strongAlgorithm says whether a checksum of the algorithm can stand for a registry file.
+func strongAlgorithm(algorithm string) bool {
+	return algorithm == "sha256" || algorithm == "sha512"
+}
+
+// setAsideInstalledFile moves the registry file installed before, and the JSON made from
+// it, out of the way so that the installer downloads it again. The returned function puts
+// them back if the download failed, and removes them otherwise: the registry file is
+// shared by every configuration using the same registry at the same ref, and a failed
+// download, offline for instance, mustn't cost them their copy.
+func (r *Registries) setAsideInstalledFile(rgst *aqua.Registry) (func(failed bool), error) {
 	filePath, err := rgst.FilePath(r.rootDir, r.cfgFilePath)
 	if err != nil {
-		return fmt.Errorf("get the path of the registry file: %w", err)
+		return nil, fmt.Errorf("get the path of the registry file: %w", err)
 	}
+	var moved []string
 	for _, p := range []string{filePath, filePath + ".json"} {
-		if err := os.Remove(p); err != nil && !errors.Is(err, os.ErrNotExist) {
-			return fmt.Errorf("remove the installed registry file: %w", err)
+		if err := os.Rename(p, p+setAsideSuffix); err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				continue
+			}
+			return nil, fmt.Errorf("set the installed registry file aside: %w", err)
 		}
+		moved = append(moved, p)
 	}
-	return nil
+	return func(failed bool) {
+		for _, p := range moved {
+			if failed {
+				_ = os.Rename(p+setAsideSuffix, p)
+				continue
+			}
+			_ = os.Remove(p + setAsideSuffix)
+		}
+	}, nil
 }
+
+// setAsideSuffix is appended to a registry file while it is downloaded again.
+const setAsideSuffix = ".aqua-lock-update"
 
 // recordChecksum records the checksum of the registry file on disk, or checks it against
 // the one recorded. The file is read rather than taken from the installer, which computes
 // one only for a file it downloads.
 func (r *Registries) recordChecksum(rgst *aqua.Registry, key, recorded *lockfile.Registry) error {
-	filePath, err := rgst.FilePath(r.rootDir, r.cfgFilePath)
-	if err != nil {
-		return fmt.Errorf("get the path of the registry file: %w", err)
-	}
-	f, err := os.Open(filePath)
-	if err != nil {
-		return fmt.Errorf("open the registry file: %w", err)
-	}
-	defer f.Close()
 	algorithm := "sha256"
-	if recorded != nil {
+	if recorded != nil && strongAlgorithm(recorded.ChecksumAlgorithm) {
 		algorithm = recorded.ChecksumAlgorithm
 	}
-	sum, err := checksum.CalculateReader(f, algorithm)
+	sum, err := r.fileChecksum(rgst, algorithm)
 	if err != nil {
-		return fmt.Errorf("calculate the checksum of the registry file: %w", err)
+		return err
 	}
-	sum = strings.ToLower(sum)
 	if recorded != nil {
 		if !strings.EqualFold(recorded.Checksum, sum) {
 			return slogerr.With(ErrRegistryChecksumMismatch, //nolint:wrapcheck
@@ -261,6 +285,24 @@ func (r *Registries) recordChecksum(rgst *aqua.Registry, key, recorded *lockfile
 	r.lf.SetRegistry(key)
 	r.changed = true
 	return nil
+}
+
+// fileChecksum is the checksum of the registry file installed on disk, in lowercase.
+func (r *Registries) fileChecksum(rgst *aqua.Registry, algorithm string) (string, error) {
+	filePath, err := rgst.FilePath(r.rootDir, r.cfgFilePath)
+	if err != nil {
+		return "", fmt.Errorf("get the path of the registry file: %w", err)
+	}
+	f, err := os.Open(filePath)
+	if err != nil {
+		return "", fmt.Errorf("open the registry file: %w", err)
+	}
+	defer f.Close()
+	sum, err := checksum.CalculateReader(f, algorithm)
+	if err != nil {
+		return "", fmt.Errorf("calculate the checksum of the registry file: %w", err)
+	}
+	return strings.ToLower(sum), nil
 }
 
 // Definitions is a package resolved for every environment it supports.

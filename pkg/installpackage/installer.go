@@ -222,6 +222,8 @@ type DownloadParam struct {
 
 func (is *Installer) InstallPackages(ctx context.Context, logger *slog.Logger, param *ParamInstallPackages) error {
 	targets, failed := is.listTargets(logger, param)
+	targets, failedLocked := is.resolveLockedTargets(ctx, logger, targets, param.LockSource)
+	failed = failed || failedLocked
 	pkgs := targetPackages(targets)
 
 	if !param.SkipLink {
@@ -293,7 +295,6 @@ func (is *Installer) InstallPackage(ctx context.Context, logger *slog.Logger, pa
 func (is *Installer) installTargets(ctx context.Context, logger *slog.Logger, targets []*Target, param *ParamInstallPackages) error {
 	eg := &errgroup.Group{}
 	eg.SetLimit(is.maxParallelism)
-	failed := false
 
 	for _, t := range targets {
 		pkg := t.Pkg
@@ -305,19 +306,6 @@ func (is *Installer) installTargets(ctx context.Context, logger *slog.Logger, ta
 		if !aqua.FilterPackageByTag(pkg.Package, param.Tags, param.ExcludedTags) {
 			logger.Debug("skip installing the package because package tags are unmatched")
 			continue
-		}
-		if t.Entry != nil {
-			// Read one at a time rather than in the goroutines: the registries
-			// are installed on first use, and the definition is the registry's
-			// even when the download fails.
-			resolved, err := resolveLocked(ctx, logger, param.LockSource, t, is.runtime)
-			if err != nil {
-				slogerr.WithError(logger, err).Error("read the package from its registry")
-				failed = true
-				continue
-			}
-			t = resolved
-			pkg = t.Pkg
 		}
 		eg.Go(func() error {
 			if err := is.InstallPackage(ctx, logger, &ParamInstallPackage{
@@ -335,7 +323,7 @@ func (is *Installer) installTargets(ctx context.Context, logger *slog.Logger, ta
 			return nil
 		})
 	}
-	if err := eg.Wait(); err != nil || failed {
+	if err := eg.Wait(); err != nil {
 		return errInstallFailure
 	}
 	return nil

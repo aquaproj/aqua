@@ -28,10 +28,9 @@ type Target struct {
 	// when the entry was written, and the checksum the entry recorded stands for them,
 	// so the install verifies the checksum alone unless the caller asks for more.
 	Locked bool
-	// Entry is the lock file entry a locked target came from. Until the target is
-	// about to be installed, Pkg knows only the package's name and commands, which is
-	// all creating links and filtering by name need: the definition to download from is
-	// read from the registry then, and only for what is actually installed.
+	// Entry is the lock file entry a locked target came from, until the installer has
+	// read the definition from the registry. Until then Pkg knows only the package's
+	// name and the lock file's commands, and nothing to download from.
 	Entry *lockfile.Entry
 }
 
@@ -54,9 +53,9 @@ type LockSource interface {
 // than looked up, because silently reading a registry would install something the lock
 // file never recorded a checksum for.
 //
-// Nothing is read from a registry here. A locked target carries the entry's commands,
-// which is enough to create links, and the definition is read when the target is
-// installed.
+// Nothing is read from a registry here. A locked target carries the entry, and the
+// installer reads the definition, and compares the commands with it, before it creates
+// any link.
 func SplitByLockFile(logger *slog.Logger, lf *lockfile.LockFile, cfg *aqua.Config, rt *runtime.Runtime) ([]*Target, []*aqua.Package, error) {
 	if lf == nil {
 		return nil, cfg.Packages, nil
@@ -122,8 +121,9 @@ func lockedTarget(lf *lockfile.LockFile, cfg *aqua.Config, pkg *aqua.Package, rt
 
 // CommandsPackageInfo is a package definition holding nothing but the entry's commands.
 //
-// It stands in for the definition where only the command names matter, such as creating
-// links. It names no download, so nothing can be installed from it.
+// It stands in for the definition until the registry's has been read, and where only the
+// command names matter, such as finding the package a command belongs to. It names no
+// download, so nothing can be installed from it.
 func CommandsPackageInfo(name string, entry *lockfile.Entry) *registry.PackageInfo {
 	files := make([]*registry.File, len(entry.Commands))
 	for i, cmd := range entry.Commands {
@@ -133,6 +133,38 @@ func CommandsPackageInfo(name string, entry *lockfile.Entry) *registry.PackageIn
 		Name:  name,
 		Files: files,
 	}
+}
+
+// resolveLockedTargets reads the definition of every locked target from its registry, and
+// says whether one couldn't be read. A target that couldn't is dropped.
+//
+// It runs before links are created, including for "aqua install -l": a link is created for
+// every command of a package, and the commands are the lock file's until they have been
+// compared with the registry's definition. A lock file listing a command such as git for a
+// package that doesn't have it would otherwise shadow the system's git. The targets are
+// read one at a time, since the registries are installed on first use.
+func (is *Installer) resolveLockedTargets(ctx context.Context, logger *slog.Logger, targets []*Target, src LockSource) ([]*Target, bool) {
+	failed := false
+	resolved := make([]*Target, 0, len(targets))
+	for _, t := range targets {
+		if t.Entry == nil {
+			resolved = append(resolved, t)
+			continue
+		}
+		logger := logger.With(
+			"package_name", t.Pkg.Package.Name,
+			"package_version", t.Pkg.Package.Version,
+			"registry", t.Pkg.Package.Registry,
+		)
+		r, err := resolveLocked(ctx, logger, src, t, is.runtime)
+		if err != nil {
+			slogerr.WithError(logger, err).Error("read the package from its registry")
+			failed = true
+			continue
+		}
+		resolved = append(resolved, r)
+	}
+	return resolved, failed
 }
 
 // resolveLocked reads the definition of a locked target from its registry, with the
