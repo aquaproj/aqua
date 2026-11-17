@@ -47,14 +47,11 @@ func TestSort(t *testing.T) {
 	if names := lf.Packages[0].Commands; len(names) == 2 && names[0] != "a" {
 		t.Errorf("commands should be sorted, got %s then %s", names[0], names[1])
 	}
-	// A null entry or registry can't be compared, and isn't written.
-	withNull := &lockfile.LockFile{
-		Packages:   []*lockfile.Entry{nil, {Name: "a"}},
-		Registries: []*lockfile.Registry{nil, {Type: "github_content"}, nil},
-	}
+	// A null entry can't be compared, and isn't written.
+	withNull := &lockfile.LockFile{Packages: []*lockfile.Entry{nil, {Name: "a"}}}
 	withNull.Sort()
-	if len(withNull.Packages) != 1 || len(withNull.Registries) != 1 {
-		t.Errorf("got %d entries and %d registries", len(withNull.Packages), len(withNull.Registries))
+	if len(withNull.Packages) != 1 {
+		t.Errorf("got %d entries", len(withNull.Packages))
 	}
 }
 
@@ -251,40 +248,16 @@ func TestEntry_CheckCommands(t *testing.T) {
 	}
 }
 
-func TestLockFile_SetRegistry(t *testing.T) {
-	t.Parallel()
-	lf := &lockfile.LockFile{}
-	key := &lockfile.Registry{Type: "github_content", RepoOwner: "corp", RepoName: "registry", Ref: "v1.0.0", Path: "registry.yaml"}
-	if lf.FindRegistry(key) != nil {
-		t.Fatal("nothing is recorded yet")
-	}
-	first := *key
-	first.Checksum = "aaa"
-	lf.SetRegistry(&first)
-	second := *key
-	second.Checksum = "bbb"
-	lf.SetRegistry(&second)
-	// Another ref is another file.
-	other := *key
-	other.Ref = "v2.0.0"
-	if lf.FindRegistry(&other) != nil {
-		t.Error("another ref must not be found")
-	}
-	if got := lf.FindRegistry(key); got == nil || got.Checksum != "bbb" || len(lf.Registries) != 1 {
-		t.Errorf("got %+v of %d", got, len(lf.Registries))
-	}
-}
-
 // A null entry describes nothing, and is dropped when the file is read so that no lookup
 // has to step around it.
 func TestRead_null(t *testing.T) {
 	t.Parallel()
-	lf, err := lockfile.Read(strings.NewReader(`{"packages": [null, {"name": "a", "version": "v1", "os": "linux", "arch": "amd64"}], "registries": [null]}`))
+	lf, err := lockfile.Read(strings.NewReader(`{"packages": [null, {"name": "a", "version": "v1", "os": "linux", "arch": "amd64"}]}`))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(lf.Packages) != 1 || len(lf.Registries) != 0 {
-		t.Errorf("got %d entries and %d registries", len(lf.Packages), len(lf.Registries))
+	if len(lf.Packages) != 1 {
+		t.Errorf("got %d entries", len(lf.Packages))
 	}
 }
 
