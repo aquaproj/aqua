@@ -106,6 +106,9 @@ func lockedTarget(lf *lockfile.LockFile, cfg *aqua.Config, pkg *aqua.Package, rt
 		}
 		return nil, errNotInLockFile
 	}
+	if len(entry.Commands) == 0 {
+		return nil, ErrNoCommandsInLockFile
+	}
 	return &Target{
 		Pkg: &config.Package{
 			Package:     pkg,
@@ -142,15 +145,12 @@ func resolveLocked(ctx context.Context, logger *slog.Logger, src LockSource, t *
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}
-	return newTarget(t.Pkg.Package, def, t.Pkg.Registry, rt)
+	return NewTarget(t.Pkg.Package, def, t.Pkg.Registry, rt)
 }
 
-// NewTarget is a target to install a locked package from its definition.
+// NewTarget is a target to install a locked package from its definition, which carries
+// the lock file's checksum.
 func NewTarget(pkg *aqua.Package, def *lockfile.Package, rgst *aqua.Registry, rt *runtime.Runtime) (*Target, error) {
-	return newTarget(pkg, def, rgst, rt)
-}
-
-func newTarget(pkg *aqua.Package, def *lockfile.Package, rgst *aqua.Registry, rt *runtime.Runtime) (*Target, error) {
 	if def.Checksum == "" && def.NeedsChecksum() {
 		return nil, errNoChecksumInLockFile
 	}

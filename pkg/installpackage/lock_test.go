@@ -112,6 +112,15 @@ func TestSplitByLockFile_missingEntry(t *testing.T) {
 			lf:   &lockfile.LockFile{},
 		},
 		{
+			// An entry written before the lock file recorded commands. Guessing
+			// them from the package name would create the wrong links.
+			name: "an entry without commands",
+			pkg:  lockTestPackage("cli/cli", "v2.1.0"),
+			lf: &lockfile.LockFile{Packages: []*lockfile.Entry{
+				{Name: "cli/cli", Version: "v2.1.0", OS: "linux", Arch: "amd64", Checksum: "aaa"},
+			}},
+		},
+		{
 			name: "a package with no version",
 			pkg:  lockTestPackage("qux/qux", ""),
 			lf:   &lockfile.LockFile{},

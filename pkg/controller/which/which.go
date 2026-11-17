@@ -358,6 +358,12 @@ func (c *Controller) packageInfo(ctx context.Context, logger *slog.Logger, cfgFi
 			"package_version", pkg.Version,
 		)
 	}
+	if len(entry.Commands) == 0 {
+		return nil, nil, slogerr.With(installpackage.ErrNoCommandsInLockFile, //nolint:wrapcheck
+			"package_name", pkg.Name,
+			"package_version", pkg.Version,
+		)
+	}
 	if !installpackage.CommandsPackageInfo(pkg.Name, entry).MaybeHasCommand(exeName) && !pkg.HasCommandAlias(exeName) {
 		// The registry isn't read for a package that doesn't have the command, and
 		// a definition without files is what findExecFileFromPkg passes over.

@@ -52,7 +52,8 @@ func g2Package(libc, asset, chksum string) *lockfile.Package {
 func standardConfig() *aqua.Config {
 	return &aqua.Config{
 		Registries: aqua.Registries{
-			"standard": {Name: "standard", Type: "standard", Ref: "v4.0.0"},
+			// What "type: standard" in aqua.yaml reads as.
+			"standard": {Name: "standard", Type: "github_content", RepoOwner: "aquaproj", RepoName: "aqua-registry", Ref: "v4.0.0", Path: "registry.yaml"},
 			"private":  {Name: "private", Type: "github_content", RepoOwner: "corp", RepoName: "registry", Ref: "v1.0.0", Path: "registry.yaml"},
 		},
 	}
@@ -155,5 +156,72 @@ func TestLocked_otherRegistry(t *testing.T) {
 	// Installed once, and nothing but the registry the package comes from.
 	if len(installer.installed) != 1 || installer.installed[0] != "private" {
 		t.Errorf("installed %v, want the private registry once", installer.installed)
+	}
+}
+
+// Only the registry named "standard" that is aquaproj/aqua-registry is read from
+// aqua-registry-g2. A registry named "standard" pointing elsewhere is that registry, and
+// aquaproj/aqua-registry under another name is how a configuration keeps using
+// aqua-registry v1.
+func TestLocked_notStandard(t *testing.T) {
+	t.Parallel()
+	for name, rgst := range map[string]*aqua.Registry{
+		"named standard, another repository": {Name: "standard", Type: "github_content", RepoOwner: "corp", RepoName: "registry", Ref: "v1.0.0", Path: "registry.yaml"},
+		"aqua-registry under another name":   {Name: "v1", Type: "github_content", RepoOwner: "aquaproj", RepoName: "aqua-registry", Ref: "v4.0.0", Path: "registry.yaml"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			g2 := &fakeG2{pkgs: []*lockfile.Package{g2Package("", "gh.tar.gz", "aaa")}}
+			installer := &fakeInstaller{pkgInfo: &registry.PackageInfo{
+				Name: "cli/cli", Type: "github_release", RepoOwner: "cli", RepoName: "cli",
+				Asset: "gh_{{.OS}}_{{.Arch}}.tar.gz", SupportedEnvs: registry.SupportedEnvs{"linux/amd64"},
+			}}
+			cfg := &aqua.Config{Registries: aqua.Registries{rgst.Name: rgst}}
+			rgsts := lockresolve.NewRegistries(installer, cfg, "aqua.yaml")
+			pkg := &aqua.Package{Name: "cli/cli", Version: "v2.1.0", Registry: rgst.Name}
+			entry := &lockfile.Entry{Name: "cli/cli", Version: "v2.1.0", OS: "linux", Arch: "amd64", Checksum: "ccc", ChecksumAlgorithm: "sha256"}
+			got, err := lockresolve.Locked(t.Context(), slog.New(slog.DiscardHandler), g2, rgsts, pkg, entry)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(g2.asked) != 0 {
+				t.Errorf("g2 was asked for %v, want nothing", g2.asked)
+			}
+			if got.Asset != "gh_linux_amd64.tar.gz" {
+				t.Errorf("the asset is %q, want the registry's", got.Asset)
+			}
+		})
+	}
+}
+
+// The same value under another algorithm is a different checksum.
+func TestLocked_algorithmMismatch(t *testing.T) {
+	t.Parallel()
+	g2 := &fakeG2{pkgs: []*lockfile.Package{g2Package("", "gh.tar.gz", "aaa")}}
+	rgsts := lockresolve.NewRegistries(&fakeInstaller{}, standardConfig(), "aqua.yaml")
+	pkg := &aqua.Package{Name: "cli/cli", Version: "v2.1.0", Registry: "standard"}
+	entry := &lockfile.Entry{Name: "cli/cli", Version: "v2.1.0", OS: "linux", Arch: "amd64", Checksum: "aaa", ChecksumAlgorithm: "sha512"}
+	if _, err := lockresolve.Locked(t.Context(), slog.New(slog.DiscardHandler), g2, rgsts, pkg, entry); !errors.Is(err, lockresolve.ErrChecksumMismatch) {
+		t.Errorf("got %v, want ErrChecksumMismatch", err)
+	}
+}
+
+// go_install downloads nothing aqua could check, so a checksum the lock file gives it is
+// not used.
+func TestLocked_noChecksumNeeded(t *testing.T) {
+	t.Parallel()
+	g2 := &fakeG2{pkgs: []*lockfile.Package{{
+		Name: "golang.org/x/tools/gopls", Version: "v0.14.0", OS: "linux", Arch: "amd64",
+		Type: "go_install", Path: "golang.org/x/tools/gopls",
+	}}}
+	rgsts := lockresolve.NewRegistries(&fakeInstaller{}, standardConfig(), "aqua.yaml")
+	pkg := &aqua.Package{Name: "golang.org/x/tools/gopls", Version: "v0.14.0", Registry: "standard"}
+	entry := &lockfile.Entry{Name: "golang.org/x/tools/gopls", Version: "v0.14.0", OS: "linux", Arch: "amd64", Checksum: "aaa", ChecksumAlgorithm: "sha256"}
+	got, err := lockresolve.Locked(t.Context(), slog.New(slog.DiscardHandler), g2, rgsts, pkg, entry)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Checksum != "" || got.ChecksumAlgorithm != "" {
+		t.Errorf("got checksum %q (%s), want none", got.Checksum, got.ChecksumAlgorithm)
 	}
 }

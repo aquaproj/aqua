@@ -107,7 +107,7 @@ type Definitions struct {
 // resolved and checksummed ahead of time. Any other registry has no branch there, so its
 // own definition is resolved here, and the checksums are left for the caller.
 func Resolve(ctx context.Context, logger *slog.Logger, g2 G2, rgsts *Registries, pkg *aqua.Package) (*Definitions, error) {
-	if pkg.Registry == aqua.RegistryTypeStandard {
+	if isStandard(rgsts.Config().Registries[pkg.Registry]) {
 		pkgs, err := g2.Resolve(ctx, logger, pkg.Name, pkg.Version)
 		if err != nil {
 			return nil, err //nolint:wrapcheck
@@ -115,6 +115,24 @@ func Resolve(ctx context.Context, logger *slog.Logger, g2 G2, rgsts *Registries,
 		return &Definitions{Packages: pkgs}, nil
 	}
 	return fromRegistry(ctx, logger, rgsts, pkg)
+}
+
+// isStandard says whether the registry is the standard one, which aqua-registry-g2
+// mirrors.
+//
+// The name alone doesn't say it: a registry named "standard" can be declared with
+// another repository, and its packages have no branch in aqua-registry-g2. Nor does
+// "type: standard", which aqua.yaml turns into a github_content registry of
+// aquaproj/aqua-registry when it is read. So the registry is the standard one when it is
+// named "standard" and is aquaproj/aqua-registry. aquaproj/aqua-registry declared under
+// another name is how a configuration keeps using aqua-registry v1, and it is resolved
+// from that registry like any other.
+func isStandard(rgst *aqua.Registry) bool {
+	return rgst != nil &&
+		rgst.Name == aqua.RegistryTypeStandard &&
+		rgst.Type == aqua.RegistryTypeGitHubContent &&
+		rgst.RepoOwner == "aquaproj" &&
+		rgst.RepoName == "aqua-registry"
 }
 
 func fromRegistry(ctx context.Context, logger *slog.Logger, rgsts *Registries, pkg *aqua.Package) (*Definitions, error) {
@@ -187,17 +205,36 @@ func Locked(ctx context.Context, logger *slog.Logger, g2 G2, rgsts *Registries, 
 		if !entry.Describes(def) {
 			continue
 		}
-		if def.Checksum != "" && !strings.EqualFold(def.Checksum, entry.Checksum) {
-			return nil, slogerr.With(ErrChecksumMismatch, //nolint:wrapcheck
-				"lock_file_checksum", entry.Checksum,
-				"registry_checksum", def.Checksum,
-			)
+		if err := setChecksum(def, entry); err != nil {
+			return nil, err
 		}
-		def.Checksum = entry.Checksum
-		def.ChecksumAlgorithm = entry.ChecksumAlgorithm
 		return def, nil
 	}
 	return nil, ErrNotInRegistry
+}
+
+// setChecksum gives the definition the checksum the lock file recorded.
+//
+// A type that downloads nothing aqua could check, go_install and cargo, takes no checksum
+// whatever the lock file says. Otherwise a checksum the registry has too must be the same
+// one, algorithm included.
+func setChecksum(def *lockfile.Package, entry *lockfile.Entry) error {
+	if !def.NeedsChecksum() {
+		def.Checksum = ""
+		def.ChecksumAlgorithm = ""
+		return nil
+	}
+	if def.Checksum != "" && (!strings.EqualFold(def.Checksum, entry.Checksum) || def.ChecksumAlgorithm != entry.ChecksumAlgorithm) {
+		return slogerr.With(ErrChecksumMismatch, //nolint:wrapcheck
+			"lock_file_checksum", entry.Checksum,
+			"lock_file_checksum_algorithm", entry.ChecksumAlgorithm,
+			"registry_checksum", def.Checksum,
+			"registry_checksum_algorithm", def.ChecksumAlgorithm,
+		)
+	}
+	def.Checksum = entry.Checksum
+	def.ChecksumAlgorithm = entry.ChecksumAlgorithm
+	return nil
 }
 
 // Source reads the definitions of a configuration's locked packages. It is Locked with

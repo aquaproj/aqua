@@ -206,12 +206,6 @@ func (e *Entry) Describes(p *Package) bool {
 	return e.OS == p.OS && e.Arch == p.Arch && maps.Equal(e.Variants, p.Variants)
 }
 
-// HasCommand says whether the package provides a command of that name on this
-// environment.
-func (e *Entry) HasCommand(name string) bool {
-	return slices.Contains(e.Commands, name)
-}
-
 // File is an executable inside the package.
 type File struct {
 	Name string `json:"name"`

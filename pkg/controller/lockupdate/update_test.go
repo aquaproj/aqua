@@ -29,9 +29,18 @@ type fakeReader struct {
 	cfg *aqua.Config
 }
 
+// Read gives the configuration the standard registry, as "type: standard" in aqua.yaml
+// reads, unless the test declares registries of its own.
 func (r *fakeReader) Read(_ *slog.Logger, _ string, cfg *aqua.Config) error {
 	*cfg = *r.cfg
+	if cfg.Registries == nil {
+		cfg.Registries = aqua.Registries{"standard": standardRegistry()}
+	}
 	return nil
+}
+
+func standardRegistry() *aqua.Registry {
+	return &aqua.Registry{Name: "standard", Type: "github_content", RepoOwner: "aquaproj", RepoName: "aqua-registry", Ref: "v4.0.0", Path: "registry.yaml"}
 }
 
 type fakeResolver struct {

@@ -25,6 +25,8 @@ func (c *Controller) install(ctx context.Context, logger *slog.Logger, findResul
 	if err := c.packageInstaller.InstallPackage(ctx, logger, &installpackage.ParamInstallPackage{
 		Pkg:             findResult.Package,
 		Checksums:       checksums,
+		Checksum:        findResult.Checksum,
+		Locked:          findResult.Locked,
 		RequireChecksum: findResult.Config.RequireChecksum(param.EnforceRequireChecksum, param.RequireChecksum),
 		ConfigFileDir:   filepath.Dir(findResult.ConfigFilePath),
 		PolicyConfigs:   policyConfigs,
