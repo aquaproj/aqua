@@ -356,10 +356,11 @@ func (c *Controller) packageInfo(ctx context.Context, logger *slog.Logger, cfgFi
 		)
 	}
 	if err := entry.CheckCommands(); err != nil {
-		return nil, nil, slogerr.With(err, //nolint:wrapcheck
-			"package_name", pkg.Name,
-			"package_version", pkg.Version,
-		)
+		// The package is passed over rather than failing the search: every command
+		// run through aqua-proxy searches every package, and one entry that can't be
+		// used mustn't stop the commands of the others.
+		slogerr.WithError(logger, err).Warn("skip a package whose lock file entry can't be used")
+		return nil, nil, nil
 	}
 	if !installpackage.CommandsPackageInfo(pkg.Name, entry).MaybeHasCommand(exeName) && !pkg.HasCommandAlias(exeName) {
 		// The registry isn't read for a package that doesn't have the command.

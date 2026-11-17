@@ -31,14 +31,14 @@ func (c *Controller) Update(ctx context.Context, logger *slog.Logger, param *con
 	// from wherever the user happens to be, and a directory outside any aqua
 	// project simply has nothing to do.
 	for _, cfgFilePath := range c.configFinder.Finds(param.CWD, param.ConfigFilePath) {
-		if err := c.updateFile(ctx, logger, cfgFilePath, param.RootDir, args); err != nil {
+		if err := c.updateFile(ctx, logger, cfgFilePath, args); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (c *Controller) updateFile(ctx context.Context, logger *slog.Logger, cfgFilePath, rootDir string, args *Args) error {
+func (c *Controller) updateFile(ctx context.Context, logger *slog.Logger, cfgFilePath string, args *Args) error {
 	logger = logger.With("config_file_path", cfgFilePath)
 
 	cfg := &aqua.Config{}
@@ -57,7 +57,7 @@ func (c *Controller) updateFile(ctx context.Context, logger *slog.Logger, cfgFil
 		lf = lockfile.New()
 	}
 
-	updated, failed := c.update(ctx, logger, lf, cfg, cfgFilePath, rootDir, args)
+	updated, failed := c.update(ctx, logger, lf, cfg, cfgFilePath, args)
 
 	// Writing sorts, so an unchanged lock file would still be rewritten. Skipping the
 	// write keeps the file's timestamp meaningful and keeps a no-op run out of git.
@@ -74,14 +74,16 @@ func (c *Controller) updateFile(ctx context.Context, logger *slog.Logger, cfgFil
 
 // update brings the packages and the registries in the lock file to what the configuration
 // asks for, and says whether anything changed and whether anything couldn't be resolved.
-func (c *Controller) update(ctx context.Context, logger *slog.Logger, lf *lockfile.LockFile, cfg *aqua.Config, cfgFilePath, rootDir string, args *Args) (bool, bool) {
-	rgsts := lockresolve.NewRecordingRegistries(c.registryInstaller, cfg, cfgFilePath, lf, rootDir, args.Force)
+func (c *Controller) update(ctx context.Context, logger *slog.Logger, lf *lockfile.LockFile, cfg *aqua.Config, cfgFilePath string, args *Args) (bool, bool) {
+	rgsts := lockresolve.NewRecordingRegistries(c.registryInstaller, cfg, cfgFilePath, lf, args.Force)
 	stale := unrecordedRegistries(lf, cfg, args)
 	updated, failedRegistries := c.updatePackages(ctx, logger, lf, rgsts, cfg, stale, args)
 	failed := len(failedRegistries) > 0
+	partial := partialRegistries(cfg, args)
 	if rgsts.Commit(func(name string) bool {
 		_, ng := failedRegistries[name]
-		return !ng
+		_, part := partial[name]
+		return !ng && !part
 	}) {
 		updated = true
 	}
@@ -129,6 +131,26 @@ func lockedRegistries(cfg *aqua.Config, args *Args, fn func(pkg *aqua.Package, k
 			fn(pkg, key)
 		}
 	}
+}
+
+// partialRegistries is the names of the registries some package of aqua.yaml comes from that
+// the run doesn't resolve, because the command named its packages.
+//
+// A checksum recorded for such a registry would sit beside the entries of the packages the
+// run left alone, which were resolved from whatever file was there before. The next run
+// would then take the registry as recorded and never resolve them again, so the checksum
+// is left for a run that resolves every package of the registry.
+func partialRegistries(cfg *aqua.Config, args *Args) map[string]struct{} {
+	partial := map[string]struct{}{}
+	if len(args.Packages) == 0 {
+		return partial
+	}
+	for _, pkg := range cfg.Packages {
+		if pkg != nil && !match(args.Packages, pkg) {
+			partial[pkg.Registry] = struct{}{}
+		}
+	}
+	return partial
 }
 
 // unrecordedRegistries is the names of the registries the run's packages come from whose

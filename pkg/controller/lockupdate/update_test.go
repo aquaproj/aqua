@@ -68,6 +68,10 @@ type fakeRegistryInstaller struct {
 	rootDir string
 }
 
+func (i *fakeRegistryInstaller) DownloadRegistry(ctx context.Context, logger *slog.Logger, rgst *aqua.Registry, cfgFilePath string, chks *checksum.Checksums) (*registry.Config, error) {
+	return i.InstallRegistry(ctx, logger, rgst, cfgFilePath, chks)
+}
+
 func (i *fakeRegistryInstaller) InstallRegistry(_ context.Context, _ *slog.Logger, rgst *aqua.Registry, cfgFilePath string, chks *checksum.Checksums) (*registry.Config, error) {
 	if i.rootDir != "" && rgst.Type == aqua.RegistryTypeGitHubContent {
 		// The real installer checksums a file it downloads into the set.
@@ -575,5 +579,47 @@ func TestController_Update_recordRegistry_failure(t *testing.T) {
 	}
 	if len(got.Registries) != 0 {
 		t.Errorf("the registry must stay unrecorded, got %+v", got.Registries)
+	}
+}
+
+// A run that names some of the packages of a registry doesn't record the registry: the
+// packages it leaves alone keep entries from whatever file was there before, and a recorded
+// registry would keep the next run from resolving them again.
+func TestController_Update_recordRegistry_named(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	rootDir := t.TempDir()
+	lockFilePath := filepath.Join(dir, lockfile.FileName)
+	cfg := &aqua.Config{
+		Registries: aqua.Registries{
+			"foo": {Name: "foo", Type: "github_content", RepoOwner: "suzuki-shunsuke", RepoName: "my-registry", Ref: "v2.0.0", Path: "registry.yaml"},
+		},
+		Packages: []*aqua.Package{
+			{Name: "foo/foo", Version: "v1.0.0", Registry: "foo"},
+			{Name: "foo/bar", Version: "v1.0.0", Registry: "foo"},
+		},
+	}
+	ctrl := lockupdate.New(
+		&fakeFinder{paths: []string{filepath.Join(dir, "aqua.yaml")}},
+		&fakeReader{cfg: cfg},
+		&fakeRegistryInstaller{rootDir: rootDir, pkgInfo: &registry.PackageInfo{
+			Name: "foo/foo", Type: "github_release", RepoOwner: "foo", RepoName: "foo",
+			Asset: "foo_{{.OS}}_{{.Arch}}.tar.gz", SupportedEnvs: registry.SupportedEnvs{"linux/amd64"},
+		}},
+		&fakeChecksumGetter{checksum: "abc"},
+		&fakeResolver{},
+	)
+	if err := ctrl.Update(t.Context(), slog.New(slog.DiscardHandler), &config.Param{RootDir: rootDir}, &lockupdate.Args{Packages: []string{"foo/foo"}}); err != nil {
+		t.Fatal(err)
+	}
+	got, err := lockfile.ReadFile(lockFilePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Registries) != 0 {
+		t.Errorf("the registry must stay unrecorded, got %+v", got.Registries)
+	}
+	if !got.Has("foo/foo", "v1.0.0") {
+		t.Error("the named package must be locked")
 	}
 }

@@ -45,9 +45,16 @@ func registryChecksum(t *testing.T) string {
 // registries it installed. It checks the file against the checksums the way the real
 // installer does when it downloads one, and writes it where the real one would.
 type fakeInstaller struct {
-	pkgInfo   *registry.PackageInfo
-	rootDir   string
-	installed []string
+	pkgInfo    *registry.PackageInfo
+	rootDir    string
+	installed  []string
+	downloaded []string
+}
+
+// DownloadRegistry downloads whatever is installed, as the real one does.
+func (i *fakeInstaller) DownloadRegistry(ctx context.Context, logger *slog.Logger, rgst *aqua.Registry, cfgFilePath string, chks *checksum.Checksums) (*registry.Config, error) {
+	i.downloaded = append(i.downloaded, rgst.Name)
+	return i.InstallRegistry(ctx, logger, rgst, cfgFilePath, chks)
 }
 
 func (i *fakeInstaller) InstallRegistry(_ context.Context, _ *slog.Logger, rgst *aqua.Registry, cfgFilePath string, chks *checksum.Checksums) (*registry.Config, error) {
@@ -315,9 +322,13 @@ func TestRegistries_record(t *testing.T) {
 	lf := &lockfile.LockFile{}
 	installer := toolInstaller()
 	installer.rootDir = rootDir
-	rgsts := lockresolve.NewRecordingRegistries(installer, standardConfig(), "aqua.yaml", lf, rootDir, false)
+	rgsts := lockresolve.NewRecordingRegistries(installer, standardConfig(), "aqua.yaml", lf, false)
 	if _, err := rgsts.Get(t.Context(), slog.New(slog.DiscardHandler), "private"); err != nil {
 		t.Fatal(err)
+	}
+	// Recording always downloads the registry, whatever is installed.
+	if len(installer.downloaded) != 1 {
+		t.Errorf("downloaded %v, want the private registry once", installer.downloaded)
 	}
 	// Nothing is written until it is committed, and a registry the caller leaves out
 	// isn't written at all.
@@ -346,13 +357,13 @@ func TestRegistries_record_recorded(t *testing.T) {
 	if err := writeRegistryFile(privateRegistry(), rootDir, "aqua.yaml"); err != nil {
 		t.Fatal(err)
 	}
-	rgsts := lockresolve.NewRecordingRegistries(installer, standardConfig(), "aqua.yaml", lockFileWithRegistry(privateRegistry(), "0000"), rootDir, false)
+	rgsts := lockresolve.NewRecordingRegistries(installer, standardConfig(), "aqua.yaml", lockFileWithRegistry(privateRegistry(), "0000"), false)
 	if _, err := rgsts.Get(t.Context(), slog.New(slog.DiscardHandler), "private"); err == nil {
 		t.Fatal("an error must be returned")
 	}
 
 	lf := lockFileWithRegistry(privateRegistry(), "0000")
-	rgsts = lockresolve.NewRecordingRegistries(installer, standardConfig(), "aqua.yaml", lf, rootDir, true)
+	rgsts = lockresolve.NewRecordingRegistries(installer, standardConfig(), "aqua.yaml", lf, true)
 	if _, err := rgsts.Get(t.Context(), slog.New(slog.DiscardHandler), "private"); err != nil {
 		t.Fatal(err)
 	}
@@ -380,7 +391,7 @@ func TestRegistries_recordDownloaded(t *testing.T) {
 	lf := &lockfile.LockFile{}
 	installer := toolInstaller()
 	installer.rootDir = rootDir
-	rgsts := lockresolve.NewRecordingRegistries(installer, standardConfig(), "aqua.yaml", lf, rootDir, false)
+	rgsts := lockresolve.NewRecordingRegistries(installer, standardConfig(), "aqua.yaml", lf, false)
 	if _, err := rgsts.Get(t.Context(), slog.New(slog.DiscardHandler), "private"); err != nil {
 		t.Fatal(err)
 	}
@@ -441,15 +452,19 @@ func (failingInstaller) InstallRegistry(context.Context, *slog.Logger, *aqua.Reg
 	return nil, errors.New("offline")
 }
 
+func (failingInstaller) DownloadRegistry(context.Context, *slog.Logger, *aqua.Registry, string, *checksum.Checksums) (*registry.Config, error) {
+	return nil, errors.New("offline")
+}
+
 // The registry file on disk is shared by every configuration using the same registry at the
-// same ref. Recording downloads it again, and a download that fails puts the old copy back.
+// same ref. A download that fails while recording leaves it as it was.
 func TestRegistries_record_failedDownload(t *testing.T) {
 	t.Parallel()
 	rootDir := t.TempDir()
 	if err := writeRegistryFile(privateRegistry(), rootDir, "aqua.yaml"); err != nil {
 		t.Fatal(err)
 	}
-	rgsts := lockresolve.NewRecordingRegistries(failingInstaller{}, standardConfig(), "aqua.yaml", &lockfile.LockFile{}, rootDir, true)
+	rgsts := lockresolve.NewRecordingRegistries(failingInstaller{}, standardConfig(), "aqua.yaml", &lockfile.LockFile{}, true)
 	if _, err := rgsts.Get(t.Context(), slog.New(slog.DiscardHandler), "private"); err == nil {
 		t.Fatal("an error must be returned")
 	}
@@ -463,8 +478,5 @@ func TestRegistries_record_failedDownload(t *testing.T) {
 	}
 	if string(b) != registryFile {
 		t.Errorf("the registry file is %q", b)
-	}
-	if _, err := os.Stat(p + ".aqua-lock-update"); !os.IsNotExist(err) {
-		t.Error("nothing must be left aside")
 	}
 }
