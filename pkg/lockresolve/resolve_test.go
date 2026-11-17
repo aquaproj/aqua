@@ -260,6 +260,7 @@ func TestLocked_notStandard(t *testing.T) {
 	for name, rgst := range map[string]*aqua.Registry{
 		"named standard, another repository": {Name: "standard", Type: "github_content", RepoOwner: "corp", RepoName: "registry", Ref: "v1.0.0", Path: "registry.yaml"},
 		"aqua-registry under another name":   {Name: "v1", Type: "github_content", RepoOwner: "aquaproj", RepoName: "aqua-registry", Ref: "v4.0.0", Path: "registry.yaml"},
+		"another file of aqua-registry":      {Name: "standard", Type: "github_content", RepoOwner: "aquaproj", RepoName: "aqua-registry", Ref: "v4.0.0", Path: "other.yaml"},
 	} {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
@@ -295,5 +296,31 @@ func TestRegistries_checksums(t *testing.T) {
 	}
 	if installer.checksums != chks {
 		t.Error("the registry must be checked against the given checksums")
+	}
+}
+
+// A lock file entry whose linked libc isn't the registry's describes a build the registry
+// doesn't have: Find would pick it as the static fallback on a machine it may not run on.
+func TestLocked_linkedLibc(t *testing.T) {
+	t.Parallel()
+	def := g2Package("musl", "gh_musl.tar.gz", "aaa")
+	def.LinkedLibc = "musl"
+	g2 := &fakeG2{pkgs: []*lockfile.Package{def}}
+	rgsts := lockresolve.NewRegistries(&fakeInstaller{}, standardConfig(), "aqua.yaml", nil)
+	entry := ghEntry()
+	entry.Variants = map[string]string{"libc": "musl"}
+	entry.LinkedLibc = "static"
+	if _, err := locked(t, g2, rgsts, standardPkg(), entry); !errors.Is(err, lockresolve.ErrNotInRegistry) {
+		t.Errorf("got %v, want ErrNotInRegistry", err)
+	}
+}
+
+// Without aqua-registry-g2 a package of the standard registry can't be read, and that is
+// an error rather than a panic.
+func TestLocked_noG2(t *testing.T) {
+	t.Parallel()
+	rgsts := lockresolve.NewRegistries(&fakeInstaller{}, standardConfig(), "aqua.yaml", nil)
+	if _, err := lockresolve.Locked(t.Context(), slog.New(slog.DiscardHandler), nil, rgsts, standardPkg(), ghEntry()); err == nil {
+		t.Fatal("an error must be returned")
 	}
 }

@@ -17,6 +17,7 @@ func (lf *LockFile) Sort() {
 	slices.SortFunc(lf.Packages, comparePackages)
 	for _, pkg := range lf.Packages {
 		slices.Sort(pkg.Commands)
+		pkg.Commands = slices.Compact(pkg.Commands)
 	}
 }
 

@@ -238,10 +238,12 @@ var (
 	ErrInvalidCommand = errors.New("the lock file entry has a command name that isn't a plain name")
 )
 
-// Describes says whether the entry is the one for p's environment: the same os, arch
-// and variants. The name and version aren't compared, since p is looked up by them.
+// Describes says whether the entry is the one for p's environment: the same os, arch,
+// variants and linked libc. The name and version aren't compared, since p is looked up by
+// them. The linked libc is compared because Find selects on it: an entry changed to say
+// static would otherwise pick a build the registry doesn't say is.
 func (e *Entry) Describes(p *Package) bool {
-	return e.OS == p.OS && e.Arch == p.Arch && maps.Equal(e.Variants, p.Variants)
+	return e.OS == p.OS && e.Arch == p.Arch && maps.Equal(e.Variants, p.Variants) && e.LinkedLibc == p.LinkedLibc
 }
 
 // File is an executable inside the package.

@@ -23,7 +23,7 @@ func TestSort(t *testing.T) {
 		{Name: "cli/cli", Version: "v2.1.0", OS: "windows", Arch: "amd64"},
 		{Name: "cli/cli", Version: "v2.1.0", OS: "linux", Arch: "amd64", Variants: map[string]string{"libc": "musl"}},
 		{Name: "cli/cli", Version: "v2.1.0", OS: "linux", Arch: "amd64", Variants: map[string]string{"libc": "glibc"}},
-		{Name: "aquaproj/aqua", Version: "v2.0.0", OS: "darwin", Arch: "arm64", Commands: []string{"b", "a"}},
+		{Name: "aquaproj/aqua", Version: "v2.0.0", OS: "darwin", Arch: "arm64", Commands: []string{"b", "a", "b"}},
 	}}
 	lf.Sort()
 
@@ -44,8 +44,8 @@ func TestSort(t *testing.T) {
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("the order is wrong (-want +got):\n%s", diff)
 	}
-	if names := lf.Packages[0].Commands; len(names) == 2 && names[0] != "a" {
-		t.Errorf("commands should be sorted, got %s then %s", names[0], names[1])
+	if diff := cmp.Diff([]string{"a", "b"}, lf.Packages[0].Commands); diff != "" {
+		t.Errorf("commands should be sorted without repeats (-want +got):\n%s", diff)
 	}
 	// A null entry can't be compared, and isn't written.
 	withNull := &lockfile.LockFile{Packages: []*lockfile.Entry{nil, {Name: "a"}}}

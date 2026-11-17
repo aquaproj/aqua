@@ -28,6 +28,7 @@ import (
 var (
 	errRegistryNotFound      = errors.New("the registry isn't found")
 	errPkgNotFoundInRegistry = errors.New("the package isn't found in the registry")
+	errNoG2                  = errors.New("aqua-registry-g2 isn't available to read the package from")
 	// ErrNotInRegistry is an entry for an environment the registry has no build for.
 	ErrNotInRegistry = errors.New("the registry has no build of the package for the environment the lock file has an entry for. Please run \"aqua lock update --force\"")
 	// ErrChecksumMismatch is a registry and a lock file disagreeing on a checksum.
@@ -132,13 +133,20 @@ type Definitions struct {
 // resolved and checksummed ahead of time. Any other registry has no branch there, so its
 // own definition is resolved here, and the checksums are left for the caller.
 func Resolve(ctx context.Context, logger *slog.Logger, g2 Resolver, rgsts *Registries, pkg *aqua.Package) (*Definitions, error) {
-	return resolveWith(ctx, logger, g2.Resolve, rgsts, pkg)
+	var fetch fetchFunc
+	if g2 != nil {
+		fetch = g2.Resolve
+	}
+	return resolveWith(ctx, logger, fetch, rgsts, pkg)
 }
 
 type fetchFunc func(ctx context.Context, logger *slog.Logger, pkgName, version string) ([]*lockfile.Package, error)
 
 func resolveWith(ctx context.Context, logger *slog.Logger, fetch fetchFunc, rgsts *Registries, pkg *aqua.Package) (*Definitions, error) {
 	if IsStandard(rgsts.Config().Registries[pkg.Registry]) {
+		if fetch == nil {
+			return nil, errNoG2
+		}
 		pkgs, err := fetch(ctx, logger, pkg.Name, pkg.Version)
 		if err != nil {
 			return nil, err
@@ -155,15 +163,17 @@ func resolveWith(ctx context.Context, logger *slog.Logger, fetch fetchFunc, rgst
 // another repository, and its packages have no branch in aqua-registry-g2. Nor does
 // "type: standard", which aqua.yaml turns into a github_content registry of
 // aquaproj/aqua-registry when it is read. So the registry is the standard one when it is
-// named "standard" and is aquaproj/aqua-registry. aquaproj/aqua-registry declared under
-// another name is how a configuration keeps using aqua-registry v1, and it is resolved
-// from that registry like any other.
+// named "standard" and is registry.yaml of aquaproj/aqua-registry, the file
+// aqua-registry-g2 mirrors. aquaproj/aqua-registry declared under another name is how a
+// configuration keeps using aqua-registry v1, and it is resolved from that registry like
+// any other.
 func IsStandard(rgst *aqua.Registry) bool {
 	return rgst != nil &&
 		rgst.Name == aqua.RegistryTypeStandard &&
 		rgst.Type == aqua.RegistryTypeGitHubContent &&
 		rgst.RepoOwner == "aquaproj" &&
-		rgst.RepoName == "aqua-registry"
+		rgst.RepoName == "aqua-registry" &&
+		rgst.Path == "registry.yaml"
 }
 
 func fromRegistry(ctx context.Context, logger *slog.Logger, rgsts *Registries, pkg *aqua.Package) (*Definitions, error) {
@@ -231,7 +241,11 @@ func fromRegistry(ctx context.Context, logger *slog.Logger, rgsts *Registries, p
 // file's, and a command the registry's definition doesn't have would be a link that
 // shadows a command of the system.
 func Locked(ctx context.Context, logger *slog.Logger, g2 G2, rgsts *Registries, pkg *aqua.Package, entry *lockfile.Entry) (*lockfile.Package, error) {
-	defs, err := resolveWith(ctx, logger, g2.Definitions, rgsts, pkg)
+	var fetch fetchFunc
+	if g2 != nil {
+		fetch = g2.Definitions
+	}
+	defs, err := resolveWith(ctx, logger, fetch, rgsts, pkg)
 	if err != nil {
 		return nil, err
 	}
