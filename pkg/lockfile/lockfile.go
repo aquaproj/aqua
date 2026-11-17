@@ -320,6 +320,12 @@ func Read(r io.Reader) (*LockFile, error) {
 	// A null entry describes nothing, and every lookup would have to step around it.
 	lf.Packages = slices.DeleteFunc(lf.Packages, func(pkg *Entry) bool { return pkg == nil })
 	lf.Registries = slices.DeleteFunc(lf.Registries, func(rgst *Registry) bool { return rgst == nil })
+	// The commands are compared with the registry's as a sorted list. A file edited by
+	// hand or merged can hold the same commands in another order.
+	for _, pkg := range lf.Packages {
+		slices.Sort(pkg.Commands)
+		pkg.Commands = slices.Compact(pkg.Commands)
+	}
 	return lf, nil
 }
 

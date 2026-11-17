@@ -287,3 +287,16 @@ func TestRead_null(t *testing.T) {
 		t.Errorf("got %d entries and %d registries", len(lf.Packages), len(lf.Registries))
 	}
 }
+
+// The commands are compared with the registry's as a sorted list, so the same commands in
+// another order, as a hand edit or a merge leaves them, read the same.
+func TestRead_commands(t *testing.T) {
+	t.Parallel()
+	lf, err := lockfile.Read(strings.NewReader(`{"packages": [{"name": "a", "version": "v1", "os": "linux", "arch": "amd64", "commands": ["b", "a", "b"]}]}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff([]string{"a", "b"}, lf.Packages[0].Commands); diff != "" {
+		t.Errorf("the commands are wrong (-want +got):\n%s", diff)
+	}
+}

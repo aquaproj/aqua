@@ -90,7 +90,7 @@ type Registries struct {
 	cfgFilePath string
 	lf          *lockfile.LockFile
 	record      bool
-	force       bool
+	force       func(key *lockfile.Registry) bool
 	// pending holds the checksums recorded this run, by registry name, until Commit
 	// writes them to the lock file.
 	pending  map[string]*lockfile.Registry
@@ -113,8 +113,8 @@ func NewRegistries(installer RegistryInstaller, cfg *aqua.Config, cfgFilePath st
 // github_content registry file in lf, for the lock update command. Every such registry is
 // downloaded, whatever is installed: the checksum recorded has to be the checksum of what
 // the registry serves. A checksum lf already has is checked rather than replaced, unless
-// force is set: then the downloaded file's checksum replaces it.
-func NewRecordingRegistries(downloader RegistryDownloader, cfg *aqua.Config, cfgFilePath string, lf *lockfile.LockFile, force bool) *Registries {
+// force says so for the registry file: then the downloaded file's checksum replaces it.
+func NewRecordingRegistries(downloader RegistryDownloader, cfg *aqua.Config, cfgFilePath string, lf *lockfile.LockFile, force func(key *lockfile.Registry) bool) *Registries {
 	r := NewRegistries(downloader, cfg, cfgFilePath, lf)
 	r.downloader = downloader
 	r.record = true
@@ -128,16 +128,16 @@ func (r *Registries) Config() *aqua.Config {
 	return r.cfg
 }
 
-// Commit writes the checksums recorded this run to the lock file, for the registries ok
+// Commit writes the checksums recorded this run to the lock file, for the registry files ok
 // accepts, and says whether the lock file changed.
 //
 // The caller leaves out a registry a package failed to be resolved from. A checksum
 // recorded for it would sit beside entries resolved from the file it replaced, and the
 // next run would see the registry recorded and leave those entries alone.
-func (r *Registries) Commit(ok func(name string) bool) bool {
+func (r *Registries) Commit(ok func(key *lockfile.Registry) bool) bool {
 	changed := false
-	for name, key := range r.pending {
-		if !ok(name) {
+	for _, key := range r.pending {
+		if !ok(key) {
 			continue
 		}
 		// Recording again what the lock file already says, as --force does, isn't
@@ -224,7 +224,7 @@ func (r *Registries) install(ctx context.Context, logger *slog.Logger, rgst *aqu
 // update command is to record one: there is none yet, or --force replaces it.
 func (r *Registries) recorded(key *lockfile.Registry) (*lockfile.Registry, error) {
 	recorded := r.lf.FindRegistry(key)
-	if r.record && r.force {
+	if r.record && r.force != nil && r.force(key) {
 		return nil, nil //nolint:nilnil
 	}
 	if recorded == nil {

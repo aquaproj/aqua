@@ -75,15 +75,21 @@ func (c *Controller) updateFile(ctx context.Context, logger *slog.Logger, cfgFil
 // update brings the packages and the registries in the lock file to what the configuration
 // asks for, and says whether anything changed and whether anything couldn't be resolved.
 func (c *Controller) update(ctx context.Context, logger *slog.Logger, lf *lockfile.LockFile, cfg *aqua.Config, cfgFilePath string, args *Args) (bool, bool) {
-	rgsts := lockresolve.NewRecordingRegistries(c.registryInstaller, cfg, cfgFilePath, lf, args.Force)
+	// A registry file is what the lock file records, and two names in aqua.yaml can
+	// point at the same one, so what the run did is turned into files.
+	partial := registryFiles(cfg, partialRegistries(cfg, args))
+	// --force replaces a registry checksum only when the run resolves every package of
+	// the registry. Otherwise the packages it resolves would be read from a new file
+	// whose checksum isn't recorded, beside the old one that is.
+	rgsts := lockresolve.NewRecordingRegistries(c.registryInstaller, cfg, cfgFilePath, lf, func(key *lockfile.Registry) bool {
+		return args.Force && !containsRegistryFile(partial, key)
+	})
 	stale := unrecordedRegistries(lf, cfg, args)
 	updated, failedRegistries := c.updatePackages(ctx, logger, lf, rgsts, cfg, stale, args)
 	failed := len(failedRegistries) > 0
-	partial := partialRegistries(cfg, args)
-	if rgsts.Commit(func(name string) bool {
-		_, ng := failedRegistries[name]
-		_, part := partial[name]
-		return !ng && !part
+	failedFiles := registryFiles(cfg, failedRegistries)
+	if rgsts.Commit(func(key *lockfile.Registry) bool {
+		return !containsRegistryFile(failedFiles, key) && !containsRegistryFile(partial, key)
 	}) {
 		updated = true
 	}
@@ -131,6 +137,22 @@ func lockedRegistries(cfg *aqua.Config, args *Args, fn func(pkg *aqua.Package, k
 			fn(pkg, key)
 		}
 	}
+}
+
+// registryFiles is the files the named registries read, for those the lock file records a
+// checksum of.
+func registryFiles(cfg *aqua.Config, names map[string]struct{}) []*lockfile.Registry {
+	files := make([]*lockfile.Registry, 0, len(names))
+	for name := range names {
+		if key := lockresolve.LockFileRegistry(cfg.Registries[name]); key != nil {
+			files = append(files, key)
+		}
+	}
+	return files
+}
+
+func containsRegistryFile(files []*lockfile.Registry, key *lockfile.Registry) bool {
+	return slices.ContainsFunc(files, key.SameFile)
 }
 
 // partialRegistries is the names of the registries some package of aqua.yaml comes from that
