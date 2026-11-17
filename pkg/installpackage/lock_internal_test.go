@@ -81,3 +81,24 @@ func TestInstaller_resolveLockedTargets_filtered(t *testing.T) {
 		})
 	}
 }
+
+// A named target whose registry can't be read is reported for that, not also as a name no
+// package matches.
+func TestInstaller_resolveLockedTargets_foundNames(t *testing.T) {
+	t.Parallel()
+	is := &Installer{runtime: &runtime.Runtime{GOOS: "linux", GOARCH: "amd64"}}
+	found := map[string]struct{}{}
+	_, failed := is.resolveLockedTargets(t.Context(), slog.New(slog.DiscardHandler), []*Target{
+		lockedTestTarget("gh", "git"), // the source fails on it
+	}, &ParamInstallPackages{
+		LockSource: fakeLockSource{},
+		Names:      map[string]struct{}{"gh": {}},
+		FoundNames: found,
+	})
+	if !failed {
+		t.Error("a target that can't be read is a failure")
+	}
+	if _, ok := found["gh"]; !ok {
+		t.Error("the name the target matches must be recorded as found")
+	}
+}

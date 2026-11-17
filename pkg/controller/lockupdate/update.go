@@ -56,7 +56,7 @@ func (c *Controller) updateFile(ctx context.Context, logger *slog.Logger, cfgFil
 		lf = lockfile.New()
 	}
 
-	rgsts := lockresolve.NewRegistries(c.registryInstaller, cfg, cfgFilePath)
+	rgsts := lockresolve.NewRegistries(c.registryInstaller, cfg, cfgFilePath, nil)
 	updated, failed := c.updatePackages(ctx, logger, lf, rgsts, cfg, args)
 
 	// Writing sorts, so an unchanged lock file would still be rewritten. Skipping the

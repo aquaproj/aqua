@@ -30,10 +30,12 @@ func (g *fakeG2) Definitions(_ context.Context, _ *slog.Logger, pkgName, version
 type fakeInstaller struct {
 	pkgInfo   *registry.PackageInfo
 	installed []string
+	checksums *checksum.Checksums
 }
 
-func (i *fakeInstaller) InstallRegistry(_ context.Context, _ *slog.Logger, rgst *aqua.Registry, _ string, _ *checksum.Checksums) (*registry.Config, error) {
+func (i *fakeInstaller) InstallRegistry(_ context.Context, _ *slog.Logger, rgst *aqua.Registry, _ string, chks *checksum.Checksums) (*registry.Config, error) {
 	i.installed = append(i.installed, rgst.Name)
+	i.checksums = chks
 	return &registry.Config{PackageInfos: registry.PackageInfos{i.pkgInfo}}, nil
 }
 
@@ -90,7 +92,7 @@ func TestLocked_standard(t *testing.T) {
 		g2Package("musl", "gh_linux_amd64_musl.tar.gz", "bbb"),
 	}}
 	installer := &fakeInstaller{}
-	rgsts := lockresolve.NewRegistries(installer, standardConfig(), "aqua.yaml")
+	rgsts := lockresolve.NewRegistries(installer, standardConfig(), "aqua.yaml", nil)
 	entry := ghEntry()
 	entry.Variants = map[string]string{"libc": "glibc"}
 
@@ -142,7 +144,7 @@ func TestLocked_mismatch(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			g2 := &fakeG2{pkgs: []*lockfile.Package{g2Package("", "gh.tar.gz", "aaa")}}
-			rgsts := lockresolve.NewRegistries(&fakeInstaller{}, standardConfig(), "aqua.yaml")
+			rgsts := lockresolve.NewRegistries(&fakeInstaller{}, standardConfig(), "aqua.yaml", nil)
 			entry := ghEntry()
 			tt.edit(entry)
 			if _, err := locked(t, g2, rgsts, standardPkg(), entry); !errors.Is(err, tt.isErr) {
@@ -156,7 +158,7 @@ func TestLocked_mismatch(t *testing.T) {
 func TestLocked_notInRegistry(t *testing.T) {
 	t.Parallel()
 	g2 := &fakeG2{pkgs: []*lockfile.Package{g2Package("", "gh.tar.gz", "aaa")}}
-	rgsts := lockresolve.NewRegistries(&fakeInstaller{}, standardConfig(), "aqua.yaml")
+	rgsts := lockresolve.NewRegistries(&fakeInstaller{}, standardConfig(), "aqua.yaml", nil)
 	entry := ghEntry()
 	entry.OS = "darwin"
 	entry.Arch = "arm64"
@@ -165,8 +167,10 @@ func TestLocked_notInRegistry(t *testing.T) {
 	}
 }
 
-// go_install downloads nothing aqua could check, so a checksum the lock file gives it is
-// not used.
+// go_install downloads nothing aqua could check, so it takes no checksum. An entry locked
+// with one is one the registry no longer describes, such as a registry changed to build
+// from source what used to be downloaded, and dropping the checksum would skip the check
+// the lock file recorded.
 func TestLocked_noChecksumNeeded(t *testing.T) {
 	t.Parallel()
 	g2 := &fakeG2{pkgs: []*lockfile.Package{{
@@ -174,11 +178,11 @@ func TestLocked_noChecksumNeeded(t *testing.T) {
 		Type: "go_install", Path: "golang.org/x/tools/gopls",
 		Files: []*lockfile.File{{Name: "gopls"}},
 	}}}
-	rgsts := lockresolve.NewRegistries(&fakeInstaller{}, standardConfig(), "aqua.yaml")
+	rgsts := lockresolve.NewRegistries(&fakeInstaller{}, standardConfig(), "aqua.yaml", nil)
 	pkg := &aqua.Package{Name: "golang.org/x/tools/gopls", Version: "v0.14.0", Registry: "standard"}
 	entry := &lockfile.Entry{
 		Name: "golang.org/x/tools/gopls", Version: "v0.14.0", OS: "linux", Arch: "amd64",
-		Checksum: "aaa", ChecksumAlgorithm: "sha256", Commands: []string{"gopls"},
+		Commands: []string{"gopls"},
 	}
 	got, err := locked(t, g2, rgsts, pkg, entry)
 	if err != nil {
@@ -186,6 +190,12 @@ func TestLocked_noChecksumNeeded(t *testing.T) {
 	}
 	if got.Checksum != "" || got.ChecksumAlgorithm != "" {
 		t.Errorf("got checksum %q (%s), want none", got.Checksum, got.ChecksumAlgorithm)
+	}
+
+	entry.Checksum = "aaa"
+	entry.ChecksumAlgorithm = "sha256"
+	if _, err := locked(t, g2, rgsts, pkg, entry); !errors.Is(err, lockresolve.ErrChecksumMismatch) {
+		t.Errorf("got %v, want ErrChecksumMismatch", err)
 	}
 }
 
@@ -221,7 +231,7 @@ func TestLocked_otherRegistry(t *testing.T) {
 	t.Parallel()
 	g2 := &fakeG2{}
 	installer := toolInstaller()
-	rgsts := lockresolve.NewRegistries(installer, standardConfig(), "aqua.yaml")
+	rgsts := lockresolve.NewRegistries(installer, standardConfig(), "aqua.yaml", nil)
 
 	for range 2 {
 		got, err := locked(t, g2, rgsts, toolPkg(), toolEntry())
@@ -255,7 +265,7 @@ func TestLocked_notStandard(t *testing.T) {
 			t.Parallel()
 			g2 := &fakeG2{pkgs: []*lockfile.Package{g2Package("", "gh.tar.gz", "aaa")}}
 			cfg := &aqua.Config{Registries: aqua.Registries{rgst.Name: rgst}}
-			rgsts := lockresolve.NewRegistries(toolInstaller(), cfg, "aqua.yaml")
+			rgsts := lockresolve.NewRegistries(toolInstaller(), cfg, "aqua.yaml", nil)
 			pkg := &aqua.Package{Name: "corp/tool", Version: "v1.0.0", Registry: rgst.Name}
 			entry := toolEntry()
 			entry.Registry = &lockfile.Registry{Type: rgst.Type, RepoOwner: rgst.RepoOwner, RepoName: rgst.RepoName}
@@ -270,5 +280,20 @@ func TestLocked_notStandard(t *testing.T) {
 				t.Errorf("the asset is %q, want the registry's", got.Asset)
 			}
 		})
+	}
+}
+
+// A registry file is checked against aqua-checksums.json, as it is without a lock file, when
+// the caller gives it.
+func TestRegistries_checksums(t *testing.T) {
+	t.Parallel()
+	chks := checksum.New()
+	installer := toolInstaller()
+	rgsts := lockresolve.NewRegistries(installer, standardConfig(), "aqua.yaml", chks)
+	if _, err := rgsts.Get(t.Context(), slog.New(slog.DiscardHandler), "private"); err != nil {
+		t.Fatal(err)
+	}
+	if installer.checksums != chks {
+		t.Error("the registry must be checked against the given checksums")
 	}
 }

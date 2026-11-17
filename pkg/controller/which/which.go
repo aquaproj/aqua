@@ -157,7 +157,7 @@ func (c *Controller) findExecFile(ctx context.Context, logger *slog.Logger, para
 	if lf != nil {
 		lk = &lockState{
 			lf:  lf,
-			src: lockresolve.NewSource(c.g2, lockresolve.NewRegistries(c.registryInstaller, cfg, cfgFilePath)),
+			src: lockresolve.NewSource(c.g2, lockresolve.NewRegistries(c.registryInstaller, cfg, cfgFilePath, checksums)),
 		}
 	}
 
@@ -263,7 +263,10 @@ func (c *Controller) findExecFileFromPkg(ctx context.Context, logger *slog.Logge
 
 	locked, err := c.lockedTarget(pkg, def, cfg)
 	if err != nil {
-		return nil, false, err
+		// Passed over like an entry whose commands can't be used: one entry that
+		// can't be installed mustn't stop the commands of the other packages.
+		slogerr.WithError(logger, err).Warn("skip a package whose lock file entry can't be used")
+		return nil, false, nil
 	}
 
 	if !pkgInfo.MaybeHasCommand(exeName) && !pkg.HasCommandAlias(exeName) {

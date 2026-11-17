@@ -155,7 +155,9 @@ func (is *Installer) resolveLockedTargets(ctx context.Context, logger *slog.Logg
 			resolved = append(resolved, t)
 			continue
 		}
-		if !aqua.FilterPackageByTag(t.Pkg.Package, param.Tags, param.ExcludedTags) || !filterPackageByNames(t.Pkg, param.Names, nil) {
+		// The names a target matches are recorded here: one whose registry can't be
+		// read is dropped below, and would otherwise be reported as not found too.
+		if !aqua.FilterPackageByTag(t.Pkg.Package, param.Tags, param.ExcludedTags) || !filterPackageByNames(t.Pkg, param.Names, param.FoundNames) {
 			continue
 		}
 		logger := logger.With(

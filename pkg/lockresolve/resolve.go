@@ -68,15 +68,21 @@ type Registries struct {
 	installer   RegistryInstaller
 	cfg         *aqua.Config
 	cfgFilePath string
+	checksums   *checksum.Checksums
 	contents    map[string]*registry.Config
 }
 
 // NewRegistries creates Registries for a configuration.
-func NewRegistries(installer RegistryInstaller, cfg *aqua.Config, cfgFilePath string) *Registries {
+//
+// checksums is aqua-checksums.json, which a registry file is checked against as it is
+// without a lock file, or nil when it isn't enabled. The lock update command passes nil:
+// the lock file is what it maintains.
+func NewRegistries(installer RegistryInstaller, cfg *aqua.Config, cfgFilePath string, checksums *checksum.Checksums) *Registries {
 	return &Registries{
 		installer:   installer,
 		cfg:         cfg,
 		cfgFilePath: cfgFilePath,
+		checksums:   checksums,
 		contents:    map[string]*registry.Config{},
 	}
 }
@@ -96,9 +102,12 @@ func (r *Registries) Get(ctx context.Context, logger *slog.Logger, name string) 
 		return nil, errRegistryNotFound
 	}
 	// The registry file has a checksum of its own, which the installer checks against
-	// the set it is given. A fresh set is passed rather than aqua-checksums.json: the
-	// lock file is what this path maintains, not that file.
-	content, err := r.installer.InstallRegistry(ctx, logger, rgst, r.cfgFilePath, checksum.New())
+	// the set it is given.
+	chks := r.checksums
+	if chks == nil {
+		chks = checksum.New()
+	}
+	content, err := r.installer.InstallRegistry(ctx, logger, rgst, r.cfgFilePath, chks)
 	if err != nil {
 		return nil, fmt.Errorf("install the registry: %w", slogerr.With(err, "registry_name", name))
 	}
@@ -258,11 +267,19 @@ func sameRegistry(a, b *lockfile.Registry) bool {
 
 // setChecksum gives the definition the checksum the lock file recorded.
 //
-// A type that downloads nothing aqua could check, go_install and cargo, takes no checksum
-// whatever the lock file says. Otherwise a checksum the registry has too must be the same
-// one, algorithm included.
+// A type that downloads nothing aqua could check, go_install and cargo, takes no checksum,
+// and an entry locked with one is one the registry no longer describes: dropping the
+// checksum would let a registry changed to build from source skip the check the lock file
+// recorded. Otherwise a checksum the registry has too must be the same one, algorithm
+// included.
 func setChecksum(def *lockfile.Package, entry *lockfile.Entry) error {
 	if !def.NeedsChecksum() {
+		if entry.Checksum != "" {
+			return slogerr.With(ErrChecksumMismatch, //nolint:wrapcheck
+				"lock_file_checksum", entry.Checksum,
+				"registry_type", def.Type,
+			)
+		}
 		def.Checksum = ""
 		def.ChecksumAlgorithm = ""
 		return nil
