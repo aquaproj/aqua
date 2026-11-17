@@ -1,6 +1,7 @@
 package lockfile_test
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -196,5 +197,64 @@ func TestPackage_Entry(t *testing.T) {
 	other.Variants = map[string]string{"libc": "glibc"}
 	if want.Describes(&other) {
 		t.Error("an entry for musl doesn't describe the glibc build")
+	}
+}
+
+// A command name becomes the name of a link in $(aqua root-dir)/bin, so anything but a
+// plain name would let a changed lock file replace a file elsewhere.
+func TestEntry_CheckCommands(t *testing.T) {
+	t.Parallel()
+	tests := map[string]struct {
+		commands []string
+		isErr    error
+	}{
+		"plain names":          {commands: []string{"gh", "kubectl-oidc_login", "terraform.exe"}},
+		"none":                 {isErr: lockfile.ErrNoCommands},
+		"a path":               {commands: []string{"../../../.bashrc"}, isErr: lockfile.ErrInvalidCommand},
+		"a slash":              {commands: []string{"bin/gh"}, isErr: lockfile.ErrInvalidCommand},
+		"a backslash":          {commands: []string{`..\evil`}, isErr: lockfile.ErrInvalidCommand},
+		"a drive":              {commands: []string{"C:evil"}, isErr: lockfile.ErrInvalidCommand},
+		"the parent directory": {commands: []string{".."}, isErr: lockfile.ErrInvalidCommand},
+		"empty":                {commands: []string{""}, isErr: lockfile.ErrInvalidCommand},
+		"one bad among good":   {commands: []string{"gh", "../x"}, isErr: lockfile.ErrInvalidCommand},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			err := (&lockfile.Entry{Commands: tt.commands}).CheckCommands()
+			if tt.isErr == nil {
+				if err != nil {
+					t.Fatal(err)
+				}
+				return
+			}
+			if !errors.Is(err, tt.isErr) {
+				t.Errorf("got %v, want %v", err, tt.isErr)
+			}
+		})
+	}
+}
+
+func TestLockFile_SetRegistry(t *testing.T) {
+	t.Parallel()
+	lf := &lockfile.LockFile{}
+	key := &lockfile.Registry{Type: "github_content", RepoOwner: "corp", RepoName: "registry", Ref: "v1.0.0", Path: "registry.yaml"}
+	if lf.FindRegistry(key) != nil {
+		t.Fatal("nothing is recorded yet")
+	}
+	first := *key
+	first.Checksum = "aaa"
+	lf.SetRegistry(&first)
+	second := *key
+	second.Checksum = "bbb"
+	lf.SetRegistry(&second)
+	// Another ref is another file.
+	other := *key
+	other.Ref = "v2.0.0"
+	if lf.FindRegistry(&other) != nil {
+		t.Error("another ref must not be found")
+	}
+	if got := lf.FindRegistry(key); got == nil || got.Checksum != "bbb" || len(lf.Registries) != 1 {
+		t.Errorf("got %+v of %d", got, len(lf.Registries))
 	}
 }

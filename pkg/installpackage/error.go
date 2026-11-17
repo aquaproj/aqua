@@ -22,7 +22,4 @@ var (
 	errNotInLockFile = errors.New(`the package isn't in the lock file. Please run "aqua lock update"`)
 	errLockFile      = errors.New("some packages can't be installed from the lock file")
 	errNoLockSource  = errors.New("a package from the lock file can't be installed without its registry")
-	// ErrNoCommandsInLockFile is an entry written before the lock file recorded the
-	// commands of a package. Guessing them would create the wrong links.
-	ErrNoCommandsInLockFile = errors.New(`the lock file entry has no commands. Please run "aqua lock update --force"`)
 )

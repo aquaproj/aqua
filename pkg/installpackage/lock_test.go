@@ -121,6 +121,15 @@ func TestSplitByLockFile_missingEntry(t *testing.T) {
 			}},
 		},
 		{
+			// A command name becomes a link in $(aqua root-dir)/bin, so a path would
+			// replace a file outside it.
+			name: "a command that isn't a plain name",
+			pkg:  lockTestPackage("cli/cli", "v2.1.0"),
+			lf: &lockfile.LockFile{Packages: []*lockfile.Entry{
+				{Name: "cli/cli", Version: "v2.1.0", OS: "linux", Arch: "amd64", Checksum: "aaa", Commands: []string{"../../../.bashrc"}},
+			}},
+		},
+		{
 			name: "a package with no version",
 			pkg:  lockTestPackage("qux/qux", ""),
 			lf:   &lockfile.LockFile{},

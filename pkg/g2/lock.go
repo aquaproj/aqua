@@ -99,6 +99,20 @@ func (c *Client) Resolve(ctx context.Context, logger *slog.Logger, pkgName, vers
 	return c.LockPackages(reg, pkgName, version), nil
 }
 
+// Definitions returns the definitions of one package version, the way Resolve does, for
+// installing a locked package.
+//
+// It says nothing about a rename. Install and exec run it, and exec runs on every command
+// through aqua-proxy: a warning there would be printed beside the output of the tool
+// itself, every time. "aqua lock update" is where the rename is said.
+func (c *Client) Definitions(ctx context.Context, logger *slog.Logger, pkgName, version string) ([]*lockfile.Package, error) {
+	reg, err := c.Get(ctx, logger, pkgName, version)
+	if err != nil {
+		return nil, err
+	}
+	return c.LockPackages(reg, pkgName, version), nil
+}
+
 // sayRenamed tells whoever is watching that the package has another name now.
 //
 // Said on every run rather than once, because nothing here changes aqua.yaml: the file

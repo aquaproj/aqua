@@ -106,8 +106,8 @@ func lockedTarget(lf *lockfile.LockFile, cfg *aqua.Config, pkg *aqua.Package, rt
 		}
 		return nil, errNotInLockFile
 	}
-	if len(entry.Commands) == 0 {
-		return nil, ErrNoCommandsInLockFile
+	if err := entry.CheckCommands(); err != nil {
+		return nil, err //nolint:wrapcheck
 	}
 	return &Target{
 		Pkg: &config.Package{

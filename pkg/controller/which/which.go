@@ -157,7 +157,7 @@ func (c *Controller) findExecFile(ctx context.Context, logger *slog.Logger, para
 	if lf != nil {
 		lk = &lockState{
 			lf:  lf,
-			src: lockresolve.NewSource(c.g2, lockresolve.NewRegistries(c.registryInstaller, cfg, cfgFilePath)),
+			src: lockresolve.NewSource(c.g2, lockresolve.NewRegistries(c.registryInstaller, cfg, cfgFilePath, lf)),
 		}
 	}
 
@@ -253,12 +253,17 @@ func (c *Controller) findExecFileFromPkg(ctx context.Context, logger *slog.Logge
 		return nil, false, err
 	}
 
-	// Nothing to look at: either the registry doesn't have the package, which
-	// findPkgInfo has already said, or it has no build for this machine, which is
-	// not worth saying.
+	// Nothing to look at: the registry doesn't have the package, which findPkgInfo
+	// has already said; or it has no build for this machine; or the lock file says it
+	// doesn't have the command. The last two are not worth saying.
 	if pkgInfo == nil {
-		logger.Warn("package isn't found")
+		logger.Debug("the package doesn't provide the command")
 		return nil, false, nil
+	}
+
+	locked, err := c.lockedTarget(pkg, def, cfg)
+	if err != nil {
+		return nil, false, err
 	}
 
 	if !pkgInfo.MaybeHasCommand(exeName) && !pkg.HasCommandAlias(exeName) {
@@ -283,14 +288,9 @@ func (c *Controller) findExecFileFromPkg(ctx context.Context, logger *slog.Logge
 
 	var fallback *FindResult
 	for _, file := range pkgInfo.GetFiles() {
-		findResult, exact, err := c.findExecFileFromFile(logger, exeName, pkg, pkgInfo, file)
+		findResult, exact, err := c.findExecFileFromFile(logger, exeName, pkg, pkgInfo, file, locked)
 		if err != nil {
 			return nil, false, err
-		}
-		if findResult != nil && def != nil {
-			if err := c.setLocked(findResult, pkg, def, cfg); err != nil {
-				return nil, false, err
-			}
 		}
 		if exact {
 			return findResult, true, nil
@@ -302,23 +302,20 @@ func (c *Controller) findExecFileFromPkg(ctx context.Context, logger *slog.Logge
 	return fallback, false, nil
 }
 
+// lockedTarget is what installing a package from the lock file takes, with the checksum
+// the download has to match, or nil for a package that didn't come from the lock file.
+func (c *Controller) lockedTarget(pkg *aqua.Package, def *lockfile.Package, cfg *aqua.Config) (*installpackage.Target, error) {
+	if def == nil {
+		return nil, nil //nolint:nilnil
+	}
+	return installpackage.NewTarget(pkg, def, cfg.Registries[pkg.Registry], c.runtime) //nolint:wrapcheck
+}
+
 // lockState is the lock file of the configuration being searched, and where the
 // definitions of its packages are read from.
 type lockState struct {
 	lf  *lockfile.LockFile
 	src *lockresolve.Source
-}
-
-// setLocked records that the package came from the lock file, with the checksum the
-// download has to match.
-func (c *Controller) setLocked(findResult *FindResult, pkg *aqua.Package, def *lockfile.Package, cfg *aqua.Config) error {
-	t, err := installpackage.NewTarget(pkg, def, cfg.Registries[pkg.Registry], c.runtime)
-	if err != nil {
-		return err //nolint:wrapcheck
-	}
-	findResult.Locked = true
-	findResult.Checksum = t.Checksum
-	return nil
 }
 
 // packageInfo returns the package definition, and with a lock file also the definition
@@ -358,16 +355,17 @@ func (c *Controller) packageInfo(ctx context.Context, logger *slog.Logger, cfgFi
 			"package_version", pkg.Version,
 		)
 	}
-	if len(entry.Commands) == 0 {
-		return nil, nil, slogerr.With(installpackage.ErrNoCommandsInLockFile, //nolint:wrapcheck
+	if err := entry.CheckCommands(); err != nil {
+		return nil, nil, slogerr.With(err, //nolint:wrapcheck
 			"package_name", pkg.Name,
 			"package_version", pkg.Version,
 		)
 	}
 	if !installpackage.CommandsPackageInfo(pkg.Name, entry).MaybeHasCommand(exeName) && !pkg.HasCommandAlias(exeName) {
-		// The registry isn't read for a package that doesn't have the command, and
-		// a definition without files is what findExecFileFromPkg passes over.
-		return &registry.PackageInfo{Name: pkg.Name}, nil, nil
+		// The registry isn't read for a package that doesn't have the command.
+		// Nothing is returned rather than a definition without files: one without
+		// files has a command after all, the one named after the package.
+		return nil, nil, nil
 	}
 	logger.Debug("getting a package from its registry with the checksum in the lock file")
 	def, err := lk.src.Locked(ctx, logger, pkg, entry)
@@ -438,7 +436,9 @@ func (c *Controller) findPkgInfo(ctx context.Context, logger *slog.Logger, cfgFi
 	return pkgInfo, nil
 }
 
-func (c *Controller) findExecFileFromFile(logger *slog.Logger, exeName string, pkg *aqua.Package, pkgInfo *registry.PackageInfo, file *registry.File) (*FindResult, bool, error) {
+// findExecFileFromFile matches the command against one file of the package. locked is the
+// package as the lock file has it, or nil.
+func (c *Controller) findExecFileFromFile(logger *slog.Logger, exeName string, pkg *aqua.Package, pkgInfo *registry.PackageInfo, file *registry.File, locked *installpackage.Target) (*FindResult, bool, error) {
 	m := matchCommand(file.Name, exeName)
 	for _, alias := range pkg.CommandAliases {
 		if file.Name != alias.Command {
@@ -455,6 +455,12 @@ func (c *Controller) findExecFileFromFile(logger *slog.Logger, exeName string, p
 			PackageInfo: pkgInfo,
 		},
 		File: file,
+	}
+	if locked != nil {
+		// The package came from the lock file, so the download has to match the
+		// checksum it recorded.
+		findResult.Locked = true
+		findResult.Checksum = locked.Checksum
 	}
 	if err := findResult.Package.ApplyVars(); err != nil {
 		return nil, false, fmt.Errorf("apply package variables: %w", err)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -30,14 +31,14 @@ func (c *Controller) Update(ctx context.Context, logger *slog.Logger, param *con
 	// from wherever the user happens to be, and a directory outside any aqua
 	// project simply has nothing to do.
 	for _, cfgFilePath := range c.configFinder.Finds(param.CWD, param.ConfigFilePath) {
-		if err := c.updateFile(ctx, logger, cfgFilePath, args); err != nil {
+		if err := c.updateFile(ctx, logger, cfgFilePath, param.RootDir, args); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (c *Controller) updateFile(ctx context.Context, logger *slog.Logger, cfgFilePath string, args *Args) error {
+func (c *Controller) updateFile(ctx context.Context, logger *slog.Logger, cfgFilePath, rootDir string, args *Args) error {
 	logger = logger.With("config_file_path", cfgFilePath)
 
 	cfg := &aqua.Config{}
@@ -56,9 +57,7 @@ func (c *Controller) updateFile(ctx context.Context, logger *slog.Logger, cfgFil
 		lf = lockfile.New()
 	}
 
-	rgsts := lockresolve.NewRegistries(c.registryInstaller, cfg, cfgFilePath)
-
-	updated, failed := c.updatePackages(ctx, logger, lf, rgsts, cfg, args)
+	updated, failed := c.update(ctx, logger, lf, cfg, cfgFilePath, rootDir, args)
 
 	// Writing sorts, so an unchanged lock file would still be rewritten. Skipping the
 	// write keeps the file's timestamp meaningful and keeps a no-op run out of git.
@@ -71,6 +70,23 @@ func (c *Controller) updateFile(ctx context.Context, logger *slog.Logger, cfgFil
 		return errUpdateLockFile
 	}
 	return nil
+}
+
+// update brings the packages and the registries in the lock file to what the configuration
+// asks for, and says whether anything changed and whether anything couldn't be resolved.
+func (c *Controller) update(ctx context.Context, logger *slog.Logger, lf *lockfile.LockFile, cfg *aqua.Config, cfgFilePath, rootDir string, args *Args) (bool, bool) {
+	rgsts := lockresolve.NewRecordingRegistries(c.registryInstaller, cfg, cfgFilePath, lf, rootDir)
+	if args.Force {
+		forgetRegistries(lf, cfg, args)
+	}
+	updated, failed := c.updatePackages(ctx, logger, lf, rgsts, cfg, args)
+	if c.recordRegistries(ctx, logger, rgsts, cfg, args) {
+		failed = true
+	}
+	if pruneRegistries(logger, lf, cfg, args) > 0 || rgsts.Changed() {
+		updated = true
+	}
+	return updated, failed
 }
 
 // updatePackages brings the lock file to what the configuration asks for, and says
@@ -94,6 +110,70 @@ func (c *Controller) updatePackages(ctx context.Context, logger *slog.Logger, lf
 		updated = true
 	}
 	return updated, failed
+}
+
+// lockedRegistries calls fn with each registry file the lock file records a checksum of
+// for the packages the run is about, and the package that uses it.
+func lockedRegistries(cfg *aqua.Config, args *Args, fn func(pkg *aqua.Package, key *lockfile.Registry)) {
+	for _, pkg := range cfg.Packages {
+		if pkg == nil || !match(args.Packages, pkg) {
+			continue
+		}
+		rgst := cfg.Registries[pkg.Registry]
+		if lockresolve.IsStandard(rgst) {
+			continue
+		}
+		if key := lockresolve.LockFileRegistry(rgst); key != nil {
+			fn(pkg, key)
+		}
+	}
+}
+
+// forgetRegistries drops the recorded checksums of the registries the run's packages come
+// from, so that --force records them again rather than checking against them.
+func forgetRegistries(lf *lockfile.LockFile, cfg *aqua.Config, args *Args) {
+	lockedRegistries(cfg, args, func(_ *aqua.Package, key *lockfile.Registry) {
+		lf.RetainRegistries(func(r *lockfile.Registry) bool {
+			return !r.SameFile(key)
+		})
+	})
+}
+
+// recordRegistries records the checksum of every registry file a package of the run comes
+// from, and says whether one couldn't be.
+//
+// Resolving a package records its registry already. This covers the packages that weren't
+// resolved because the lock file had them, which a lock file written before registries
+// were recorded has nothing for.
+func (c *Controller) recordRegistries(ctx context.Context, logger *slog.Logger, rgsts *lockresolve.Registries, cfg *aqua.Config, args *Args) bool {
+	failed := false
+	lockedRegistries(cfg, args, func(pkg *aqua.Package, _ *lockfile.Registry) {
+		if _, err := rgsts.Get(ctx, logger, pkg.Registry); err != nil {
+			failed = true
+			slogerr.WithError(logger, err).Error("record the checksum of the registry", "registry_name", pkg.Registry)
+		}
+	})
+	return failed
+}
+
+// pruneRegistries drops the checksums of registry files no package of aqua.yaml comes
+// from, and reports how many went. Not when the command named its packages, for the same
+// reason as prune.
+func pruneRegistries(logger *slog.Logger, lf *lockfile.LockFile, cfg *aqua.Config, args *Args) int {
+	if len(args.Packages) > 0 {
+		return 0
+	}
+	var declared []*lockfile.Registry
+	lockedRegistries(cfg, args, func(_ *aqua.Package, key *lockfile.Registry) {
+		declared = append(declared, key)
+	})
+	pruned := lf.RetainRegistries(func(r *lockfile.Registry) bool {
+		return slices.ContainsFunc(declared, r.SameFile)
+	})
+	if pruned > 0 {
+		logger.Info("dropped the registries aqua.yaml doesn't use", "num_of_registries", pruned)
+	}
+	return pruned
 }
 
 // prune drops the entries aqua.yaml no longer declares, and reports how many went.

@@ -16,6 +16,7 @@ func (lf *LockFile) Sort() {
 	for _, pkg := range lf.Packages {
 		slices.Sort(pkg.Commands)
 	}
+	slices.SortFunc(lf.Registries, compareRegistries)
 }
 
 func comparePackages(a, b *Entry) int {
@@ -37,6 +38,20 @@ func comparePackages(a, b *Entry) int {
 }
 
 // variantKey renders the variants as a string that sorts stably.
+func compareRegistries(a, b *Registry) int {
+	for _, d := range []int{
+		cmp.Compare(a.Type, b.Type),
+		cmp.Compare(a.RepoOwner, b.RepoOwner),
+		cmp.Compare(a.RepoName, b.RepoName),
+		cmp.Compare(a.Ref, b.Ref),
+	} {
+		if d != 0 {
+			return d
+		}
+	}
+	return cmp.Compare(a.Path, b.Path)
+}
+
 func variantKey(pkg *Entry) string {
 	if len(pkg.Variants) == 0 {
 		return ""

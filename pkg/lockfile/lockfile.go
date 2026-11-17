@@ -20,11 +20,13 @@ package lockfile
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"maps"
 	"os"
 	"slices"
+	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 )
@@ -44,6 +46,14 @@ type LockFile struct {
 	// so that a repository shared between a Linux CI and a macOS laptop resolves
 	// from the same file without either of them rewriting it.
 	Packages []*Entry `json:"packages"`
+	// Registries holds the checksum of every registry file a locked package is read
+	// from. Where a package is downloaded from is the registry's answer, so the
+	// registry file is what an attacker would change next; its checksum is what
+	// keeps a changed file from being read. aqua-registry-g2 and local registries
+	// have none: the first is read a package at a time from a repository whose
+	// branches are protected, and the second sits in the repository beside the lock
+	// file.
+	Registries []*Registry `json:"registries,omitempty"`
 }
 
 // Metadata tells whoever opens the file what it is.
@@ -160,15 +170,58 @@ type Package struct {
 	SLSAProvenance             *registry.SLSAProvenance             `json:"slsa_provenance,omitempty"`
 }
 
-// Registry names where the entry was resolved from.
+// Registry names where the entry was resolved from. In LockFile.Registries it also
+// names one file of the registry at one ref, with that file's checksum.
 //
 // The fields are spelled out rather than combined into one string. A short form
 // would need a rule to parse it, and writing the parts keeps the entry's meaning
 // unchanged if another registry type appears.
 type Registry struct {
-	Type      string `json:"type"`
-	RepoOwner string `json:"repo_owner,omitempty"`
-	RepoName  string `json:"repo_name,omitempty"`
+	Type              string `json:"type"`
+	RepoOwner         string `json:"repo_owner,omitempty"`
+	RepoName          string `json:"repo_name,omitempty"`
+	Ref               string `json:"ref,omitempty"`
+	Path              string `json:"path,omitempty"`
+	Checksum          string `json:"checksum,omitempty"`
+	ChecksumAlgorithm string `json:"checksum_algorithm,omitempty"`
+}
+
+// SameFile says whether two registries name the same file at the same ref.
+func (r *Registry) SameFile(other *Registry) bool {
+	return r.Type == other.Type && r.RepoOwner == other.RepoOwner && r.RepoName == other.RepoName &&
+		r.Ref == other.Ref && r.Path == other.Path
+}
+
+// FindRegistry returns the recorded checksum of the registry file rgst names, or nil.
+func (lf *LockFile) FindRegistry(rgst *Registry) *Registry {
+	if lf == nil {
+		return nil
+	}
+	for _, r := range lf.Registries {
+		if r != nil && r.SameFile(rgst) {
+			return r
+		}
+	}
+	return nil
+}
+
+// SetRegistry records the checksum of a registry file, replacing what was recorded for
+// the same file.
+func (lf *LockFile) SetRegistry(rgst *Registry) {
+	lf.Registries = slices.DeleteFunc(lf.Registries, func(r *Registry) bool {
+		return r == nil || r.SameFile(rgst)
+	})
+	lf.Registries = append(lf.Registries, rgst)
+}
+
+// RetainRegistries drops the registry files a predicate doesn't declare, and reports how
+// many went.
+func (lf *LockFile) RetainRegistries(declared func(rgst *Registry) bool) int {
+	before := len(lf.Registries)
+	lf.Registries = slices.DeleteFunc(lf.Registries, func(r *Registry) bool {
+		return r == nil || !declared(r)
+	})
+	return before - len(lf.Registries)
 }
 
 // Entry returns what the lock file records of the package.
@@ -199,6 +252,37 @@ func (p *Package) commands() []string {
 	slices.Sort(names)
 	return slices.Compact(names)
 }
+
+// CheckCommands says whether the entry's commands can be used as they are.
+//
+// A command name becomes the name of a link in $(aqua root-dir)/bin, so it has to be a
+// name and nothing else. The lock file can be changed by whoever can change the
+// repository, and a name such as "../../.bashrc" would replace a file outside that
+// directory with a link. An entry with no commands at all was written before the lock
+// file recorded them, and guessing them from the package name would create the wrong
+// links.
+func (e *Entry) CheckCommands() error {
+	if len(e.Commands) == 0 {
+		return ErrNoCommands
+	}
+	for _, cmd := range e.Commands {
+		if !validCommand(cmd) {
+			return fmt.Errorf("%w: %q", ErrInvalidCommand, cmd)
+		}
+	}
+	return nil
+}
+
+func validCommand(cmd string) bool {
+	return cmd != "" && cmd != "." && cmd != ".." && !strings.ContainsAny(cmd, `/\:`) && !strings.ContainsRune(cmd, 0)
+}
+
+var (
+	// ErrNoCommands is an entry written before the lock file recorded commands.
+	ErrNoCommands = errors.New(`the lock file entry has no commands. Please run "aqua lock update --force"`)
+	// ErrInvalidCommand is a command name that isn't a plain name.
+	ErrInvalidCommand = errors.New("the lock file entry has a command name that isn't a plain name")
+)
 
 // Describes says whether the entry is the one for p's environment: the same os, arch
 // and variants. The name and version aren't compared, since p is looked up by them.

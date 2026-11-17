@@ -61,12 +61,26 @@ func (r *fakeResolver) Resolve(_ context.Context, _ *slog.Logger, pkgName, versi
 	}, nil
 }
 
-// fakeRegistryInstaller answers with one package definition, whatever is asked for.
+// fakeRegistryInstaller answers with one package definition, whatever is asked for. With
+// rootDir, it writes a github_content registry's file where the real installer would.
 type fakeRegistryInstaller struct {
 	pkgInfo *registry.PackageInfo
+	rootDir string
 }
 
-func (i *fakeRegistryInstaller) InstallRegistry(_ context.Context, _ *slog.Logger, _ *aqua.Registry, _ string, _ *checksum.Checksums) (*registry.Config, error) {
+func (i *fakeRegistryInstaller) InstallRegistry(_ context.Context, _ *slog.Logger, rgst *aqua.Registry, cfgFilePath string, _ *checksum.Checksums) (*registry.Config, error) {
+	if i.rootDir != "" && rgst.Type == aqua.RegistryTypeGitHubContent {
+		p, err := rgst.FilePath(i.rootDir, cfgFilePath)
+		if err != nil {
+			return nil, err //nolint:wrapcheck
+		}
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			return nil, err //nolint:wrapcheck
+		}
+		if err := os.WriteFile(p, []byte("packages: []\n"), 0o600); err != nil {
+			return nil, err //nolint:wrapcheck
+		}
+	}
 	return &registry.Config{PackageInfos: registry.PackageInfos{i.pkgInfo}}, nil
 }
 
@@ -289,10 +303,11 @@ func TestController_Update_otherRegistry(t *testing.T) {
 		Packages: []*aqua.Package{{Name: "foo/foo", Version: "v1.0.0", Registry: "foo"}},
 	}
 	g2 := &fakeResolver{}
+	rootDir := t.TempDir()
 	ctrl := lockupdate.New(
 		&fakeFinder{paths: []string{cfgFilePath}},
 		&fakeReader{cfg: cfg},
-		&fakeRegistryInstaller{pkgInfo: &registry.PackageInfo{
+		&fakeRegistryInstaller{rootDir: rootDir, pkgInfo: &registry.PackageInfo{
 			Name:          "foo/foo",
 			Type:          "github_release",
 			RepoOwner:     "foo",
@@ -304,7 +319,7 @@ func TestController_Update_otherRegistry(t *testing.T) {
 		&fakeChecksumGetter{checksum: "abc"},
 		g2,
 	)
-	if err := ctrl.Update(t.Context(), slog.New(slog.DiscardHandler), &config.Param{}, &lockupdate.Args{}); err != nil {
+	if err := ctrl.Update(t.Context(), slog.New(slog.DiscardHandler), &config.Param{RootDir: rootDir}, &lockupdate.Args{}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -322,6 +337,12 @@ func TestController_Update_otherRegistry(t *testing.T) {
 	if got.OS != "linux" || got.Arch != "amd64" {
 		t.Errorf("the environment is %s/%s, want linux/amd64", got.OS, got.Arch)
 	}
+	checkOtherRegistryEntry(t, lf)
+}
+
+func checkOtherRegistryEntry(t *testing.T, lf *lockfile.LockFile) {
+	t.Helper()
+	got := lf.Packages[0]
 	// The checksum comes from the getter, not from the registry.
 	if got.Checksum != "abc" {
 		t.Errorf("the checksum is %q, want abc", got.Checksum)
@@ -329,6 +350,59 @@ func TestController_Update_otherRegistry(t *testing.T) {
 	// The entry records which registry answered.
 	if got.Registry == nil || got.Registry.RepoName != "my-registry" {
 		t.Errorf("the registry is %+v, want my-registry", got.Registry)
+	}
+	// And the lock file records the checksum of the registry file it was read from,
+	// since that file decides where the package is downloaded from.
+	if len(lf.Registries) != 1 || lf.Registries[0].Ref != "v1.0.0" || lf.Registries[0].Checksum == "" {
+		t.Errorf("the registries are %+v", lf.Registries)
+	}
+}
+
+// A lock file that has a package but not the checksum of the registry it comes from, such
+// as one written before registries were recorded, gets the checksum without the package
+// being resolved again. A registry no package uses any more is dropped.
+func TestController_Update_recordRegistry(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	rootDir := t.TempDir()
+	cfgFilePath := filepath.Join(dir, "aqua.yaml")
+	lockFilePath := filepath.Join(dir, lockfile.FileName)
+	cfg := &aqua.Config{
+		Registries: aqua.Registries{
+			"foo": {Name: "foo", Type: "github_content", RepoOwner: "suzuki-shunsuke", RepoName: "my-registry", Ref: "v2.0.0", Path: "registry.yaml"},
+		},
+		Packages: []*aqua.Package{{Name: "foo/foo", Version: "v1.0.0", Registry: "foo"}},
+	}
+	lf := lockfile.New()
+	lf.Packages = []*lockfile.Entry{
+		{Name: "foo/foo", Version: "v1.0.0", OS: "linux", Arch: "amd64", Checksum: "abc", Commands: []string{"foo"}},
+	}
+	// The ref aqua.yaml used before.
+	lf.Registries = []*lockfile.Registry{
+		{Type: "github_content", RepoOwner: "suzuki-shunsuke", RepoName: "my-registry", Ref: "v1.0.0", Path: "registry.yaml", Checksum: "old", ChecksumAlgorithm: "sha256"},
+	}
+	if err := lockfile.Write(lockFilePath, lf); err != nil {
+		t.Fatal(err)
+	}
+	ctrl := lockupdate.New(
+		&fakeFinder{paths: []string{cfgFilePath}},
+		&fakeReader{cfg: cfg},
+		&fakeRegistryInstaller{rootDir: rootDir, pkgInfo: &registry.PackageInfo{Name: "foo/foo"}},
+		&fakeChecksumGetter{},
+		&fakeResolver{},
+	)
+	if err := ctrl.Update(t.Context(), slog.New(slog.DiscardHandler), &config.Param{RootDir: rootDir}, &lockupdate.Args{}); err != nil {
+		t.Fatal(err)
+	}
+	got, err := lockfile.ReadFile(lockFilePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Registries) != 1 || got.Registries[0].Ref != "v2.0.0" || got.Registries[0].Checksum == "" {
+		t.Errorf("the registries are %+v, want the checksum of v2.0.0 alone", got.Registries)
+	}
+	if len(got.Packages) != 1 || got.Packages[0].Checksum != "abc" {
+		t.Errorf("the package entry changed: %+v", got.Packages)
 	}
 }
 
