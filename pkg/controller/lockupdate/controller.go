@@ -45,7 +45,7 @@ type ChecksumGetter interface {
 
 // RegistryInstaller installs a registry a configuration declares. Only the registries the
 // packages being resolved come from are installed.
-type RegistryInstaller = lockresolve.RegistryInstaller
+type RegistryInstaller = lockresolve.RegistryDownloader
 
 // Controller updates lock files.
 type Controller struct {
