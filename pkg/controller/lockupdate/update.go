@@ -9,6 +9,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/lockfile"
+	"github.com/aquaproj/aqua/v2/pkg/lockresolve"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
@@ -55,11 +56,7 @@ func (c *Controller) updateFile(ctx context.Context, logger *slog.Logger, cfgFil
 		lf = lockfile.New()
 	}
 
-	rgsts := &registries{
-		installer:   c.registryInstaller,
-		cfg:         cfg,
-		cfgFilePath: cfgFilePath,
-	}
+	rgsts := lockresolve.NewRegistries(c.registryInstaller, cfg, cfgFilePath)
 
 	updated, failed := c.updatePackages(ctx, logger, lf, rgsts, cfg, args)
 
@@ -78,7 +75,7 @@ func (c *Controller) updateFile(ctx context.Context, logger *slog.Logger, cfgFil
 
 // updatePackages brings the lock file to what the configuration asks for, and says
 // whether anything changed and whether anything couldn't be resolved.
-func (c *Controller) updatePackages(ctx context.Context, logger *slog.Logger, lf *lockfile.LockFile, rgsts *registries, cfg *aqua.Config, args *Args) (bool, bool) {
+func (c *Controller) updatePackages(ctx context.Context, logger *slog.Logger, lf *lockfile.LockFile, rgsts *lockresolve.Registries, cfg *aqua.Config, args *Args) (bool, bool) {
 	updated := false
 	failed := false
 	for _, pkg := range cfg.Packages {
@@ -134,7 +131,7 @@ func prune(logger *slog.Logger, lf *lockfile.LockFile, cfg *aqua.Config, args *A
 	return pruned
 }
 
-func (c *Controller) updatePackage(ctx context.Context, logger *slog.Logger, lf *lockfile.LockFile, rgsts *registries, pkg *aqua.Package, args *Args) (bool, error) {
+func (c *Controller) updatePackage(ctx context.Context, logger *slog.Logger, lf *lockfile.LockFile, rgsts *lockresolve.Registries, pkg *aqua.Package, args *Args) (bool, error) {
 	if !match(args.Packages, pkg) {
 		return false, nil
 	}
@@ -158,21 +155,31 @@ func (c *Controller) updatePackage(ctx context.Context, logger *slog.Logger, lf 
 	// different set of environments than the lock file holds, and a package that
 	// dropped one would otherwise keep a stale entry for it.
 	lf.Remove(pkg.Name, pkg.Version)
-	lf.Packages = append(lf.Packages, pkgs...)
+	for _, p := range pkgs {
+		lf.Packages = append(lf.Packages, p.Entry())
+	}
 	logger.Info("update the lock file", "environments", len(pkgs))
 	return true, nil
 }
 
-// resolve reads the package from where its registry says it lives.
+// resolve reads the package from where its registry says it lives, with a checksum for
+// every environment.
 //
-// The standard registry is mirrored by aqua-registry-g2, which serves a registry.json
-// resolved and checksummed ahead of time. Any other registry has no branch there, so
-// its own definition is resolved here instead.
-func (c *Controller) resolve(ctx context.Context, logger *slog.Logger, rgsts *registries, pkg *aqua.Package) ([]*lockfile.Package, error) {
-	if pkg.Registry == aqua.RegistryTypeStandard {
-		return c.g2.Resolve(ctx, logger, pkg.Name, pkg.Version) //nolint:wrapcheck
+// aqua-registry-g2 serves its checksums with the definitions. Any other registry doesn't,
+// so they are fetched here, which is the work ar2 does ahead of time for the packages g2
+// covers.
+func (c *Controller) resolve(ctx context.Context, logger *slog.Logger, rgsts *lockresolve.Registries, pkg *aqua.Package) ([]*lockfile.Package, error) {
+	defs, err := lockresolve.Resolve(ctx, logger, c.g2, rgsts, pkg)
+	if err != nil {
+		return nil, err //nolint:wrapcheck
 	}
-	return c.resolveFromRegistry(ctx, logger, rgsts, pkg)
+	if defs.PkgInfo == nil {
+		return defs.Packages, nil
+	}
+	if err := c.fillChecksums(ctx, logger, defs.Packages, pkg, defs.PkgInfo, defs.SupportedEnvs); err != nil {
+		return nil, err
+	}
+	return defs.Packages, nil
 }
 
 // match reports whether pkg is one of the packages named on the command line. Each

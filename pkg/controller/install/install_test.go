@@ -166,7 +166,7 @@ packages:
 			pkgInstaller := installpackage.New(d.param, downloader, d.rt, linker, nil, &checksum.Calculator{}, unarchive.New(executor), &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &packslip.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{}, vacuumMock)
 			policyFinder := policy.NewConfigFinder()
 			policyReader := policy.NewReader(&policy.MockValidator{}, policyFinder, policy.NewConfigReader())
-			ctrl := install.New(d.param, finder.NewConfigFinder(), reader.New(d.param), registry.New(d.param, registryDownloader, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), pkgInstaller, d.rt, policyReader)
+			ctrl := install.New(d.param, finder.NewConfigFinder(), reader.New(d.param), registry.New(d.param, registryDownloader, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), pkgInstaller, d.rt, policyReader, nil)
 			if err := ctrl.Install(ctx, logger, d.param); err != nil {
 				if d.isErr {
 					return

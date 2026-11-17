@@ -10,7 +10,9 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/aquaproj/aqua/v2/pkg/lockfile"
+	"github.com/aquaproj/aqua/v2/pkg/lockresolve"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
@@ -22,6 +24,11 @@ type FindResult struct {
 	ExePath        string
 	ConfigFilePath string
 	EnableChecksum bool
+	// Locked says the package came from the lock file, and Checksum is what the lock
+	// file recorded for it. Installing the package has to verify the download
+	// against it, the same as "aqua install" does.
+	Locked   bool
+	Checksum *checksum.Checksum
 }
 
 // Which finds the command.
@@ -146,6 +153,13 @@ func (c *Controller) findExecFile(ctx context.Context, logger *slog.Logger, para
 	if err != nil {
 		return nil, false, err //nolint:wrapcheck
 	}
+	var lk *lockState
+	if lf != nil {
+		lk = &lockState{
+			lf:  lf,
+			src: lockresolve.NewSource(c.g2, lockresolve.NewRegistries(c.registryInstaller, cfg, cfgFilePath)),
+		}
+	}
 
 	logger.Debug("reading registry cache")
 	registryCache, err := registry.NewCache(param.RootDir, cfgFilePath)
@@ -169,13 +183,13 @@ func (c *Controller) findExecFile(ctx context.Context, logger *slog.Logger, para
 		}
 	}()
 
-	return c.findExecFileFromPkgs(ctx, logger, cfgFilePath, cfg, lf, registryCache, rgPaths, registries, exeName, checksums)
+	return c.findExecFileFromPkgs(ctx, logger, cfgFilePath, cfg, lk, registryCache, rgPaths, registries, exeName, checksums)
 }
 
-func (c *Controller) findExecFileFromPkgs(ctx context.Context, logger *slog.Logger, cfgFilePath string, cfg *aqua.Config, lf *lockfile.LockFile, rCache *registry.Cache, rgPaths map[string]string, registries map[string]*registry.Config, exeName string, checksums *checksum.Checksums) (*FindResult, bool, error) {
+func (c *Controller) findExecFileFromPkgs(ctx context.Context, logger *slog.Logger, cfgFilePath string, cfg *aqua.Config, lk *lockState, rCache *registry.Cache, rgPaths map[string]string, registries map[string]*registry.Config, exeName string, checksums *checksum.Checksums) (*FindResult, bool, error) {
 	var fallback *FindResult
 	for _, pkg := range cfg.Packages {
-		findResult, exact, err := c.findExecFileFromPkg(ctx, logger, cfgFilePath, cfg, lf, rCache, rgPaths, registries, exeName, pkg, checksums)
+		findResult, exact, err := c.findExecFileFromPkg(ctx, logger, cfgFilePath, cfg, lk, rCache, rgPaths, registries, exeName, pkg, checksums)
 		if err != nil {
 			return nil, false, err
 		}
@@ -225,7 +239,7 @@ func (c *Controller) setRegistryCacheKeys(cfg *aqua.Config, cfgFilePath string, 
 	return nil
 }
 
-func (c *Controller) findExecFileFromPkg(ctx context.Context, logger *slog.Logger, cfgFilePath string, cfg *aqua.Config, lf *lockfile.LockFile, rCache *registry.Cache, rgPaths map[string]string, registries map[string]*registry.Config, exeName string, pkg *aqua.Package, checksums *checksum.Checksums) (*FindResult, bool, error) { //nolint:cyclop
+func (c *Controller) findExecFileFromPkg(ctx context.Context, logger *slog.Logger, cfgFilePath string, cfg *aqua.Config, lk *lockState, rCache *registry.Cache, rgPaths map[string]string, registries map[string]*registry.Config, exeName string, pkg *aqua.Package, checksums *checksum.Checksums) (*FindResult, bool, error) { //nolint:cyclop
 	if pkg.Registry == "" || pkg.Name == "" {
 		logger.Debug("ignore a package because the package name or package registry name is empty")
 		return nil, false, nil
@@ -234,7 +248,7 @@ func (c *Controller) findExecFileFromPkg(ctx context.Context, logger *slog.Logge
 		"registry_name", pkg.Registry,
 		"package_name", pkg.Name,
 	)
-	pkgInfo, err := c.packageInfo(ctx, logger, cfgFilePath, cfg, lf, rCache, rgPaths, registries, pkg, checksums)
+	pkgInfo, def, err := c.packageInfo(ctx, logger, cfgFilePath, cfg, lk, rCache, rgPaths, registries, exeName, pkg, checksums)
 	if err != nil {
 		return nil, false, err
 	}
@@ -273,6 +287,11 @@ func (c *Controller) findExecFileFromPkg(ctx context.Context, logger *slog.Logge
 		if err != nil {
 			return nil, false, err
 		}
+		if findResult != nil && def != nil {
+			if err := c.setLocked(findResult, pkg, def, cfg); err != nil {
+				return nil, false, err
+			}
+		}
 		if exact {
 			return findResult, true, nil
 		}
@@ -283,41 +302,73 @@ func (c *Controller) findExecFileFromPkg(ctx context.Context, logger *slog.Logge
 	return fallback, false, nil
 }
 
-// packageInfo returns the package definition, from the lock file where there is one.
+// lockState is the lock file of the configuration being searched, and where the
+// definitions of its packages are read from.
+type lockState struct {
+	lf  *lockfile.LockFile
+	src *lockresolve.Source
+}
+
+// setLocked records that the package came from the lock file, with the checksum the
+// download has to match.
+func (c *Controller) setLocked(findResult *FindResult, pkg *aqua.Package, def *lockfile.Package, cfg *aqua.Config) error {
+	t, err := installpackage.NewTarget(pkg, def, cfg.Registries[pkg.Registry], c.runtime)
+	if err != nil {
+		return err //nolint:wrapcheck
+	}
+	findResult.Locked = true
+	findResult.Checksum = t.Checksum
+	return nil
+}
+
+// packageInfo returns the package definition, and with a lock file also the definition
+// it was read as.
 //
-// A lock file entry is already resolved for this environment, so taking it means aqua
-// reads no registry to answer where a command lives. That is what lets "aqua exec"
-// run on a locked configuration without downloading anything.
+// With a lock file, which package a command belongs to is the lock file's answer: an
+// entry records the commands of its package, so a package that doesn't have the command
+// is passed over without reading its registry. That is what keeps a private registry
+// from being read to run a command from a public one. Where the package is downloaded
+// from is never the lock file's answer, so the package that has the command is read from
+// its registry, with the checksum the lock file recorded.
 //
-// Where a lock file exists, it is the only source: a package missing from it is an
-// error rather than something to look up in a registry, the same as when installing.
-// Running a command aqua would refuse to install would be the worse answer, and the
-// registry it would come from may no longer describe the version that is on disk.
+// Where a lock file exists, it is the only source of which packages there are: a package
+// missing from it is an error rather than something to look up in a registry, the same
+// as when installing.
 //
 // A package the lock file describes but not for this machine returns nothing, so the
 // search carries on to the next package.
-func (c *Controller) packageInfo(ctx context.Context, logger *slog.Logger, cfgFilePath string, cfg *aqua.Config, lf *lockfile.LockFile, rCache *registry.Cache, rgPaths map[string]string, registries map[string]*registry.Config, pkg *aqua.Package, checksums *checksum.Checksums) (*registry.PackageInfo, error) {
-	if lf == nil {
-		return c.findPkgInfo(ctx, logger, cfgFilePath, cfg, rCache, rgPaths, registries, pkg, checksums)
+func (c *Controller) packageInfo(ctx context.Context, logger *slog.Logger, cfgFilePath string, cfg *aqua.Config, lk *lockState, rCache *registry.Cache, rgPaths map[string]string, registries map[string]*registry.Config, exeName string, pkg *aqua.Package, checksums *checksum.Checksums) (*registry.PackageInfo, *lockfile.Package, error) {
+	if lk == nil {
+		pkgInfo, err := c.findPkgInfo(ctx, logger, cfgFilePath, cfg, rCache, rgPaths, registries, pkg, checksums)
+		return pkgInfo, nil, err
 	}
-	entry := lf.Find(pkg.Name, pkg.Version, c.runtime)
+	entry := lk.lf.Find(pkg.Name, pkg.Version, c.runtime)
 	if entry == nil {
 		// Entries for the package but none for this machine means it has no build
 		// here, which is what supported_envs says and what aqua passes over: the
 		// command simply isn't provided, and the search moves on. No entries at all
 		// means the lock file doesn't know the package, which is a file to bring up
 		// to date.
-		if lf.Has(pkg.Name, pkg.Version) {
+		if lk.lf.Has(pkg.Name, pkg.Version) {
 			logger.Debug("the package isn't supported on this environment")
-			return nil, nil //nolint:nilnil
+			return nil, nil, nil
 		}
-		return nil, slogerr.With(errNotInLockFile, //nolint:wrapcheck
+		return nil, nil, slogerr.With(errNotInLockFile, //nolint:wrapcheck
 			"package_name", pkg.Name,
 			"package_version", pkg.Version,
 		)
 	}
-	logger.Debug("getting a package from the lock file")
-	return entry.PackageInfo(), nil
+	if !installpackage.CommandsPackageInfo(pkg.Name, entry).MaybeHasCommand(exeName) && !pkg.HasCommandAlias(exeName) {
+		// The registry isn't read for a package that doesn't have the command, and
+		// a definition without files is what findExecFileFromPkg passes over.
+		return &registry.PackageInfo{Name: pkg.Name}, nil, nil
+	}
+	logger.Debug("getting a package from its registry with the checksum in the lock file")
+	def, err := lk.src.Locked(ctx, logger, pkg, entry)
+	if err != nil {
+		return nil, nil, err //nolint:wrapcheck
+	}
+	return def.PackageInfo(), def, nil
 }
 
 func (c *Controller) findPkgInfo(ctx context.Context, logger *slog.Logger, cfgFilePath string, cfg *aqua.Config, rCache *registry.Cache, rgPaths map[string]string, registries map[string]*registry.Config, pkg *aqua.Package, checksums *checksum.Checksums) (*registry.PackageInfo, error) { //nolint:cyclop,funlen

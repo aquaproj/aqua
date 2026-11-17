@@ -57,12 +57,8 @@ type fakeRegistryInstaller struct {
 	pkgInfo *registry.PackageInfo
 }
 
-func (i *fakeRegistryInstaller) InstallRegistries(_ context.Context, _ *slog.Logger, cfg *aqua.Config, _ string, _ *checksum.Checksums) (map[string]*registry.Config, error) {
-	contents := make(map[string]*registry.Config, len(cfg.Registries))
-	for name := range cfg.Registries {
-		contents[name] = &registry.Config{PackageInfos: registry.PackageInfos{i.pkgInfo}}
-	}
-	return contents, nil
+func (i *fakeRegistryInstaller) InstallRegistry(_ context.Context, _ *slog.Logger, _ *aqua.Registry, _ string, _ *checksum.Checksums) (*registry.Config, error) {
+	return &registry.Config{PackageInfos: registry.PackageInfos{i.pkgInfo}}, nil
 }
 
 // fakeChecksumGetter answers with one checksum for every environment, under the
@@ -137,8 +133,8 @@ func TestController_Update_alreadyLocked(t *testing.T) {
 	lockFilePath := filepath.Join(dir, lockfile.FileName)
 
 	lf := lockfile.New()
-	lf.Packages = []*lockfile.Package{
-		{Name: "cli/cli", Version: "v2.1.0", OS: "linux", Arch: "amd64", Type: "github_release", Checksum: "old"},
+	lf.Packages = []*lockfile.Entry{
+		{Name: "cli/cli", Version: "v2.1.0", OS: "linux", Arch: "amd64", Checksum: "old"},
 	}
 	if err := lockfile.Write(lockFilePath, lf); err != nil {
 		t.Fatal(err)
@@ -180,8 +176,8 @@ func TestController_Update_force(t *testing.T) {
 	lockFilePath := filepath.Join(dir, lockfile.FileName)
 
 	lf := lockfile.New()
-	lf.Packages = []*lockfile.Package{
-		{Name: "cli/cli", Version: "v2.1.0", OS: "windows", Arch: "amd64", Type: "github_release", Checksum: "old"},
+	lf.Packages = []*lockfile.Entry{
+		{Name: "cli/cli", Version: "v2.1.0", OS: "windows", Arch: "amd64", Checksum: "old"},
 	}
 	if err := lockfile.Write(lockFilePath, lf); err != nil {
 		t.Fatal(err)
@@ -314,8 +310,8 @@ func TestController_Update_otherRegistry(t *testing.T) {
 		t.Fatalf("got %d entries, want 1", len(lf.Packages))
 	}
 	got := lf.Packages[0]
-	if got.Asset != "foo_linux_amd64.tar.gz" {
-		t.Errorf("the asset is %q, want foo_linux_amd64.tar.gz", got.Asset)
+	if got.OS != "linux" || got.Arch != "amd64" {
+		t.Errorf("the environment is %s/%s, want linux/amd64", got.OS, got.Arch)
 	}
 	// The checksum comes from the getter, not from the registry.
 	if got.Checksum != "abc" {
@@ -427,7 +423,7 @@ func TestController_Update_otherRegistry_versionOverrides(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(lf.Packages) != 1 || lf.Packages[0].Asset != "foo_linux_amd64.tar.gz" {
+	if len(lf.Packages) != 1 || lf.Packages[0].Checksum != "abc" {
 		t.Errorf("the entries are %+v", lf.Packages)
 	}
 }

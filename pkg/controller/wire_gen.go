@@ -45,6 +45,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/install-registry"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/aquaproj/aqua/v2/pkg/link"
+	"github.com/aquaproj/aqua/v2/pkg/lockresolve"
 	"github.com/aquaproj/aqua/v2/pkg/minisign"
 	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/aquaproj/aqua/v2/pkg/packslip"
@@ -57,6 +58,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter/forge/gitea"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter/forge/gitlab"
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter/goproxy"
+	"github.com/google/wire"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 	"io"
 	"log/slog"
@@ -192,7 +194,9 @@ func InitializeInstallCommandController(ctx context.Context, logger *slog.Logger
 	configFinderImpl := policy.NewConfigFinder()
 	configReaderImpl := policy.NewConfigReader()
 	policyReader := policy.NewReader(validatorImpl, configFinderImpl, configReaderImpl)
-	controller := install.New(param, configFinder, configReader, installer, installpackageInstaller, rt, policyReader)
+	cache := g2.NewCache(param)
+	g2Client := g2.NewDefault(gitHubContentFileDownloader, cache)
+	controller := install.New(param, configFinder, configReader, installer, installpackageInstaller, rt, policyReader, g2Client)
 	return controller, nil
 }
 
@@ -213,7 +217,9 @@ func InitializeWhichCommandController(ctx context.Context, logger *slog.Logger, 
 	installer := registry.New(param, gitHubContentFileDownloader, rt, verifier, slsaVerifier)
 	osEnv := osenv.New()
 	linker := link.New()
-	controller := which.New(param, configFinder, configReader, installer, rt, osEnv, linker)
+	cache := g2.NewCache(param)
+	client := g2.NewDefault(gitHubContentFileDownloader, cache)
+	controller := which.New(param, configFinder, configReader, installer, rt, osEnv, linker, client)
 	return controller, nil
 }
 
@@ -257,7 +263,9 @@ func InitializeExecCommandController(ctx context.Context, logger *slog.Logger, p
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(v, httpDownloader)
 	registryInstaller := registry.New(param, gitHubContentFileDownloader, rt, verifier, slsaVerifier)
 	osEnv := osenv.New()
-	controller := which.New(param, configFinder, configReader, registryInstaller, rt, osEnv, linker)
+	cache := g2.NewCache(param)
+	g2Client := g2.NewDefault(gitHubContentFileDownloader, cache)
+	controller := which.New(param, configFinder, configReader, registryInstaller, rt, osEnv, linker, g2Client)
 	validatorImpl := policy.NewValidator(param)
 	configFinderImpl := policy.NewConfigFinder()
 	configReaderImpl := policy.NewConfigReader()
@@ -345,12 +353,14 @@ func InitializeCopyCommandController(ctx context.Context, logger *slog.Logger, p
 	gitHubContentFileDownloader := download.NewGitHubContentFileDownloader(v, httpDownloader)
 	registryInstaller := registry.New(param, gitHubContentFileDownloader, rt, verifier, slsaVerifier)
 	osEnv := osenv.New()
-	controller := which.New(param, configFinder, configReader, registryInstaller, rt, osEnv, linker)
+	cache := g2.NewCache(param)
+	g2Client := g2.NewDefault(gitHubContentFileDownloader, cache)
+	controller := which.New(param, configFinder, configReader, registryInstaller, rt, osEnv, linker, g2Client)
 	validatorImpl := policy.NewValidator(param)
 	configFinderImpl := policy.NewConfigFinder()
 	configReaderImpl := policy.NewConfigReader()
 	policyReader := policy.NewReader(validatorImpl, configFinderImpl, configReaderImpl)
-	installController := install.New(param, configFinder, configReader, registryInstaller, installer, rt, policyReader)
+	installController := install.New(param, configFinder, configReader, registryInstaller, installer, rt, policyReader, g2Client)
 	cpController := cp.New(param, installer, rt, controller, installController, policyReader)
 	return cpController, nil
 }
@@ -436,7 +446,7 @@ func InitializeUpdateCommandController(ctx context.Context, logger *slog.Logger,
 	fuzzyGetter := versiongetter.NewFuzzy(fuzzyfinderFinder, generalVersionGetter, g2VersionGetter)
 	osEnv := osenv.New()
 	linker := link.New()
-	controller := which.New(param, configFinder, configReader, installer, rt, osEnv, linker)
+	controller := which.New(param, configFinder, configReader, installer, rt, osEnv, linker, g2Client)
 	updateController := update.New(param, v, configFinder, configReader, installer, rt, fuzzyGetter, fuzzyfinderFinder, controller)
 	return updateController, nil
 }
@@ -479,9 +489,11 @@ func InitializeRemoveCommandController(ctx context.Context, logger *slog.Logger,
 	fuzzyfinderFinder := fuzzyfinder.New()
 	osEnv := osenv.New()
 	linker := link.New()
-	controller := which.New(param, configFinder, configReader, installer, rt, osEnv, linker)
-	client := vacuum.New(param)
-	removeController := remove.New(param, target, rt, configFinder, configReader, installer, fuzzyfinderFinder, controller, client)
+	cache := g2.NewCache(param)
+	client := g2.NewDefault(gitHubContentFileDownloader, cache)
+	controller := which.New(param, configFinder, configReader, installer, rt, osEnv, linker, client)
+	vacuumClient := vacuum.New(param)
+	removeController := remove.New(param, target, rt, configFinder, configReader, installer, fuzzyfinderFinder, controller, vacuumClient)
 	return removeController, nil
 }
 
@@ -578,3 +590,9 @@ func InitializeMigrateCommandController(ctx context.Context, logger *slog.Logger
 	controller := migrate.New(configFinder, configReader)
 	return controller, nil
 }
+
+// wire.go:
+
+// g2LockSet reads the definitions of locked packages of the standard registry from
+// aqua-registry-g2.
+var g2LockSet = wire.NewSet(g2.NewDefault, wire.Bind(new(lockresolve.G2), new(*g2.Client)), g2.NewCache)

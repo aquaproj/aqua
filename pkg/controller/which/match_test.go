@@ -187,7 +187,7 @@ packages:
 			testutil.RootParam(dir, param)
 			env := testutil.RootEnv(dir, map[string]string{"PATH": ""})
 			downloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(logger, http.DefaultClient))
-			ctrl := which.New(param, finder.NewConfigFinder(), reader.New(param), registry.New(param, downloader, rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), rt, osenv.NewMock(env), link.New())
+			ctrl := which.New(param, finder.NewConfigFinder(), reader.New(param), registry.New(param, downloader, rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), rt, osenv.NewMock(env), link.New(), nil)
 			findResult, err := ctrl.Which(t.Context(), logger, param, d.exeName)
 			if err != nil {
 				if d.isErr {

@@ -11,12 +11,12 @@ import (
 func TestLockFile_Find(t *testing.T) {
 	t.Parallel()
 	lf := &lockfile.LockFile{
-		Packages: []*lockfile.Package{
-			{Name: "cli/cli", Version: "v2.1.0", OS: "darwin", Arch: "arm64", Asset: "darwin-arm64"},
-			{Name: "cli/cli", Version: "v2.1.0", OS: "linux", Arch: "amd64", Asset: "linux-amd64"},
-			{Name: "cli/cli", Version: "v2.1.0", OS: "linux", Arch: "amd64", Asset: "linux-amd64-musl", Variants: map[string]string{"libc": "musl"}},
-			{Name: "cli/cli", Version: "v2.0.0", OS: "darwin", Arch: "arm64", Asset: "old"},
-			{Name: "cli/cli", Version: "v2.1.0", OS: "linux", Arch: "amd64", Asset: "unknown-variant", Variants: map[string]string{"distro": "alpine"}},
+		Packages: []*lockfile.Entry{
+			{Name: "cli/cli", Version: "v2.1.0", OS: "darwin", Arch: "arm64", Checksum: "darwin-arm64"},
+			{Name: "cli/cli", Version: "v2.1.0", OS: "linux", Arch: "amd64", Checksum: "linux-amd64"},
+			{Name: "cli/cli", Version: "v2.1.0", OS: "linux", Arch: "amd64", Checksum: "linux-amd64-musl", Variants: map[string]string{"libc": "musl"}},
+			{Name: "cli/cli", Version: "v2.0.0", OS: "darwin", Arch: "arm64", Checksum: "old"},
+			{Name: "cli/cli", Version: "v2.1.0", OS: "linux", Arch: "amd64", Checksum: "unknown-variant", Variants: map[string]string{"distro": "alpine"}},
 		},
 	}
 	tests := []struct {
@@ -61,8 +61,8 @@ func TestLockFile_Find(t *testing.T) {
 			if got == nil {
 				t.Fatal("no entry was found")
 			}
-			if got.Asset != tt.want {
-				t.Errorf("got %q, want %q", got.Asset, tt.want)
+			if got.Checksum != tt.want {
+				t.Errorf("got %q, want %q", got.Checksum, tt.want)
 			}
 		})
 	}
@@ -75,11 +75,11 @@ func TestLockFile_Find(t *testing.T) {
 func TestLockFile_Find_static(t *testing.T) {
 	t.Parallel()
 	lf := &lockfile.LockFile{
-		Packages: []*lockfile.Package{
-			{Name: "foo/foo", Version: "v1.0.0", OS: "linux", Arch: "amd64", Asset: "gnu", LinkedLibc: "glibc", Variants: map[string]string{"libc": "glibc"}},
-			{Name: "foo/foo", Version: "v1.0.0", OS: "linux", Arch: "amd64", Asset: "musl", LinkedLibc: "static", Variants: map[string]string{"libc": "musl"}},
-			{Name: "foo/foo", Version: "v1.0.0", OS: "linux", Arch: "arm64", Asset: "gnu", LinkedLibc: "glibc", Variants: map[string]string{"libc": "glibc"}},
-			{Name: "foo/foo", Version: "v1.0.0", OS: "linux", Arch: "arm64", Asset: "musl", LinkedLibc: "musl", Variants: map[string]string{"libc": "musl"}},
+		Packages: []*lockfile.Entry{
+			{Name: "foo/foo", Version: "v1.0.0", OS: "linux", Arch: "amd64", Checksum: "gnu", LinkedLibc: "glibc", Variants: map[string]string{"libc": "glibc"}},
+			{Name: "foo/foo", Version: "v1.0.0", OS: "linux", Arch: "amd64", Checksum: "musl", LinkedLibc: "static", Variants: map[string]string{"libc": "musl"}},
+			{Name: "foo/foo", Version: "v1.0.0", OS: "linux", Arch: "arm64", Checksum: "gnu", LinkedLibc: "glibc", Variants: map[string]string{"libc": "glibc"}},
+			{Name: "foo/foo", Version: "v1.0.0", OS: "linux", Arch: "arm64", Checksum: "musl", LinkedLibc: "musl", Variants: map[string]string{"libc": "musl"}},
 		},
 	}
 	for _, tc := range []struct {
@@ -98,7 +98,7 @@ func TestLockFile_Find_static(t *testing.T) {
 			got := lf.Find("foo/foo", "v1.0.0", tc.rt)
 			asset := ""
 			if got != nil {
-				asset = got.Asset
+				asset = got.Checksum
 			}
 			if asset != tc.want {
 				t.Errorf("got %q, want %q", asset, tc.want)
@@ -110,7 +110,7 @@ func TestLockFile_Find_static(t *testing.T) {
 func TestLockFile_Find_unsupportedVariantKey(t *testing.T) {
 	t.Parallel()
 	lf := &lockfile.LockFile{
-		Packages: []*lockfile.Package{
+		Packages: []*lockfile.Entry{
 			{Name: "foo/foo", Version: "v1.0.0", OS: "linux", Arch: "amd64", Variants: map[string]string{"distro": "alpine"}},
 		},
 	}

@@ -16,6 +16,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/aquaproj/aqua/v2/pkg/lockfile"
+	"github.com/aquaproj/aqua/v2/pkg/lockresolve"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
@@ -160,10 +161,10 @@ func (c *Controller) install(ctx context.Context, logger *slog.Logger, cfgFilePa
 		return err //nolint:wrapcheck
 	}
 
-	// A package the lock file describes needs no registry, so a configuration with a
-	// lock file downloads and evaluates none of them. rest is everything when there
-	// is no lock file, which is what keeps a repository that hasn't adopted one
-	// working as before.
+	// A package the lock file describes is read from its own registry when it is
+	// installed, and only then, so a configuration with a lock file installs no
+	// registry up front. rest is everything when there is no lock file, which is what
+	// keeps a repository that hasn't adopted one working as before.
 	cfgRest := *cfg
 	cfgRest.Packages = rest
 
@@ -186,6 +187,7 @@ func (c *Controller) install(ctx context.Context, logger *slog.Logger, cfgFilePa
 		Config:          &cfgRest,
 		Registries:      registryContents,
 		LockedPackages:  locked,
+		LockSource:      lockresolve.NewSource(c.g2, lockresolve.NewRegistries(c.registryInstaller, cfg, cfgFilePath)),
 		ConfigFilePath:  cfgFilePath,
 		SkipLink:        c.skipLink,
 		Tags:            c.tags,

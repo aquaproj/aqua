@@ -14,11 +14,11 @@ import (
 func (lf *LockFile) Sort() {
 	slices.SortFunc(lf.Packages, comparePackages)
 	for _, pkg := range lf.Packages {
-		slices.SortFunc(pkg.Files, compareFiles)
+		slices.Sort(pkg.Commands)
 	}
 }
 
-func comparePackages(a, b *Package) int {
+func comparePackages(a, b *Entry) int {
 	if d := cmp.Compare(a.Name, b.Name); d != 0 {
 		return d
 	}
@@ -36,15 +36,8 @@ func comparePackages(a, b *Package) int {
 	return cmp.Compare(variantKey(a), variantKey(b))
 }
 
-func compareFiles(a, b *File) int {
-	if d := cmp.Compare(a.Name, b.Name); d != 0 {
-		return d
-	}
-	return cmp.Compare(a.Src, b.Src)
-}
-
 // variantKey renders the variants as a string that sorts stably.
-func variantKey(pkg *Package) string {
+func variantKey(pkg *Entry) string {
 	if len(pkg.Variants) == 0 {
 		return ""
 	}
@@ -81,7 +74,7 @@ func (lf *LockFile) Has(name, version string) bool {
 // is by name and version -- so what it costs is the file saying more than it means.
 func (lf *LockFile) Retain(declared func(name, version string) bool) int {
 	before := len(lf.Packages)
-	lf.Packages = slices.DeleteFunc(lf.Packages, func(pkg *Package) bool {
+	lf.Packages = slices.DeleteFunc(lf.Packages, func(pkg *Entry) bool {
 		// A null entry is nothing a configuration asks for either, and it is the one
 		// thing in the file that can't be looked up at all.
 		return pkg == nil || !declared(pkg.Name, pkg.Version)
@@ -91,7 +84,7 @@ func (lf *LockFile) Retain(declared func(name, version string) bool) int {
 
 // Remove drops every entry of the package at that version.
 func (lf *LockFile) Remove(name, version string) {
-	lf.Packages = slices.DeleteFunc(lf.Packages, func(pkg *Package) bool {
+	lf.Packages = slices.DeleteFunc(lf.Packages, func(pkg *Entry) bool {
 		return pkg.Name == name && pkg.Version == version
 	})
 }

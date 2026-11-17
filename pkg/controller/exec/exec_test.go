@@ -157,7 +157,7 @@ packages:
 			}
 			ghDownloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(logger, http.DefaultClient))
 			osEnv := osenv.NewMock(env)
-			whichCtrl := which.New(d.param, finder.NewConfigFinder(), reader.New(d.param), registry.New(d.param, ghDownloader, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), d.rt, osEnv, linker)
+			whichCtrl := which.New(d.param, finder.NewConfigFinder(), reader.New(d.param), registry.New(d.param, ghDownloader, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), d.rt, osEnv, linker, nil)
 			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(logger, http.DefaultClient))
 			executor := &osexec.Mock{}
 			pkgInstaller := installpackage.New(d.param, downloader, d.rt, linker, nil, &checksum.Calculator{}, unarchive.New(executor), &cosign.MockVerifier{}, &slsa.MockVerifier{}, &minisign.MockVerifier{}, &packslip.MockVerifier{}, &ghattestation.MockVerifier{}, &installpackage.MockGoInstallInstaller{}, &installpackage.MockGoBuildInstaller{}, &installpackage.MockCargoPackageInstaller{}, vacuum.NewMock(d.param.RootDir, nil, nil))
@@ -288,7 +288,7 @@ packages:
 			}
 			ghDownloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(logger, http.DefaultClient))
 			osEnv := osenv.NewMock(d.env)
-			whichCtrl := which.New(d.param, finder.NewConfigFinder(), reader.New(d.param), registry.New(d.param, ghDownloader, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), d.rt, osEnv, linker)
+			whichCtrl := which.New(d.param, finder.NewConfigFinder(), reader.New(d.param), registry.New(d.param, ghDownloader, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), d.rt, osEnv, linker, nil)
 			downloader := download.NewDownloader(nil, download.NewHTTPDownloader(logger, http.DefaultClient))
 			executor := &osexec.Mock{}
 			vacuumMock := vacuum.NewMock(d.param.RootDir, nil, nil)

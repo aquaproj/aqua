@@ -17,11 +17,11 @@ import (
 // it runs whichever one the machine has, including one whose libc can't be told. A
 // release publishing a glibc and a musl build has an entry for each and none for a
 // machine that is neither, and the musl build is usually the static one.
-func (lf *LockFile) Find(name, version string, rt *runtime.Runtime) *Package {
+func (lf *LockFile) Find(name, version string, rt *runtime.Runtime) *Entry {
 	if lf == nil {
 		return nil
 	}
-	var best, static *Package
+	var best, static *Entry
 	for _, pkg := range lf.Packages {
 		if !pkg.isFor(name, version, rt) {
 			continue
@@ -44,13 +44,13 @@ func (lf *LockFile) Find(name, version string, rt *runtime.Runtime) *Package {
 
 // isFor says whether the entry describes name at version on rt's os and arch, whatever its
 // variants say.
-func (p *Package) isFor(name, version string, rt *runtime.Runtime) bool {
+func (p *Entry) isFor(name, version string, rt *runtime.Runtime) bool {
 	return p.Name == name && p.Version == version && p.OS == rt.GOOS && p.Arch == rt.GOARCH
 }
 
 // isStatic says whether the entry is a build needing no libc, for a machine aqua can tell
 // it is for.
-func (p *Package) isStatic() bool {
+func (p *Entry) isStatic() bool {
 	return p.LinkedLibc == linkedStatic && supportedVariants(p.Variants)
 }
 
