@@ -13,6 +13,7 @@ aqua is a single binary written in Go.
 ## 1. Install the binary `aqua` in `PATH`
 
 - [Homebrew](#homebrew)
+- [Nix](#nix)
 - Windows
   - [Winget](#winget)
   - [Scoop](#scoop)
@@ -37,6 +38,20 @@ Or
 
 ```sh
 brew install aquaproj/aqua/aqua
+```
+
+### Nix
+
+aqua is available in [nixpkgs](https://github.com/NixOS/nixpkgs/blob/master/pkgs/by-name/aq/aqua/package.nix) (unstable channels).
+
+```sh
+nix profile add nixpkgs#aqua
+```
+
+Or try it without installing:
+
+```sh
+nix shell nixpkgs#aqua
 ```
 
 ### Winget
