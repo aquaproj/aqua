@@ -9,6 +9,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
+	"github.com/aquaproj/aqua/v2/pkg/lockresolve"
 	"github.com/aquaproj/aqua/v2/pkg/policy"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 )
@@ -24,9 +25,10 @@ type Controller struct {
 	excludedTags      map[string]struct{}
 	policyReader      PolicyReader
 	skipLink          bool
+	g2                lockresolve.G2
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, pkgInstaller Installer, rt *runtime.Runtime, policyReader PolicyReader) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, pkgInstaller Installer, rt *runtime.Runtime, policyReader PolicyReader, g2 lockresolve.G2) *Controller {
 	return &Controller{
 		rootDir:           param.RootDir,
 		configFinder:      configFinder,
@@ -38,6 +40,7 @@ func New(param *config.Param, configFinder ConfigFinder, configReader ConfigRead
 		tags:              param.Tags,
 		excludedTags:      param.ExcludedTags,
 		policyReader:      policyReader,
+		g2:                g2,
 	}
 }
 
@@ -58,4 +61,5 @@ type PolicyReader interface {
 
 type RegistryInstaller interface {
 	InstallRegistries(ctx context.Context, logger *slog.Logger, cfg *aqua.Config, cfgFilePath string, checksums *checksum.Checksums) (map[string]*registry.Config, error)
+	InstallRegistry(ctx context.Context, logger *slog.Logger, regist *aqua.Registry, cfgFilePath string, checksums *checksum.Checksums) (*registry.Config, error)
 }

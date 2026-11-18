@@ -10,6 +10,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/lockresolve"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 )
@@ -23,9 +24,10 @@ type Controller struct {
 	runtime           *runtime.Runtime
 	osenv             osenv.OSEnv
 	linker            Linker
+	g2                lockresolve.G2
 }
 
-func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, rt *runtime.Runtime, osEnv osenv.OSEnv, linker Linker) *Controller {
+func New(param *config.Param, configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, rt *runtime.Runtime, osEnv osenv.OSEnv, linker Linker, g2 lockresolve.G2) *Controller {
 	return &Controller{
 		stdout:            os.Stdout,
 		rootDir:           param.RootDir,
@@ -35,6 +37,7 @@ func New(param *config.Param, configFinder ConfigFinder, configReader ConfigRead
 		runtime:           rt,
 		osenv:             osEnv,
 		linker:            linker,
+		g2:                g2,
 	}
 }
 

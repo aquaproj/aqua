@@ -1,11 +1,13 @@
 package lockfile_test
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/lockfile"
 	"github.com/google/go-cmp/cmp"
 )
@@ -15,15 +17,13 @@ import (
 // file produces a diff that says nothing.
 func TestSort(t *testing.T) {
 	t.Parallel()
-	lf := &lockfile.LockFile{Packages: []*lockfile.Package{
+	lf := &lockfile.LockFile{Packages: []*lockfile.Entry{
 		{Name: "cli/cli", Version: "v2.2.0", OS: "linux", Arch: "amd64"},
 		{Name: "aquaproj/aqua", Version: "v2.0.0", OS: "linux", Arch: "arm64"},
 		{Name: "cli/cli", Version: "v2.1.0", OS: "windows", Arch: "amd64"},
 		{Name: "cli/cli", Version: "v2.1.0", OS: "linux", Arch: "amd64", Variants: map[string]string{"libc": "musl"}},
 		{Name: "cli/cli", Version: "v2.1.0", OS: "linux", Arch: "amd64", Variants: map[string]string{"libc": "glibc"}},
-		{Name: "aquaproj/aqua", Version: "v2.0.0", OS: "darwin", Arch: "arm64", Files: []*lockfile.File{
-			{Name: "b"}, {Name: "a"},
-		}},
+		{Name: "aquaproj/aqua", Version: "v2.0.0", OS: "darwin", Arch: "arm64", Commands: []string{"b", "a", "b"}},
 	}}
 	lf.Sort()
 
@@ -44,14 +44,20 @@ func TestSort(t *testing.T) {
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("the order is wrong (-want +got):\n%s", diff)
 	}
-	if names := lf.Packages[0].Files; len(names) == 2 && names[0].Name != "a" {
-		t.Errorf("files should be sorted, got %s then %s", names[0].Name, names[1].Name)
+	if diff := cmp.Diff([]string{"a", "b"}, lf.Packages[0].Commands); diff != "" {
+		t.Errorf("commands should be sorted without repeats (-want +got):\n%s", diff)
+	}
+	// A null entry can't be compared, and isn't written.
+	withNull := &lockfile.LockFile{Packages: []*lockfile.Entry{nil, {Name: "a"}}}
+	withNull.Sort()
+	if len(withNull.Packages) != 1 {
+		t.Errorf("got %d entries", len(withNull.Packages))
 	}
 }
 
 func TestHasAndRemove(t *testing.T) {
 	t.Parallel()
-	lf := &lockfile.LockFile{Packages: []*lockfile.Package{
+	lf := &lockfile.LockFile{Packages: []*lockfile.Entry{
 		{Name: "cli/cli", Version: "v2.1.0", OS: "linux", Arch: "amd64"},
 		{Name: "cli/cli", Version: "v2.1.0", OS: "darwin", Arch: "arm64"},
 		{Name: "cli/cli", Version: "v2.2.0", OS: "linux", Arch: "amd64"},
@@ -93,15 +99,13 @@ func TestWriteAndRead(t *testing.T) {
 	t.Parallel()
 	path := filepath.Join(t.TempDir(), "aqua-lock.json")
 	want := lockfile.New()
-	want.Packages = []*lockfile.Package{{
+	want.Packages = []*lockfile.Entry{{
 		Name:     "cli/cli",
 		Version:  "v2.1.0",
 		Registry: &lockfile.Registry{Type: "github_content", RepoOwner: "aquaproj", RepoName: "aqua-registry-g2"},
 		OS:       "linux", Arch: "amd64",
-		Type: "github_release", RepoOwner: "cli", RepoName: "cli",
-		Asset: "gh_2.1.0_linux_amd64.tar.gz", Format: "tar.gz",
 		Checksum: "abc", ChecksumAlgorithm: "sha256",
-		Files: []*lockfile.File{{Name: "gh", Src: "gh_2.1.0_linux_amd64/bin/gh"}},
+		Commands: []string{"gh"},
 	}}
 	if err := lockfile.Write(path, want); err != nil {
 		t.Fatal(err)
@@ -126,7 +130,7 @@ func TestWriteAndRead(t *testing.T) {
 // doesn't answers a question nobody puts.
 func TestLockFile_Retain(t *testing.T) {
 	t.Parallel()
-	lf := &lockfile.LockFile{Packages: []*lockfile.Package{
+	lf := &lockfile.LockFile{Packages: []*lockfile.Entry{
 		{Name: "cli/cli", Version: "v2.1.0", OS: "linux", Arch: "amd64"},
 		{Name: "cli/cli", Version: "v2.1.0", OS: "darwin", Arch: "arm64"},
 		// The version before it was bumped.
@@ -155,5 +159,117 @@ func TestLockFile_Retain(t *testing.T) {
 		if pkg.Version != "v2.1.0" {
 			t.Errorf("kept %s %s", pkg.Name, pkg.Version)
 		}
+	}
+}
+
+// An entry records which commands a package has and nothing of where they come from, so
+// that changing the lock file can't point a command at another download.
+func TestPackage_Entry(t *testing.T) {
+	t.Parallel()
+	pkg := &lockfile.Package{
+		Name:     "cli/cli",
+		Version:  "v2.1.0",
+		Registry: &lockfile.Registry{Type: "github_content", RepoOwner: "aquaproj", RepoName: "aqua-registry-g2"},
+		OS:       "linux", Arch: "amd64",
+		Variants:   map[string]string{"libc": "musl"},
+		LinkedLibc: "static",
+		Type:       "github_release", RepoOwner: "cli", RepoName: "cli",
+		Asset: "gh_2.1.0_linux_amd64.tar.gz", Format: "tar.gz",
+		Checksum: "abc", ChecksumAlgorithm: "sha256",
+		Files: []*lockfile.File{
+			{Name: "gh", Src: "gh_2.1.0_linux_amd64/bin/gh"},
+			{Name: "gh", Src: "elsewhere/gh"},
+			{Name: "a", Src: "a"},
+		},
+		Cosign: &registry.Cosign{},
+	}
+	want := &lockfile.Entry{
+		Name:     "cli/cli",
+		Version:  "v2.1.0",
+		Registry: &lockfile.Registry{Type: "github_content", RepoOwner: "aquaproj", RepoName: "aqua-registry-g2"},
+		OS:       "linux", Arch: "amd64",
+		Variants:   map[string]string{"libc": "musl"},
+		LinkedLibc: "static",
+		Checksum:   "abc", ChecksumAlgorithm: "sha256",
+		Commands: []string{"a", "gh"},
+	}
+	if diff := cmp.Diff(want, pkg.Entry()); diff != "" {
+		t.Errorf("the entry is wrong (-want +got):\n%s", diff)
+	}
+	// A definition without files has the command named after the package, and the
+	// entry records it rather than nothing.
+	noFiles := *pkg
+	noFiles.Files = nil
+	if got := noFiles.Entry().Commands; len(got) != 1 || got[0] != "cli" {
+		t.Errorf("the commands are %v, want the default one", got)
+	}
+	if !want.Describes(pkg) {
+		t.Error("the entry describes the package it came from")
+	}
+	other := *pkg
+	other.Variants = map[string]string{"libc": "glibc"}
+	if want.Describes(&other) {
+		t.Error("an entry for musl doesn't describe the glibc build")
+	}
+}
+
+// A command name becomes the name of a link in $(aqua root-dir)/bin, so anything but a
+// plain name would let a changed lock file replace a file elsewhere.
+func TestEntry_CheckCommands(t *testing.T) {
+	t.Parallel()
+	tests := map[string]struct {
+		commands []string
+		isErr    error
+	}{
+		"plain names":          {commands: []string{"gh", "kubectl-oidc_login", "terraform.exe"}},
+		"none":                 {isErr: lockfile.ErrNoCommands},
+		"a path":               {commands: []string{"../../../.bashrc"}, isErr: lockfile.ErrInvalidCommand},
+		"a slash":              {commands: []string{"bin/gh"}, isErr: lockfile.ErrInvalidCommand},
+		"a backslash":          {commands: []string{`..\evil`}, isErr: lockfile.ErrInvalidCommand},
+		"a drive":              {commands: []string{"C:evil"}, isErr: lockfile.ErrInvalidCommand},
+		"the parent directory": {commands: []string{".."}, isErr: lockfile.ErrInvalidCommand},
+		"empty":                {commands: []string{""}, isErr: lockfile.ErrInvalidCommand},
+		"one bad among good":   {commands: []string{"gh", "../x"}, isErr: lockfile.ErrInvalidCommand},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			err := (&lockfile.Entry{Commands: tt.commands}).CheckCommands()
+			if tt.isErr == nil {
+				if err != nil {
+					t.Fatal(err)
+				}
+				return
+			}
+			if !errors.Is(err, tt.isErr) {
+				t.Errorf("got %v, want %v", err, tt.isErr)
+			}
+		})
+	}
+}
+
+// A null entry describes nothing, and is dropped when the file is read so that no lookup
+// has to step around it.
+func TestRead_null(t *testing.T) {
+	t.Parallel()
+	lf, err := lockfile.Read(strings.NewReader(`{"packages": [null, {"name": "a", "version": "v1", "os": "linux", "arch": "amd64"}]}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(lf.Packages) != 1 {
+		t.Errorf("got %d entries", len(lf.Packages))
+	}
+}
+
+// The commands are compared with the registry's as a sorted list, so the same commands in
+// another order, as a hand edit or a merge leaves them, read the same.
+func TestRead_commands(t *testing.T) {
+	t.Parallel()
+	lf, err := lockfile.Read(strings.NewReader(`{"packages": [{"name": "a", "version": "v1", "os": "linux", "arch": "amd64", "commands": ["b", "a", "b"]}]}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff([]string{"a", "b"}, lf.Packages[0].Commands); diff != "" {
+		t.Errorf("the commands are wrong (-want +got):\n%s", diff)
 	}
 }

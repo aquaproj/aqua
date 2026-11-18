@@ -286,7 +286,7 @@ packages:
 			testutil.RootParam(dir, d.param)
 			env := testutil.RootEnv(dir, d.env)
 			downloader := download.NewGitHubContentFileDownloader(nil, download.NewHTTPDownloader(logger, http.DefaultClient))
-			ctrl := which.New(d.param, finder.NewConfigFinder(), reader.New(d.param), registry.New(d.param, downloader, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), d.rt, osenv.NewMock(env), linker)
+			ctrl := which.New(d.param, finder.NewConfigFinder(), reader.New(d.param), registry.New(d.param, downloader, d.rt, &cosign.MockVerifier{}, &slsa.MockVerifier{}), d.rt, osenv.NewMock(env), linker, nil)
 			which, err := ctrl.Which(ctx, logger, d.param, d.exeName)
 			if err != nil {
 				if d.isErr {

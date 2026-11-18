@@ -21,4 +21,5 @@ var (
 	// it, not to work around it.
 	errNotInLockFile = errors.New(`the package isn't in the lock file. Please run "aqua lock update"`)
 	errLockFile      = errors.New("some packages can't be installed from the lock file")
+	errNoLockSource  = errors.New("a package from the lock file can't be installed without its registry")
 )

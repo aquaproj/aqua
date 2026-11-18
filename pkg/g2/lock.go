@@ -87,11 +87,25 @@ func (c *Client) Resolve(ctx context.Context, logger *slog.Logger, pkgName, vers
 	// the one it has now, and both of them to the same id. So resolving is the
 	// fetch's business, and what is left here is saying that the configuration asks for
 	// a name the registry no longer calls it.
-	reg, err := c.Get(ctx, logger, pkgName, version)
+	pkgs, err := c.Definitions(ctx, logger, pkgName, version)
 	if err != nil {
 		return nil, err
 	}
 	c.sayRenamed(logger, pkgName, c.cachedNames().Resolve(pkgName))
+	return pkgs, nil
+}
+
+// Definitions returns the definitions of one package version, the way Resolve does, for
+// installing a locked package.
+//
+// It says nothing about a rename. Install and exec run it, and exec runs on every command
+// through aqua-proxy: a warning there would be printed beside the output of the tool
+// itself, every time. "aqua lock update" is where the rename is said.
+func (c *Client) Definitions(ctx context.Context, logger *slog.Logger, pkgName, version string) ([]*lockfile.Package, error) {
+	reg, err := c.Get(ctx, logger, pkgName, version)
+	if err != nil {
+		return nil, err
+	}
 	// The entry is named the way aqua.yaml asked for it, not the way the registry holds
 	// it. That name is what ties the entry to the configuration, so install and exec
 	// find it without resolving anything -- which is what keeps the table off the path

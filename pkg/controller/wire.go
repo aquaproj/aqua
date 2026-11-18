@@ -46,6 +46,7 @@ import (
 	registry "github.com/aquaproj/aqua/v2/pkg/install-registry"
 	"github.com/aquaproj/aqua/v2/pkg/installpackage"
 	"github.com/aquaproj/aqua/v2/pkg/link"
+	"github.com/aquaproj/aqua/v2/pkg/lockresolve"
 	"github.com/aquaproj/aqua/v2/pkg/minisign"
 	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/aquaproj/aqua/v2/pkg/packslip"
@@ -60,6 +61,14 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/versiongetter/goproxy"
 	"github.com/google/wire"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
+)
+
+// g2LockSet reads the definitions of locked packages of the standard registry from
+// aqua-registry-g2.
+var g2LockSet = wire.NewSet(
+	g2.NewDefault,
+	wire.Bind(new(lockresolve.G2), new(*g2.Client)),
+	g2.NewCache,
 )
 
 func InitializeListCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*list.Controller, error) {
@@ -260,6 +269,7 @@ func InitializeGenerateCommandController(ctx context.Context, logger *slog.Logge
 
 func InitializeInstallCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*install.Controller, error) {
 	wire.Build(
+		g2LockSet,
 		install.New,
 		wire.NewSet(
 			finder.NewConfigFinder,
@@ -394,6 +404,7 @@ func InitializeInstallCommandController(ctx context.Context, logger *slog.Logger
 
 func InitializeWhichCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*which.Controller, error) {
 	wire.Build(
+		g2LockSet,
 		which.New,
 		wire.NewSet(
 			finder.NewConfigFinder,
@@ -453,6 +464,7 @@ func InitializeWhichCommandController(ctx context.Context, logger *slog.Logger, 
 
 func InitializeExecCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*cexec.Controller, error) {
 	wire.Build(
+		g2LockSet,
 		cexec.New,
 		wire.NewSet(
 			finder.NewConfigFinder,
@@ -696,6 +708,7 @@ func InitializeUpdateAquaCommandController(ctx context.Context, logger *slog.Log
 
 func InitializeCopyCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime) (*cp.Controller, error) {
 	wire.Build(
+		g2LockSet,
 		cp.New,
 		wire.NewSet(
 			finder.NewConfigFinder,
@@ -1041,6 +1054,7 @@ func InitializeUpdateCommandController(ctx context.Context, logger *slog.Logger,
 		wire.NewSet(
 			g2.NewDefault,
 			wire.Bind(new(g2.Dirs), new(*g2.Client)),
+			wire.Bind(new(lockresolve.G2), new(*g2.Client)),
 		),
 		g2.NewCache,
 		versiongetter.NewCargo,
@@ -1121,6 +1135,7 @@ func InitializeInfoCommandController(ctx context.Context, param *config.Param, r
 
 func InitializeRemoveCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, httpClient *http.Client, rt *runtime.Runtime, target *config.RemoveMode) (*remove.Controller, error) {
 	wire.Build(
+		g2LockSet,
 		remove.New,
 		wire.NewSet(
 			finder.NewConfigFinder,

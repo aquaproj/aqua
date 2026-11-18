@@ -1,19 +1,32 @@
 // Package lockfile reads and writes aqua-lock.json.
 //
-// The lock file records everything needed to install a package: not just its
-// checksum, the way aqua-checksums.json did, but the asset name, the format, the
-// files inside the archive and how it is signed. aqua can therefore install without
-// consulting a registry at all, which is what stops a private registry from blocking
-// the packages that don't come from it.
+// The lock file records the checksum of every environment a package supports and the
+// names of the commands it provides. It doesn't record where a package is downloaded
+// from: the asset, the URL, the repository and how it is signed come from the registry
+// every time, the way they did with aqua-checksums.json.
+//
+// That split is the point of the format. A lock file sits in the repository, so anyone
+// who can change the repository can change it, and an entry saying where to download
+// from would let them install whatever they like under a command name the user already
+// runs. A checksum can't be turned that way: the registry decides what is downloaded,
+// and a checksum that doesn't match it fails the install. The command names can't
+// either: they choose among the packages aqua.yaml declares, which the policy has
+// already let through. They are what lets aqua find the package a command belongs to
+// without reading every registry, so a private registry doesn't block running a
+// command from a public one.
 //
 // It is generated and updated by aqua. Editing it by hand isn't expected.
 package lockfile
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"os"
+	"slices"
+	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 )
@@ -32,7 +45,7 @@ type LockFile struct {
 	// not per package: the lock file carries every os and arch a package supports,
 	// so that a repository shared between a Linux CI and a macOS laptop resolves
 	// from the same file without either of them rewriting it.
-	Packages []*Package `json:"packages"`
+	Packages []*Entry `json:"packages"`
 }
 
 // Metadata tells whoever opens the file what it is.
@@ -41,7 +54,41 @@ type Metadata struct {
 	References  []string `json:"references,omitempty"`
 }
 
+// Entry is what the lock file records of one package on one environment.
+//
+// It holds nothing that says where the package comes from. See the package comment.
+type Entry struct {
+	Name     string    `json:"name"`
+	Version  string    `json:"version"`
+	Registry *Registry `json:"registry,omitempty"`
+
+	OS   string `json:"os"`
+	Arch string `json:"arch"`
+	// Variants distinguishes entries that share an os and arch but differ
+	// otherwise, such as a linux/amd64 build for musl and one for glibc.
+	Variants map[string]string `json:"variants,omitempty"`
+
+	// LinkedLibc is Package.LinkedLibc. It is kept because Find selects on it: a
+	// statically linked build is what a machine gets when no entry's variants match.
+	// Changing it can only pick another entry of the same package, whose definition
+	// still comes from the registry.
+	LinkedLibc string `json:"linked_libc,omitempty"`
+
+	// Checksum may be empty only for the types that build from source through
+	// another tool, which verifies for itself: go_install and cargo.
+	Checksum          string `json:"checksum,omitempty"`
+	ChecksumAlgorithm string `json:"checksum_algorithm,omitempty"`
+
+	// Commands are the names of the executables the package provides on this
+	// environment, sorted. They say which package a command belongs to, and nothing
+	// about where the executable sits inside the package: that is the registry's.
+	Commands []string `json:"commands,omitempty"`
+}
+
 // Package is everything needed to install one package on one environment.
+//
+// It is what a registry resolves to, not what the lock file holds: Entry is the part of
+// it the lock file records. aqua-registry-g2's registry.json is a list of these.
 type Package struct {
 	Name     string    `json:"name"`
 	Version  string    `json:"version"`
@@ -126,6 +173,79 @@ type Registry struct {
 	RepoName  string `json:"repo_name,omitempty"`
 }
 
+// Entry returns what the lock file records of the package.
+func (p *Package) Entry() *Entry {
+	return &Entry{
+		Name:              p.Name,
+		Version:           p.Version,
+		Registry:          p.Registry,
+		OS:                p.OS,
+		Arch:              p.Arch,
+		Variants:          p.Variants,
+		LinkedLibc:        p.LinkedLibc,
+		Checksum:          p.Checksum,
+		ChecksumAlgorithm: p.ChecksumAlgorithm,
+		Commands:          p.commands(),
+	}
+}
+
+// commands are the names of the package's files, sorted and without repeats.
+//
+// A definition without files has one command after all, named after the package, and
+// that is the command the package is installed with. It is recorded the same way, or the
+// entry would have no commands for any run of the lock update command to fill in.
+func (p *Package) commands() []string {
+	files := p.PackageInfo().GetFiles()
+	if len(files) == 0 {
+		return nil
+	}
+	names := make([]string, 0, len(files))
+	for _, f := range files {
+		names = append(names, f.Name)
+	}
+	slices.Sort(names)
+	return slices.Compact(names)
+}
+
+// CheckCommands says whether the entry's commands can be used as they are.
+//
+// A command name becomes the name of a link in $(aqua root-dir)/bin, so it has to be a
+// name and nothing else. The lock file can be changed by whoever can change the
+// repository, and a name such as "../../.bashrc" would replace a file outside that
+// directory with a link. An entry with no commands at all was written before the lock
+// file recorded them, and guessing them from the package name would create the wrong
+// links.
+func (e *Entry) CheckCommands() error {
+	if len(e.Commands) == 0 {
+		return ErrNoCommands
+	}
+	for _, cmd := range e.Commands {
+		if !validCommand(cmd) {
+			return fmt.Errorf("%w: %q", ErrInvalidCommand, cmd)
+		}
+	}
+	return nil
+}
+
+func validCommand(cmd string) bool {
+	return cmd != "" && cmd != "." && cmd != ".." && !strings.ContainsAny(cmd, `/\:`) && !strings.ContainsRune(cmd, 0)
+}
+
+var (
+	// ErrNoCommands is an entry written before the lock file recorded commands.
+	ErrNoCommands = errors.New(`the lock file entry has no commands. Please run "aqua lock update --force"`)
+	// ErrInvalidCommand is a command name that isn't a plain name.
+	ErrInvalidCommand = errors.New("the lock file entry has a command name that isn't a plain name")
+)
+
+// Describes says whether the entry is the one for p's environment: the same os, arch,
+// variants and linked libc. The name and version aren't compared, since p is looked up by
+// them. The linked libc is compared because Find selects on it: an entry changed to say
+// static would otherwise pick a build the registry doesn't say is.
+func (e *Entry) Describes(p *Package) bool {
+	return e.OS == p.OS && e.Arch == p.Arch && maps.Equal(e.Variants, p.Variants) && e.LinkedLibc == p.LinkedLibc
+}
+
 // File is an executable inside the package.
 type File struct {
 	Name string `json:"name"`
@@ -147,6 +267,14 @@ func Read(r io.Reader) (*LockFile, error) {
 	lf := &LockFile{}
 	if err := json.NewDecoder(r).Decode(lf); err != nil {
 		return nil, fmt.Errorf("read the lock file as JSON: %w", err)
+	}
+	// A null entry describes nothing, and every lookup would have to step around it.
+	lf.Packages = slices.DeleteFunc(lf.Packages, func(pkg *Entry) bool { return pkg == nil })
+	// The commands are compared with the registry's as a sorted list. A file edited by
+	// hand or merged can hold the same commands in another order.
+	for _, pkg := range lf.Packages {
+		slices.Sort(pkg.Commands)
+		pkg.Commands = slices.Compact(pkg.Commands)
 	}
 	return lf, nil
 }
