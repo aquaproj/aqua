@@ -157,7 +157,7 @@ func (c *Controller) findExecFile(ctx context.Context, logger *slog.Logger, para
 	if lf != nil {
 		lk = &lockState{
 			lf:  lf,
-			src: lockresolve.NewSource(c.g2, lockresolve.NewRegistries(c.registryInstaller, cfg, cfgFilePath, checksums)),
+			src: lockresolve.NewSource(c.g2, lockresolve.NewRegistries(c.registryInstaller, cfg, cfgFilePath, lf)),
 		}
 	}
 
