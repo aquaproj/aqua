@@ -90,11 +90,13 @@ func Test_configFinderFind(t *testing.T) { //nolint:funlen
 		exp                   string
 		files                 map[string]string
 		isErr                 bool
+		errMsg                string
 	}{
 		{
-			name:  "not found",
-			wd:    "foo",
-			isErr: true,
+			name:   "not found",
+			wd:     "foo",
+			isErr:  true,
+			errMsg: "configuration file isn't found; run \"aqua init\" to create one",
 		},
 		{
 			name:              "configFilePath",
@@ -138,6 +140,9 @@ func Test_configFinderFind(t *testing.T) { //nolint:funlen
 			p, err := configFinder.Find(join(root, d.wd)[0], configFilePath, join(root, d.globalConfigFilePaths...)...)
 			if err != nil {
 				if d.isErr {
+					if err.Error() != d.errMsg {
+						t.Fatalf("wanted error message %q, got %q", d.errMsg, err)
+					}
 					return
 				}
 				t.Fatal(err)
