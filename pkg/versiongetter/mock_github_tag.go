@@ -25,5 +25,8 @@ func (g *MockGitHubTagClient) ListTags(ctx context.Context, owner string, repo s
 	}
 	m := min((opts.Page+1)*opts.PerPage, len(tags))
 	resp := &github.Response{}
+	if m < len(tags) {
+		resp.NextPage = opts.Page + 1
+	}
 	return tags[opts.Page*opts.PerPage : m], resp, nil
 }
