@@ -41,7 +41,7 @@ jobs:
         with:
           aqua_version: ${{inputs.aqua_version}}
 
-      - uses: actions/setup-go@v7.0.0
+      - uses: actions/setup-go@v7.1.0
         if: inputs.aqua_version == ''
         with:
           go-version-file: go.mod
@@ -130,7 +130,7 @@ jobs:
         with:
           aqua_version: ${{inputs.aqua_version}}
 
-      - uses: actions/setup-go@v7.0.0
+      - uses: actions/setup-go@v7.1.0
         if: inputs.aqua_version == ''
         with:
           go-version-file: go.mod
