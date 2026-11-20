@@ -78,6 +78,16 @@ func (is *Installer) createCmdLink(logger *slog.Logger, file *registry.File, cmd
 	if cmd != file.Name {
 		logger = logger.With("command_alias", cmd)
 	}
+	if isReservedCommand(cmd) {
+		// $(aqua root-dir)/bin/aqua is aqua itself, and aqua-proxy runs it. A link
+		// there would replace the binary with a link to aqua-proxy, which refuses to
+		// run aqua to avoid calling itself forever, so aqua would stop working.
+		// aqua can't manage aqua, so the command is skipped rather than failing the
+		// install over it.
+		logger.Warn("skip creating a link: aqua can't manage aqua",
+			"doc", "https://aquaproj.github.io/docs/reference/aqua-cant-manage-aqua")
+		return nil
+	}
 	if is.realRuntime.IsWindows() {
 		if err := is.createHardLinkToProxy(logger, cmd, aquaProxyPathOnWindows); err != nil {
 			return fmt.Errorf("create a hard link to aqua-proxy: %w", err)
@@ -88,6 +98,13 @@ func (is *Installer) createCmdLink(logger *slog.Logger, file *registry.File, cmd
 		return fmt.Errorf("create a symbolic link: %w", err)
 	}
 	return nil
+}
+
+// isReservedCommand says whether a command name is one of aqua's own, which a link in
+// $(aqua root-dir)/bin must not replace. Case is ignored, since the file systems of macOS
+// and Windows ignore it too.
+func isReservedCommand(cmd string) bool {
+	return strings.EqualFold(cmd, "aqua") || strings.EqualFold(cmd, proxyName)
 }
 
 func (is *Installer) createHardLinkToProxy(logger *slog.Logger, cmd, aquaProxyPathOnWindows string) error {
