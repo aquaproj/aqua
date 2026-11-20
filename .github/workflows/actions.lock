@@ -12,28 +12,28 @@ workflows:
         - 'suzuki-shunsuke/close-discussion-action@v0.1.0'
     '.github/workflows/debug-with-action-tmate.yaml':
         - 'actions/checkout@v7.0.1'
-        - 'actions/setup-go@v7.0.0'
+        - 'actions/setup-go@v7.1.0'
         - 'aquaproj/aqua-installer@v4.1.1'
         - 'mxschmitt/action-tmate@v3.22'
         - 'rhysd/action-setup-vim@v1.6.1'
     '.github/workflows/macos-test.yaml':
         - 'actions/checkout@v7.0.1'
-        - 'actions/setup-go@v7.0.0'
+        - 'actions/setup-go@v7.1.0'
     '.github/workflows/release.yaml': []
     '.github/workflows/test-goreleaser.yaml':
         - 'actions/checkout@v7.0.1'
-        - 'actions/setup-go@v7.0.0'
+        - 'actions/setup-go@v7.1.0'
         - 'aquaproj/aqua-installer@v4.1.1'
     '.github/workflows/test.yaml': []
     '.github/workflows/watch-star.yaml':
         - 'suzuki-shunsuke/watch-star-action@v0.1.1'
     '.github/workflows/wc-integration-test.yaml':
         - 'actions/checkout@v7.0.1'
-        - 'actions/setup-go@v7.0.0'
+        - 'actions/setup-go@v7.1.0'
         - 'suzuki-shunsuke/download-go-module-action@v0.0.10'
     '.github/workflows/wc-test-docker.yaml':
         - 'actions/checkout@v7.0.1'
-        - 'actions/setup-go@v7.0.0'
+        - 'actions/setup-go@v7.1.0'
         - 'suzuki-shunsuke/download-go-module-action@v0.0.10'
     '.github/workflows/wc_autofix.yaml':
         - 'actions/checkout@v7.0.1'
@@ -41,11 +41,11 @@ workflows:
         - 'autofix-ci/action@v1.3.4'
     '.github/workflows/windows-test.yaml':
         - 'actions/checkout@v7.0.1'
-        - 'actions/setup-go@v7.0.0'
+        - 'actions/setup-go@v7.1.0'
         - 'aquaproj/aqua-installer@v4.1.1'
     '.github/workflows/workflow_call_test.yaml':
         - 'actions/checkout@v7.0.1'
-        - 'actions/setup-go@v7.0.0'
+        - 'actions/setup-go@v7.1.0'
         - 'dorny/paths-filter@v4.0.3'
         - 'suzuki-shunsuke/download-go-module-action@v0.0.10'
 dependencies:
@@ -59,9 +59,9 @@ dependencies:
         commit: 'sha1-9000827ccba6bdab643e8b6fd33ac0654aef8333'
         owner_id: 44036562
         repo_id: 192626254
-    'actions/setup-go@v7.0.0':
-        ref: 'v7.0.0'
-        commit: 'sha1-b7ad1dad31e06c5925ef5d2fc7ad053ef454303e'
+    'actions/setup-go@v7.1.0':
+        ref: 'v7.1.0'
+        commit: 'sha1-d8cbb8045d7f43706b9177cceb36c1f91a6644d5'
         owner_id: 44036562
         repo_id: 192624594
     'aquaproj/aqua-installer@611554c6f0137ba41c8dd15aca8bee82504ea461':
