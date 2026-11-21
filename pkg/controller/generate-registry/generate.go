@@ -182,7 +182,7 @@ func (c *Controller) getPackageInfoMain(ctx context.Context, logger *slog.Logger
 		assetNames = append(assetNames, asset.GetName())
 	}
 
-	c.patchRelease(logger, cfg, pkgInfo, pkgName, release.GetTagName(), assetNames)
+	c.patchRelease(logger, cfg, pkgInfo, pkgName, release.GetTagName(), assetNames) //nolint:contextcheck // the asset names are read with archives.Identify, which reads no stream without one
 	return pkgInfo, []string{version}
 }
 
