@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
-	"os"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
@@ -39,10 +38,9 @@ func (is *Installer) getGitHubContentRegistry(ctx context.Context, logger *slog.
 		}
 	}
 
-	// WriteFile applies the permissions only when it creates the file, so the
-	// file must not be created before it. Creating it first left every registry
-	// file at 0644 rather than the 0600 intended here.
-	if err := os.WriteFile(registryFilePath, content, registryFilePermission); err != nil {
+	// The file is written to a temporary file and renamed into place, so another aqua
+	// reading the registry never sees it half written.
+	if err := writeFileAtomically(registryFilePath, content); err != nil {
 		return nil, fmt.Errorf("write the configuration file: %w", err)
 	}
 	registryContent := &registry.Config{}

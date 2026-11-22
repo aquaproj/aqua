@@ -57,6 +57,14 @@ func (i *fakeInstaller) DownloadRegistry(ctx context.Context, logger *slog.Logge
 	return i.InstallRegistry(ctx, logger, rgst, cfgFilePath, chks)
 }
 
+// InstallLockedRegistry checks the file against the recorded checksum, as the real one
+// does when it downloads one.
+func (i *fakeInstaller) InstallLockedRegistry(ctx context.Context, logger *slog.Logger, rgst *aqua.Registry, chk *checksum.Checksum) (*registry.Config, error) {
+	chks := checksum.New()
+	chks.Set(chk.ID, chk)
+	return i.InstallRegistry(ctx, logger, rgst, "", chks)
+}
+
 func (i *fakeInstaller) InstallRegistry(_ context.Context, _ *slog.Logger, rgst *aqua.Registry, cfgFilePath string, chks *checksum.Checksums) (*registry.Config, error) {
 	i.installed = append(i.installed, rgst.Name)
 	if rgst.Type == aqua.RegistryTypeGitHubContent {
@@ -484,6 +492,10 @@ func TestLocked_noG2(t *testing.T) {
 type failingInstaller struct{}
 
 func (failingInstaller) InstallRegistry(context.Context, *slog.Logger, *aqua.Registry, string, *checksum.Checksums) (*registry.Config, error) {
+	return nil, errors.New("offline")
+}
+
+func (failingInstaller) InstallLockedRegistry(context.Context, *slog.Logger, *aqua.Registry, *checksum.Checksum) (*registry.Config, error) {
 	return nil, errors.New("offline")
 }
 

@@ -62,4 +62,5 @@ type PolicyReader interface {
 type RegistryInstaller interface {
 	InstallRegistries(ctx context.Context, logger *slog.Logger, cfg *aqua.Config, cfgFilePath string, checksums *checksum.Checksums) (map[string]*registry.Config, error)
 	InstallRegistry(ctx context.Context, logger *slog.Logger, regist *aqua.Registry, cfgFilePath string, checksums *checksum.Checksums) (*registry.Config, error)
+	InstallLockedRegistry(ctx context.Context, logger *slog.Logger, regist *aqua.Registry, chk *checksum.Checksum) (*registry.Config, error)
 }

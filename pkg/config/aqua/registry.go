@@ -2,6 +2,7 @@ package aqua
 
 import (
 	"path/filepath"
+	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
@@ -79,6 +80,54 @@ func (r *Registry) FilePath(rootDir, cfgFilePath string) (string, error) {
 		return filepath.Join(rootDir, "registries", r.Type, "github.com", r.RepoOwner, r.RepoName, r.Ref, r.Path), nil
 	}
 	return "", errInvalidRegistryType
+}
+
+// The number of hex digits of a checksum of each algorithm a lock file may record for a
+// registry file.
+const (
+	sha256HexLen = 64
+	sha512HexLen = 128
+)
+
+func lockedChecksumLen(algorithm string) int {
+	switch algorithm {
+	case "sha256":
+		return sha256HexLen
+	case "sha512":
+		return sha512HexLen
+	}
+	return 0
+}
+
+// LockedFilePath returns where a github_content registry file whose checksum a lock file
+// recorded is kept.
+//
+// The file at FilePath is named by the ref, which another configuration's lock update can
+// rewrite with whatever the ref points at now. A file kept under its checksum is never
+// replaced by different content, so what is read from it is what the lock file recorded.
+// It sits apart from FilePath's tree, which a registry path with directories could
+// otherwise collide with.
+//
+// The checksum comes from the lock file, which nothing validates, so it is checked to be
+// a hex digest of the algorithm before it becomes part of a path.
+func (r *Registry) LockedFilePath(rootDir, algorithm, checksum string) (string, error) {
+	if r.Type != RegistryTypeGitHubContent {
+		return "", slogerr.With(errInvalidRegistryType, "registry_type", r.Type) //nolint:wrapcheck
+	}
+	checksum = strings.ToLower(checksum)
+	if n := lockedChecksumLen(algorithm); n == 0 || len(checksum) != n || !isHex(checksum) {
+		return "", slogerr.With(errInvalidLockedChecksum, "checksum_algorithm", algorithm) //nolint:wrapcheck
+	}
+	return filepath.Join(rootDir, "registries", "github_content_locked", "github.com", r.RepoOwner, r.RepoName, r.Ref, algorithm+"-"+checksum, r.Path), nil
+}
+
+func isHex(s string) bool {
+	for _, c := range s {
+		if (c < '0' || c > '9') && (c < 'a' || c > 'f') {
+			return false
+		}
+	}
+	return true
 }
 
 // validateLocal validates a local registry configuration.

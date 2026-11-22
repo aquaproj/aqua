@@ -64,8 +64,12 @@ type G2 interface {
 // RegistryInstaller installs one registry a configuration declares. It uses the registry
 // file installed before when there is one, and checks a file against the checksums only
 // when it downloads one.
+//
+// InstallLockedRegistry keeps a github_content registry under the checksum the lock file
+// recorded, so a file installed before is one checked against that checksum.
 type RegistryInstaller interface {
 	InstallRegistry(ctx context.Context, logger *slog.Logger, regist *aqua.Registry, cfgFilePath string, checksums *checksum.Checksums) (*registry.Config, error)
+	InstallLockedRegistry(ctx context.Context, logger *slog.Logger, regist *aqua.Registry, chk *checksum.Checksum) (*registry.Config, error)
 }
 
 // RegistryDownloader is a RegistryInstaller that can also download a registry whatever is
@@ -203,7 +207,10 @@ func (r *Registries) install(ctx context.Context, logger *slog.Logger, rgst *aqu
 		chks.Set(id, &checksum.Checksum{ID: id, Checksum: recorded.Checksum, Algorithm: recorded.ChecksumAlgorithm})
 	}
 	if !r.record {
-		return r.installer.InstallRegistry(ctx, logger, rgst, r.cfgFilePath, chks) //nolint:wrapcheck
+		// Install and exec read the file kept under the recorded checksum. The file
+		// named by the ref is shared with every configuration, and another one's lock
+		// update may have replaced it with what the ref points at now.
+		return r.installer.InstallLockedRegistry(ctx, logger, rgst, chks.Get(id)) //nolint:wrapcheck
 	}
 	content, err := r.downloader.DownloadRegistry(ctx, logger, rgst, r.cfgFilePath, chks)
 	if err != nil {

@@ -16,4 +16,7 @@ var (
 	errRefIsRequired = errors.New("ref is required for github_content registry")
 	// errRefCannotBeMainOrMaster is returned when github_content registry uses unstable refs
 	errRefCannotBeMainOrMaster = errors.New("ref cannot be 'main' or 'master' for github_content registry")
+	// errInvalidLockedChecksum is a registry checksum in a lock file that isn't a hex digest
+	// of its algorithm.
+	errInvalidLockedChecksum = errors.New(`the checksum of the registry in the lock file isn't a valid hex digest. Please run "aqua lock update --force"`)
 )

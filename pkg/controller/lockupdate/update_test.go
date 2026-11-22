@@ -72,6 +72,12 @@ func (i *fakeRegistryInstaller) DownloadRegistry(ctx context.Context, logger *sl
 	return i.InstallRegistry(ctx, logger, rgst, cfgFilePath, chks)
 }
 
+func (i *fakeRegistryInstaller) InstallLockedRegistry(ctx context.Context, logger *slog.Logger, rgst *aqua.Registry, chk *checksum.Checksum) (*registry.Config, error) {
+	chks := checksum.New()
+	chks.Set(chk.ID, chk)
+	return i.InstallRegistry(ctx, logger, rgst, "", chks)
+}
+
 func (i *fakeRegistryInstaller) InstallRegistry(_ context.Context, _ *slog.Logger, rgst *aqua.Registry, cfgFilePath string, chks *checksum.Checksums) (*registry.Config, error) {
 	if i.rootDir != "" && rgst.Type == aqua.RegistryTypeGitHubContent {
 		// The real installer checksums a file it downloads into the set.
