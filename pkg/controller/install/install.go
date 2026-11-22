@@ -187,7 +187,7 @@ func (c *Controller) install(ctx context.Context, logger *slog.Logger, cfgFilePa
 		Config:          &cfgRest,
 		Registries:      registryContents,
 		LockedPackages:  locked,
-		LockSource:      lockresolve.NewSource(c.g2, lockresolve.NewRegistries(c.registryInstaller, cfg, cfgFilePath, checksums)),
+		LockSource:      lockresolve.NewSource(c.g2, lockresolve.NewRegistries(c.registryInstaller, cfg, cfgFilePath, lf)),
 		ConfigFilePath:  cfgFilePath,
 		SkipLink:        c.skipLink,
 		Tags:            c.tags,

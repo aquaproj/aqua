@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/config"
@@ -56,8 +57,7 @@ func (c *Controller) updateFile(ctx context.Context, logger *slog.Logger, cfgFil
 		lf = lockfile.New()
 	}
 
-	rgsts := lockresolve.NewRegistries(c.registryInstaller, cfg, cfgFilePath, nil)
-	updated, failed := c.updatePackages(ctx, logger, lf, rgsts, cfg, args)
+	updated, failed := c.update(ctx, logger, lf, cfg, cfgFilePath, args)
 
 	// Writing sorts, so an unchanged lock file would still be rewritten. Skipping the
 	// write keeps the file's timestamp meaningful and keeps a no-op run out of git.
@@ -72,18 +72,45 @@ func (c *Controller) updateFile(ctx context.Context, logger *slog.Logger, cfgFil
 	return nil
 }
 
+// update brings the packages and the registries in the lock file to what the configuration
+// asks for, and says whether anything changed and whether anything couldn't be resolved.
+func (c *Controller) update(ctx context.Context, logger *slog.Logger, lf *lockfile.LockFile, cfg *aqua.Config, cfgFilePath string, args *Args) (bool, bool) {
+	// A registry file is what the lock file records, and two names in aqua.yaml can
+	// point at the same one, so what the run did is turned into files.
+	partial := registryFiles(cfg, partialRegistries(cfg, args))
+	// --force replaces a registry checksum only when the run resolves every package of
+	// the registry. Otherwise the packages it resolves would be read from a new file
+	// whose checksum isn't recorded, beside the old one that is.
+	rgsts := lockresolve.NewRecordingRegistries(c.registryInstaller, cfg, cfgFilePath, lf, func(key *lockfile.Registry) bool {
+		return args.Force && !containsRegistryFile(partial, key)
+	})
+	stale := unrecordedRegistries(lf, cfg, args)
+	updated, failedRegistries := c.updatePackages(ctx, logger, lf, rgsts, cfg, stale, args)
+	failed := len(failedRegistries) > 0
+	failedFiles := registryFiles(cfg, failedRegistries)
+	if rgsts.Commit(func(key *lockfile.Registry) bool {
+		return !containsRegistryFile(failedFiles, key) && !containsRegistryFile(partial, key)
+	}) {
+		updated = true
+	}
+	if pruneRegistries(logger, lf, cfg, args) > 0 {
+		updated = true
+	}
+	return updated, failed
+}
+
 // updatePackages brings the lock file to what the configuration asks for, and says
-// whether anything changed and whether anything couldn't be resolved.
-func (c *Controller) updatePackages(ctx context.Context, logger *slog.Logger, lf *lockfile.LockFile, rgsts *lockresolve.Registries, cfg *aqua.Config, args *Args) (bool, bool) {
+// whether anything changed and the registries of the packages that couldn't be resolved.
+func (c *Controller) updatePackages(ctx context.Context, logger *slog.Logger, lf *lockfile.LockFile, rgsts *lockresolve.Registries, cfg *aqua.Config, stale map[string]struct{}, args *Args) (bool, map[string]struct{}) {
 	updated := false
-	failed := false
+	failed := map[string]struct{}{}
 	for _, pkg := range cfg.Packages {
 		logger := logger.With("package_name", pkg.Name, "package_version", pkg.Version)
-		changed, err := c.updatePackage(ctx, logger, lf, rgsts, pkg, args)
+		changed, err := c.updatePackage(ctx, logger, lf, rgsts, pkg, stale, args)
 		if err != nil {
 			// One package that can't be resolved shouldn't cost the rest their
 			// entries, so the run keeps going and reports at the end.
-			failed = true
+			failed[pkg.Registry] = struct{}{}
 			slogerr.WithError(logger, err).Error("update the lock file")
 			continue
 		}
@@ -93,6 +120,98 @@ func (c *Controller) updatePackages(ctx context.Context, logger *slog.Logger, lf
 		updated = true
 	}
 	return updated, failed
+}
+
+// lockedRegistries calls fn with each registry file the lock file records a checksum of
+// for the packages the run is about, and the package that uses it.
+func lockedRegistries(cfg *aqua.Config, args *Args, fn func(pkg *aqua.Package, key *lockfile.Registry)) {
+	for _, pkg := range cfg.Packages {
+		if pkg == nil || !match(args.Packages, pkg) {
+			continue
+		}
+		rgst := cfg.Registries[pkg.Registry]
+		if lockresolve.IsStandard(rgst) {
+			continue
+		}
+		if key := lockresolve.LockFileRegistry(rgst); key != nil {
+			fn(pkg, key)
+		}
+	}
+}
+
+// registryFiles is the files the named registries read, for those the lock file records a
+// checksum of.
+func registryFiles(cfg *aqua.Config, names map[string]struct{}) []*lockfile.Registry {
+	files := make([]*lockfile.Registry, 0, len(names))
+	for name := range names {
+		if key := lockresolve.LockFileRegistry(cfg.Registries[name]); key != nil {
+			files = append(files, key)
+		}
+	}
+	return files
+}
+
+func containsRegistryFile(files []*lockfile.Registry, key *lockfile.Registry) bool {
+	return slices.ContainsFunc(files, key.SameFile)
+}
+
+// partialRegistries is the names of the registries some package of aqua.yaml comes from that
+// the run doesn't resolve, because the command named its packages.
+//
+// A checksum recorded for such a registry would sit beside the entries of the packages the
+// run left alone, which were resolved from whatever file was there before. The next run
+// would then take the registry as recorded and never resolve them again, so the checksum
+// is left for a run that resolves every package of the registry.
+func partialRegistries(cfg *aqua.Config, args *Args) map[string]struct{} {
+	partial := map[string]struct{}{}
+	if len(args.Packages) == 0 {
+		return partial
+	}
+	for _, pkg := range cfg.Packages {
+		if pkg != nil && !match(args.Packages, pkg) {
+			partial[pkg.Registry] = struct{}{}
+		}
+	}
+	return partial
+}
+
+// unrecordedRegistries is the names of the registries the run's packages come from whose
+// file the lock file has no checksum of.
+//
+// The entries of a package from such a registry are resolved again even when the lock
+// file has them. A registry with no checksum is usually one whose ref aqua.yaml changed,
+// and the entries were resolved from the file at the old ref: recording the new file's
+// checksum beside them would leave entries that don't match the registry they are now
+// read from. It is taken before anything is resolved, since resolving the first package
+// records the registry for the rest.
+func unrecordedRegistries(lf *lockfile.LockFile, cfg *aqua.Config, args *Args) map[string]struct{} {
+	stale := map[string]struct{}{}
+	lockedRegistries(cfg, args, func(pkg *aqua.Package, key *lockfile.Registry) {
+		if lf.FindRegistry(key) == nil {
+			stale[pkg.Registry] = struct{}{}
+		}
+	})
+	return stale
+}
+
+// pruneRegistries drops the checksums of registry files no package of aqua.yaml comes
+// from, and reports how many went. Not when the command named its packages, for the same
+// reason as prune.
+func pruneRegistries(logger *slog.Logger, lf *lockfile.LockFile, cfg *aqua.Config, args *Args) int {
+	if len(args.Packages) > 0 {
+		return 0
+	}
+	var declared []*lockfile.Registry
+	lockedRegistries(cfg, args, func(_ *aqua.Package, key *lockfile.Registry) {
+		declared = append(declared, key)
+	})
+	pruned := lf.RetainRegistries(func(r *lockfile.Registry) bool {
+		return slices.ContainsFunc(declared, r.SameFile)
+	})
+	if pruned > 0 {
+		logger.Info("dropped the registries aqua.yaml doesn't use", "num_of_registries", pruned)
+	}
+	return pruned
 }
 
 // prune drops the entries aqua.yaml no longer declares, and reports how many went.
@@ -130,7 +249,7 @@ func prune(logger *slog.Logger, lf *lockfile.LockFile, cfg *aqua.Config, args *A
 	return pruned
 }
 
-func (c *Controller) updatePackage(ctx context.Context, logger *slog.Logger, lf *lockfile.LockFile, rgsts *lockresolve.Registries, pkg *aqua.Package, args *Args) (bool, error) {
+func (c *Controller) updatePackage(ctx context.Context, logger *slog.Logger, lf *lockfile.LockFile, rgsts *lockresolve.Registries, pkg *aqua.Package, stale map[string]struct{}, args *Args) (bool, error) {
 	if !match(args.Packages, pkg) {
 		return false, nil
 	}
@@ -141,7 +260,7 @@ func (c *Controller) updatePackage(ctx context.Context, logger *slog.Logger, lf 
 		logger.Warn("skip a package whose version isn't written in aqua.yaml")
 		return false, nil
 	}
-	if !args.Force && lf.Has(pkg.Name, pkg.Version) {
+	if _, ok := stale[pkg.Registry]; !ok && !args.Force && lf.Has(pkg.Name, pkg.Version) {
 		return false, nil
 	}
 

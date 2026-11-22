@@ -14,11 +14,13 @@ import (
 func (lf *LockFile) Sort() {
 	// A null entry describes nothing and can't be compared, so it isn't written.
 	lf.Packages = slices.DeleteFunc(lf.Packages, func(pkg *Entry) bool { return pkg == nil })
+	lf.Registries = slices.DeleteFunc(lf.Registries, func(r *Registry) bool { return r == nil })
 	slices.SortFunc(lf.Packages, comparePackages)
 	for _, pkg := range lf.Packages {
 		slices.Sort(pkg.Commands)
 		pkg.Commands = slices.Compact(pkg.Commands)
 	}
+	slices.SortFunc(lf.Registries, compareRegistries)
 }
 
 func comparePackages(a, b *Entry) int {
@@ -37,6 +39,20 @@ func comparePackages(a, b *Entry) int {
 	// Two entries can share all of the above and differ by variant, such as a
 	// linux/amd64 build for musl and one for glibc.
 	return cmp.Compare(variantKey(a), variantKey(b))
+}
+
+func compareRegistries(a, b *Registry) int {
+	for _, d := range []int{
+		cmp.Compare(a.Type, b.Type),
+		cmp.Compare(a.RepoOwner, b.RepoOwner),
+		cmp.Compare(a.RepoName, b.RepoName),
+		cmp.Compare(a.Ref, b.Ref),
+	} {
+		if d != 0 {
+			return d
+		}
+	}
+	return cmp.Compare(a.Path, b.Path)
 }
 
 // variantKey renders the variants as a string that sorts stably.
