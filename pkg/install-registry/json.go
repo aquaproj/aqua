@@ -49,15 +49,11 @@ func (is *Installer) handleYAMLGitHubContent(ctx context.Context, logger *slog.L
 }
 
 func (is *Installer) createJSON(jsonPath string, content *registry.Config) error {
-	jsonFile, err := os.Create(jsonPath)
+	b, err := json.Marshal(content)
 	if err != nil {
-		return fmt.Errorf("create a file to convert registry YAML to JSON: %w", err)
-	}
-	defer jsonFile.Close()
-	if err := json.NewEncoder(jsonFile).Encode(content); err != nil {
 		return fmt.Errorf("encode a registry as JSON: %w", err)
 	}
-	return nil
+	return writeFileAtomically(jsonPath, b)
 }
 
 func isJSON(p string) bool {

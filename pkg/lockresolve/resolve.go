@@ -20,6 +20,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/aquaproj/aqua/v2/pkg/lockfile"
 	"github.com/aquaproj/aqua/v2/pkg/resolve"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
@@ -40,12 +41,17 @@ var (
 	// ErrRegistryMismatch is an entry resolved from another registry than the one
 	// aqua.yaml now says the package comes from.
 	ErrRegistryMismatch = errors.New(`the lock file entry was resolved from another registry than aqua.yaml declares. Please run "aqua lock update --force"`)
-	// ErrRegistryNotInLockFile is a registry file the lock file has no checksum of.
-	ErrRegistryNotInLockFile = errors.New(`the lock file has no checksum of the registry. Please run "aqua lock update"`)
+	// ErrRegistryNotInLockFile is a registry file the lock file has no commit and checksum
+	// of, which a lock file written before the commit was recorded lacks too.
+	ErrRegistryNotInLockFile = errors.New(`the lock file has no commit or checksum of the registry. Please run "aqua lock update"`)
 	// ErrWeakRegistryChecksum is a registry checksum of an algorithm that isn't
 	// collision resistant.
 	ErrWeakRegistryChecksum = errors.New(`the checksum of the registry in the lock file must be sha256 or sha512. Please run "aqua lock update --force"`)
 )
+
+// commitUnavailableHint is logged with a registry that couldn't be read at the recorded
+// commit.
+const commitUnavailableHint = `if the commit of the registry in the lock file is no longer available, run "aqua lock update --force" to record the commit the ref points at now`
 
 // Resolver resolves a package of the standard registry from aqua-registry-g2, for the
 // lock update command. It says when the configuration asks for a package by a name the
@@ -64,15 +70,26 @@ type G2 interface {
 // RegistryInstaller installs one registry a configuration declares. It uses the registry
 // file installed before when there is one, and checks a file against the checksums only
 // when it downloads one.
+//
+// InstallLockedRegistry reads a github_content registry at the commit the lock file
+// recorded, downloading it from the commit and checking it against the checksum when it
+// isn't installed yet.
 type RegistryInstaller interface {
 	InstallRegistry(ctx context.Context, logger *slog.Logger, regist *aqua.Registry, cfgFilePath string, checksums *checksum.Checksums) (*registry.Config, error)
+	InstallLockedRegistry(ctx context.Context, logger *slog.Logger, regist *aqua.Registry, commit string, chk *checksum.Checksum) (*registry.Config, error)
 }
 
 // RegistryDownloader is a RegistryInstaller that can also download a registry whatever is
 // installed, and check it against the checksums, which is what recording a checksum needs.
 type RegistryDownloader interface {
 	RegistryInstaller
-	DownloadRegistry(ctx context.Context, logger *slog.Logger, regist *aqua.Registry, cfgFilePath string, checksums *checksum.Checksums) (*registry.Config, error)
+	DownloadRegistry(ctx context.Context, logger *slog.Logger, regist *aqua.Registry, commit string, checksums *checksum.Checksums) (*registry.Config, error)
+}
+
+// CommitResolver resolves a registry's ref to the commit it points at now, which the lock
+// update command records.
+type CommitResolver interface {
+	GetCommitSHA1(ctx context.Context, owner, repo, ref, lastSHA string) (string, *github.Response, error)
 }
 
 // Registries installs the registries of one configuration as the packages need them.
@@ -87,6 +104,7 @@ type RegistryDownloader interface {
 type Registries struct {
 	installer   RegistryInstaller
 	downloader  RegistryDownloader
+	resolver    CommitResolver
 	cfg         *aqua.Config
 	cfgFilePath string
 	lf          *lockfile.LockFile
@@ -110,14 +128,19 @@ func NewRegistries(installer RegistryInstaller, cfg *aqua.Config, cfgFilePath st
 	}
 }
 
-// NewRecordingRegistries creates Registries that record the checksum of every
+// NewRecordingRegistries creates Registries that record the commit and the checksum of every
 // github_content registry file in lf, for the lock update command. Every such registry is
 // downloaded, whatever is installed: the checksum recorded has to be the checksum of what
-// the registry serves. A checksum lf already has is checked rather than replaced, unless
-// force says so for the registry file: then the downloaded file's checksum replaces it.
-func NewRecordingRegistries(downloader RegistryDownloader, cfg *aqua.Config, cfgFilePath string, lf *lockfile.LockFile, force func(key *lockfile.Registry) bool) *Registries {
+// the commit holds.
+//
+// A registry lf already has a commit for is downloaded from that commit and checked against
+// the recorded checksum, so a ref that has moved on neither fails the run nor changes the
+// lock file. A registry without one, or one force says so for, has its ref resolved to the
+// commit it points at now, and that commit and its checksum are recorded.
+func NewRecordingRegistries(downloader RegistryDownloader, resolver CommitResolver, cfg *aqua.Config, cfgFilePath string, lf *lockfile.LockFile, force func(key *lockfile.Registry) bool) *Registries {
 	r := NewRegistries(downloader, cfg, cfgFilePath, lf)
 	r.downloader = downloader
+	r.resolver = resolver
 	r.record = true
 	r.force = force
 	r.pending = map[string]*lockfile.Registry{}
@@ -142,8 +165,8 @@ func (r *Registries) Commit(ok func(key *lockfile.Registry) bool) bool {
 			continue
 		}
 		// Recording again what the lock file already says, as --force does, isn't
-		// a change.
-		if old := r.lf.FindRegistry(key); old != nil && old.Checksum == key.Checksum && old.ChecksumAlgorithm == key.ChecksumAlgorithm {
+		// a change. A record without the commit is: the commit has to be written.
+		if old := r.lf.FindRegistry(key); old != nil && old.Commit == key.Commit && old.Checksum == key.Checksum && old.ChecksumAlgorithm == key.ChecksumAlgorithm {
 			continue
 		}
 		r.lf.SetRegistry(key)
@@ -203,9 +226,22 @@ func (r *Registries) install(ctx context.Context, logger *slog.Logger, rgst *aqu
 		chks.Set(id, &checksum.Checksum{ID: id, Checksum: recorded.Checksum, Algorithm: recorded.ChecksumAlgorithm})
 	}
 	if !r.record {
-		return r.installer.InstallRegistry(ctx, logger, rgst, r.cfgFilePath, chks) //nolint:wrapcheck
+		// Install and exec read the registry at the recorded commit. The ref may have
+		// moved on, and the file named by it is shared with every configuration.
+		content, err := r.installer.InstallLockedRegistry(ctx, logger, rgst, recorded.Commit, chks.Get(id))
+		if err != nil {
+			// The commit may have become unavailable, the repository deleted for one.
+			// The hint is an attribute: slogerr keeps attributes, not the messages of
+			// errors wrapped around one of its own.
+			return nil, slogerr.With(err, "registry_commit", recorded.Commit, "hint", commitUnavailableHint) //nolint:wrapcheck
+		}
+		return content, nil
 	}
-	content, err := r.downloader.DownloadRegistry(ctx, logger, rgst, r.cfgFilePath, chks)
+	commit, err := r.commit(ctx, rgst, recorded)
+	if err != nil {
+		return nil, err
+	}
+	content, err := r.downloader.DownloadRegistry(ctx, logger, rgst, commit, chks)
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}
@@ -214,6 +250,7 @@ func (r *Registries) install(ctx context.Context, logger *slog.Logger, rgst *aqu
 		if downloaded == nil {
 			return nil, errNoRegistryChecksum
 		}
+		key.Commit = commit
 		key.Checksum = strings.ToLower(downloaded.Checksum)
 		key.ChecksumAlgorithm = downloaded.Algorithm
 		r.pending[rgst.Name] = key
@@ -221,10 +258,30 @@ func (r *Registries) install(ctx context.Context, logger *slog.Logger, rgst *aqu
 	return content, nil
 }
 
-// recorded is the checksum the registry file is checked against, or nil when the lock
-// update command is to record one: there is none yet, or --force replaces it.
+// commit is the commit the lock update command downloads a registry from: the recorded one,
+// or, when there is none to keep, the one the ref points at now.
+func (r *Registries) commit(ctx context.Context, rgst *aqua.Registry, recorded *lockfile.Registry) (string, error) {
+	if recorded != nil {
+		return recorded.Commit, nil
+	}
+	commit, _, err := r.resolver.GetCommitSHA1(ctx, rgst.RepoOwner, rgst.RepoName, rgst.Ref, "")
+	if err != nil {
+		return "", fmt.Errorf("resolve the registry's ref to a commit: %w", slogerr.With(err, "registry_ref", rgst.Ref))
+	}
+	return commit, nil
+}
+
+// recorded is the commit and the checksum the registry file is read at and checked against,
+// or nil when the lock update command is to record them: there are none yet, or --force
+// replaces them.
+//
+// A record without the commit, which a lock file written before the commit was recorded
+// has, counts as none: the file can't be downloaded at what was recorded.
 func (r *Registries) recorded(key *lockfile.Registry) (*lockfile.Registry, error) {
 	recorded := r.lf.FindRegistry(key)
+	if recorded != nil && recorded.Commit == "" {
+		recorded = nil
+	}
 	if r.record && r.force != nil && r.force(key) {
 		return nil, nil //nolint:nilnil
 	}

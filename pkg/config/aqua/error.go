@@ -16,4 +16,6 @@ var (
 	errRefIsRequired = errors.New("ref is required for github_content registry")
 	// errRefCannotBeMainOrMaster is returned when github_content registry uses unstable refs
 	errRefCannotBeMainOrMaster = errors.New("ref cannot be 'main' or 'master' for github_content registry")
+	// errInvalidCommit is a registry commit in a lock file that isn't a commit SHA.
+	errInvalidCommit = errors.New(`the commit of the registry in the lock file isn't a commit SHA. Please run "aqua lock update --force"`)
 )

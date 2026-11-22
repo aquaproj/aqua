@@ -2,6 +2,7 @@ package aqua
 
 import (
 	"path/filepath"
+	"strings"
 
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
@@ -79,6 +80,43 @@ func (r *Registry) FilePath(rootDir, cfgFilePath string) (string, error) {
 		return filepath.Join(rootDir, "registries", r.Type, "github.com", r.RepoOwner, r.RepoName, r.Ref, r.Path), nil
 	}
 	return "", errInvalidRegistryType
+}
+
+// The number of hex digits of a commit SHA: SHA-1, and SHA-256 for a repository using it.
+const (
+	sha1HexLen   = 40
+	sha256HexLen = 64
+)
+
+// CommitFilePath returns where a github_content registry file at a commit the lock file
+// recorded is kept.
+//
+// The file at FilePath is named by the ref, which moves on, and is shared with every
+// configuration: another one's lock update rewrites it with whatever the ref points at now.
+// A commit doesn't move, so a file kept under it always holds the content of that commit.
+// It sits apart from FilePath's tree, where a ref that looks like a commit SHA could
+// otherwise collide with it.
+//
+// The commit comes from the lock file, which nothing validates, so it is checked to be a
+// commit SHA before it becomes part of a path.
+func (r *Registry) CommitFilePath(rootDir, commit string) (string, error) {
+	if r.Type != RegistryTypeGitHubContent {
+		return "", slogerr.With(errInvalidRegistryType, "registry_type", r.Type) //nolint:wrapcheck
+	}
+	commit = strings.ToLower(commit)
+	if (len(commit) != sha1HexLen && len(commit) != sha256HexLen) || !isHex(commit) {
+		return "", errInvalidCommit
+	}
+	return filepath.Join(rootDir, "registries", "github_content_commit", "github.com", r.RepoOwner, r.RepoName, commit, r.Path), nil
+}
+
+func isHex(s string) bool {
+	for _, c := range s {
+		if (c < '0' || c > '9') && (c < 'a' || c > 'f') {
+			return false
+		}
+	}
+	return true
 }
 
 // validateLocal validates a local registry configuration.

@@ -1299,6 +1299,7 @@ func InitializeLockUpdateCommandController(ctx context.Context, logger *slog.Log
 			github.New,
 			wire.Bind(new(download.GitHub), new(*github.RepositoriesService)),
 			wire.Bind(new(download.GitHubContentAPI), new(*github.RepositoriesService)),
+			wire.Bind(new(lockupdate.CommitResolver), new(*github.RepositoriesService)),
 		),
 		wire.NewSet(
 			download.NewGitHubContentFileDownloader,

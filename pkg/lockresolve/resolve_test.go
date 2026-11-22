@@ -12,8 +12,10 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/aquaproj/aqua/v2/pkg/lockfile"
 	"github.com/aquaproj/aqua/v2/pkg/lockresolve"
+	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
 // fakeG2 answers with the definitions it holds, the way aqua-registry-g2 serves a
@@ -49,12 +51,46 @@ type fakeInstaller struct {
 	rootDir    string
 	installed  []string
 	downloaded []string
+	// commits are the commits registries were downloaded or read at.
+	commits []string
 }
 
 // DownloadRegistry downloads whatever is installed, as the real one does.
-func (i *fakeInstaller) DownloadRegistry(ctx context.Context, logger *slog.Logger, rgst *aqua.Registry, cfgFilePath string, chks *checksum.Checksums) (*registry.Config, error) {
+func (i *fakeInstaller) DownloadRegistry(ctx context.Context, logger *slog.Logger, rgst *aqua.Registry, commit string, chks *checksum.Checksums) (*registry.Config, error) {
 	i.downloaded = append(i.downloaded, rgst.Name)
-	return i.InstallRegistry(ctx, logger, rgst, cfgFilePath, chks)
+	i.commits = append(i.commits, commit)
+	return i.InstallRegistry(ctx, logger, rgst, "aqua.yaml", chks)
+}
+
+// InstallLockedRegistry checks the file against the recorded checksum, as the real one
+// does when it downloads one.
+func (i *fakeInstaller) InstallLockedRegistry(ctx context.Context, logger *slog.Logger, rgst *aqua.Registry, commit string, chk *checksum.Checksum) (*registry.Config, error) {
+	i.commits = append(i.commits, commit)
+	chks := checksum.New()
+	chks.Set(chk.ID, chk)
+	return i.InstallRegistry(ctx, logger, rgst, "", chks)
+}
+
+// testCommit is the commit a test lock file records for a registry, and the one
+// fakeResolver resolves a ref to by default.
+var testCommit = strings.Repeat("c", 40) //nolint:gochecknoglobals
+
+// fakeResolver resolves every ref to commit, or fails with err, and counts the calls.
+type fakeResolver struct {
+	commit string
+	err    error
+	calls  int
+}
+
+func (r *fakeResolver) GetCommitSHA1(context.Context, string, string, string, string) (string, *github.Response, error) {
+	r.calls++
+	if r.err != nil {
+		return "", nil, r.err
+	}
+	if r.commit == "" {
+		return testCommit, nil, nil
+	}
+	return r.commit, nil, nil
 }
 
 func (i *fakeInstaller) InstallRegistry(_ context.Context, _ *slog.Logger, rgst *aqua.Registry, cfgFilePath string, chks *checksum.Checksums) (*registry.Config, error) {
@@ -272,6 +308,7 @@ func toolPkg() *aqua.Package {
 // lockFileWithRegistry is a lock file recording chksum for the file of rgst.
 func lockFileWithRegistry(rgst *aqua.Registry, chksum string) *lockfile.LockFile {
 	key := lockresolve.LockFileRegistry(rgst)
+	key.Commit = testCommit
 	key.Checksum = chksum
 	key.ChecksumAlgorithm = "sha256"
 	return &lockfile.LockFile{Registries: []*lockfile.Registry{key}}
@@ -330,7 +367,7 @@ func TestRegistries_record(t *testing.T) {
 	lf := &lockfile.LockFile{}
 	installer := toolInstaller()
 	installer.rootDir = rootDir
-	rgsts := lockresolve.NewRecordingRegistries(installer, standardConfig(), "aqua.yaml", lf, nil)
+	rgsts := lockresolve.NewRecordingRegistries(installer, &fakeResolver{}, standardConfig(), "aqua.yaml", lf, nil)
 	if _, err := rgsts.Get(t.Context(), slog.New(slog.DiscardHandler), "private"); err != nil {
 		t.Fatal(err)
 	}
@@ -349,8 +386,14 @@ func TestRegistries_record(t *testing.T) {
 	if !rgsts.Commit(func(*lockfile.Registry) bool { return true }) {
 		t.Error("recording a checksum is a change to the lock file")
 	}
-	got := lf.FindRegistry(lockresolve.LockFileRegistry(privateRegistry()))
-	if got == nil || got.Checksum != registryChecksum(t) || got.ChecksumAlgorithm != "sha256" {
+	assertRecorded(t, lf.FindRegistry(lockresolve.LockFileRegistry(privateRegistry())))
+}
+
+// assertRecorded checks a registry is recorded with the resolved commit and the checksum of
+// the file downloaded from it.
+func assertRecorded(t *testing.T, got *lockfile.Registry) {
+	t.Helper()
+	if got == nil || got.Commit != testCommit || got.Checksum != registryChecksum(t) || got.ChecksumAlgorithm != "sha256" {
 		t.Fatalf("recorded %+v", got)
 	}
 }
@@ -365,13 +408,13 @@ func TestRegistries_record_recorded(t *testing.T) {
 	if err := writeRegistryFile(privateRegistry(), rootDir, "aqua.yaml"); err != nil {
 		t.Fatal(err)
 	}
-	rgsts := lockresolve.NewRecordingRegistries(installer, standardConfig(), "aqua.yaml", lockFileWithRegistry(privateRegistry(), "0000"), nil)
+	rgsts := lockresolve.NewRecordingRegistries(installer, &fakeResolver{}, standardConfig(), "aqua.yaml", lockFileWithRegistry(privateRegistry(), "0000"), nil)
 	if _, err := rgsts.Get(t.Context(), slog.New(slog.DiscardHandler), "private"); err == nil {
 		t.Fatal("an error must be returned")
 	}
 
 	lf := lockFileWithRegistry(privateRegistry(), "0000")
-	rgsts = lockresolve.NewRecordingRegistries(installer, standardConfig(), "aqua.yaml", lf, forceAll)
+	rgsts = lockresolve.NewRecordingRegistries(installer, &fakeResolver{}, standardConfig(), "aqua.yaml", lf, forceAll)
 	if _, err := rgsts.Get(t.Context(), slog.New(slog.DiscardHandler), "private"); err != nil {
 		t.Fatal(err)
 	}
@@ -399,7 +442,7 @@ func TestRegistries_recordDownloaded(t *testing.T) {
 	lf := &lockfile.LockFile{}
 	installer := toolInstaller()
 	installer.rootDir = rootDir
-	rgsts := lockresolve.NewRecordingRegistries(installer, standardConfig(), "aqua.yaml", lf, nil)
+	rgsts := lockresolve.NewRecordingRegistries(installer, &fakeResolver{}, standardConfig(), "aqua.yaml", lf, nil)
 	if _, err := rgsts.Get(t.Context(), slog.New(slog.DiscardHandler), "private"); err != nil {
 		t.Fatal(err)
 	}
@@ -487,6 +530,10 @@ func (failingInstaller) InstallRegistry(context.Context, *slog.Logger, *aqua.Reg
 	return nil, errors.New("offline")
 }
 
+func (failingInstaller) InstallLockedRegistry(context.Context, *slog.Logger, *aqua.Registry, string, *checksum.Checksum) (*registry.Config, error) {
+	return nil, errors.New("offline")
+}
+
 func (failingInstaller) DownloadRegistry(context.Context, *slog.Logger, *aqua.Registry, string, *checksum.Checksums) (*registry.Config, error) {
 	return nil, errors.New("offline")
 }
@@ -499,7 +546,7 @@ func TestRegistries_record_failedDownload(t *testing.T) {
 	if err := writeRegistryFile(privateRegistry(), rootDir, "aqua.yaml"); err != nil {
 		t.Fatal(err)
 	}
-	rgsts := lockresolve.NewRecordingRegistries(failingInstaller{}, standardConfig(), "aqua.yaml", &lockfile.LockFile{}, forceAll)
+	rgsts := lockresolve.NewRecordingRegistries(failingInstaller{}, &fakeResolver{}, standardConfig(), "aqua.yaml", &lockfile.LockFile{}, forceAll)
 	if _, err := rgsts.Get(t.Context(), slog.New(slog.DiscardHandler), "private"); err == nil {
 		t.Fatal("an error must be returned")
 	}
@@ -517,3 +564,102 @@ func TestRegistries_record_failedDownload(t *testing.T) {
 }
 
 func forceAll(*lockfile.Registry) bool { return true }
+
+// A registry the lock file has a commit for is downloaded from that commit, and the ref
+// isn't resolved: a ref that has moved on doesn't change the lock file without --force.
+func TestRegistries_record_keepsCommit(t *testing.T) {
+	t.Parallel()
+	installer := toolInstaller()
+	resolver := &fakeResolver{commit: strings.Repeat("d", 40)}
+	lf := lockFileWithRegistry(privateRegistry(), registryChecksum(t))
+	rgsts := lockresolve.NewRecordingRegistries(installer, resolver, standardConfig(), "aqua.yaml", lf, nil)
+	if _, err := rgsts.Get(t.Context(), slog.New(slog.DiscardHandler), "private"); err != nil {
+		t.Fatal(err)
+	}
+	if resolver.calls != 0 {
+		t.Errorf("resolved the ref %d times, want none", resolver.calls)
+	}
+	if len(installer.commits) != 1 || installer.commits[0] != testCommit {
+		t.Errorf("downloaded at %v, want the recorded commit", installer.commits)
+	}
+	if rgsts.Commit(func(*lockfile.Registry) bool { return true }) {
+		t.Error("checking a recorded registry must not change the lock file")
+	}
+}
+
+// A record without the commit, from a lock file written before the commit was recorded,
+// counts as none: the ref is resolved and the commit is written, even though the checksum
+// is the same.
+func TestRegistries_record_withoutCommit(t *testing.T) {
+	t.Parallel()
+	resolver := &fakeResolver{}
+	lf := lockFileWithRegistry(privateRegistry(), registryChecksum(t))
+	lf.Registries[0].Commit = ""
+	rgsts := lockresolve.NewRecordingRegistries(toolInstaller(), resolver, standardConfig(), "aqua.yaml", lf, nil)
+	if _, err := rgsts.Get(t.Context(), slog.New(slog.DiscardHandler), "private"); err != nil {
+		t.Fatal(err)
+	}
+	if resolver.calls != 1 {
+		t.Errorf("resolved the ref %d times, want once", resolver.calls)
+	}
+	if !rgsts.Commit(func(*lockfile.Registry) bool { return true }) {
+		t.Fatal("writing the commit is a change to the lock file")
+	}
+	if got := lf.FindRegistry(lockresolve.LockFileRegistry(privateRegistry())); got.Commit != testCommit || len(lf.Registries) != 1 {
+		t.Errorf("recorded %+v of %d", got, len(lf.Registries))
+	}
+}
+
+// A ref that can't be resolved fails the registry, and nothing is recorded for it.
+func TestRegistries_record_unresolvableRef(t *testing.T) {
+	t.Parallel()
+	installer := toolInstaller()
+	lf := &lockfile.LockFile{}
+	rgsts := lockresolve.NewRecordingRegistries(installer, &fakeResolver{err: errors.New("not found")}, standardConfig(), "aqua.yaml", lf, nil)
+	if _, err := rgsts.Get(t.Context(), slog.New(slog.DiscardHandler), "private"); err == nil {
+		t.Fatal("an error must be returned")
+	}
+	if len(installer.downloaded) != 0 {
+		t.Errorf("downloaded %v, want nothing", installer.downloaded)
+	}
+	if rgsts.Commit(func(*lockfile.Registry) bool { return true }) || len(lf.Registries) != 0 {
+		t.Error("nothing must be recorded for a registry whose ref can't be resolved")
+	}
+}
+
+// Install and exec read a registry at the recorded commit, and refuse a record without
+// the commit, which the lock update command records again.
+func TestLocked_registryCommit(t *testing.T) {
+	t.Parallel()
+	installer := toolInstaller()
+	lf := lockFileWithRegistry(privateRegistry(), registryChecksum(t))
+	if _, err := lockresolve.NewRegistries(installer, standardConfig(), "aqua.yaml", lf).Get(t.Context(), slog.New(slog.DiscardHandler), "private"); err != nil {
+		t.Fatal(err)
+	}
+	if len(installer.commits) != 1 || installer.commits[0] != testCommit {
+		t.Errorf("read at %v, want the recorded commit", installer.commits)
+	}
+
+	lf.Registries[0].Commit = ""
+	_, err := lockresolve.NewRegistries(toolInstaller(), standardConfig(), "aqua.yaml", lf).Get(t.Context(), slog.New(slog.DiscardHandler), "private")
+	if !errors.Is(err, lockresolve.ErrRegistryNotInLockFile) {
+		t.Errorf("got %v, want ErrRegistryNotInLockFile", err)
+	}
+}
+
+// A registry that can't be read at the recorded commit, which may have become unavailable,
+// points to recording the commit again.
+func TestLocked_registryCommitUnavailable(t *testing.T) {
+	t.Parallel()
+	lf := lockFileWithRegistry(privateRegistry(), registryChecksum(t))
+	_, err := lockresolve.NewRegistries(failingInstaller{}, standardConfig(), "aqua.yaml", lf).Get(t.Context(), slog.New(slog.DiscardHandler), "private")
+	if err == nil {
+		t.Fatal("an error must be returned")
+	}
+	// The hint is logged with the error, as aqua reports one.
+	buf := &strings.Builder{}
+	slogerr.WithError(slog.New(slog.NewTextHandler(buf, nil)), err).Error("install the registry")
+	if !strings.Contains(buf.String(), `aqua lock update --force`) || !strings.Contains(buf.String(), testCommit) {
+		t.Errorf("logged %q, want the commit and a hint pointing to aqua lock update --force", buf.String())
+	}
+}
