@@ -14,21 +14,18 @@ import (
 	"go.yaml.in/yaml/v2"
 )
 
-var (
-	errDownloadOnlyGitHubContent = errors.New("only a github_content registry can be downloaded")
-	errNoDownloadedChecksum      = errors.New("the checksum of the downloaded registry file wasn't recorded")
-)
+var errDownloadOnlyGitHubContent = errors.New("only a github_content registry can be downloaded")
 
-// DownloadRegistry downloads a github_content registry whatever is installed, checks it
-// against checksums the way InstallRegistry does (recording a checksum the set doesn't
-// have), and keeps it at LockedFilePath for its checksum.
+// DownloadRegistry downloads a github_content registry from a commit whatever is
+// installed, checks it against checksums the way InstallRegistry does (recording a
+// checksum the set doesn't have), and keeps it at CommitFilePath for the commit.
 //
 // It is for recording a registry's checksum, which has to be the checksum of what the
-// registry serves: a file already on disk may be stale or edited. The file is kept under
-// its own checksum rather than in place of what the ref pointed at before, so a lock file
-// that recorded the earlier content still reads that content, whether the run recording
-// the new one succeeds or not.
-func (is *Installer) DownloadRegistry(ctx context.Context, logger *slog.Logger, regist *aqua.Registry, _ string, checksums *checksum.Checksums) (*registry.Config, error) {
+// commit holds: a file already on disk may be stale or edited. It is downloaded from the
+// commit the ref was resolved to rather than the ref, which may have moved on since, or
+// be served stale by a cache, and the checksum would then be recorded beside a commit it
+// doesn't describe.
+func (is *Installer) DownloadRegistry(ctx context.Context, logger *slog.Logger, regist *aqua.Registry, commit string, checksums *checksum.Checksums) (*registry.Config, error) {
 	if err := regist.Validate(); err != nil {
 		return nil, fmt.Errorf("validate the registry: %w", err)
 	}
@@ -36,20 +33,17 @@ func (is *Installer) DownloadRegistry(ctx context.Context, logger *slog.Logger, 
 		return nil, errDownloadOnlyGitHubContent
 	}
 
-	content, err := is.downloadGitHubContent(ctx, logger, regist)
+	registryFilePath, err := regist.CommitFilePath(is.param.RootDir, commit)
+	if err != nil {
+		return nil, fmt.Errorf("get a registry file path: %w", err)
+	}
+
+	content, err := is.downloadGitHubContent(ctx, logger, regist, commit)
 	if err != nil {
 		return nil, err
 	}
 	if err := checksum.CheckRegistry(regist, checksums, content); err != nil {
 		return nil, fmt.Errorf("check a registry's checksum: %w", err)
-	}
-	chk := checksums.Get(checksum.RegistryID(regist))
-	if chk == nil {
-		return nil, errNoDownloadedChecksum
-	}
-	registryFilePath, err := regist.LockedFilePath(is.param.RootDir, chk.Algorithm, chk.Checksum)
-	if err != nil {
-		return nil, fmt.Errorf("get a registry file path: %w", err)
 	}
 
 	registryContent, err := parseRegistry(registryFilePath, content)
@@ -76,11 +70,13 @@ func parseRegistry(registryFilePath string, content []byte) (*registry.Config, e
 	return registryContent, nil
 }
 
-func (is *Installer) downloadGitHubContent(ctx context.Context, logger *slog.Logger, regist *aqua.Registry) ([]byte, error) {
+// downloadGitHubContent downloads a registry file at ref, which is the commit the lock file
+// records rather than the registry's own ref.
+func (is *Installer) downloadGitHubContent(ctx context.Context, logger *slog.Logger, regist *aqua.Registry, ref string) ([]byte, error) {
 	file, err := is.registryDownloader.DownloadGitHubContentFile(ctx, logger, &domain.GitHubContentFileParam{
 		RepoOwner: regist.RepoOwner,
 		RepoName:  regist.RepoName,
-		Ref:       regist.Ref,
+		Ref:       ref,
 		Path:      regist.Path,
 	})
 	if err != nil {

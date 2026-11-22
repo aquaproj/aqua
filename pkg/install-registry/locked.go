@@ -15,21 +15,23 @@ import (
 
 var errInstallLockedOnlyGitHubContent = errors.New("only a github_content registry has a checksum in the lock file")
 
-// InstallLockedRegistry returns the content of a github_content registry whose checksum a
-// lock file recorded, reading it from LockedFilePath for that checksum, or downloading it
-// and checking it against the checksum when it isn't there yet.
+// InstallLockedRegistry returns the content of a github_content registry at the commit a
+// lock file recorded, reading it from CommitFilePath for that commit, or downloading it
+// from the commit and checking it against the recorded checksum when it isn't there yet.
 //
-// A file at that path isn't checked again: only content checked against the checksum in
-// its path is ever written there, and it is written atomically. So, unlike the file at
-// FilePath, it can't have been replaced by what the ref points at now.
-func (is *Installer) InstallLockedRegistry(ctx context.Context, logger *slog.Logger, regist *aqua.Registry, chk *checksum.Checksum) (*registry.Config, error) {
+// The file is downloaded from the commit rather than the ref, so it is what the lock file
+// recorded even after the ref has moved on. A file at that path isn't checked again: only
+// content of that commit checked against the checksum is ever written there, and it is
+// written atomically. So, unlike the file at FilePath, it can't have been replaced by
+// what the ref points at now.
+func (is *Installer) InstallLockedRegistry(ctx context.Context, logger *slog.Logger, regist *aqua.Registry, commit string, chk *checksum.Checksum) (*registry.Config, error) {
 	if err := regist.Validate(); err != nil {
 		return nil, fmt.Errorf("validate the registry: %w", err)
 	}
 	if regist.Type != aqua.RegistryTypeGitHubContent {
 		return nil, errInstallLockedOnlyGitHubContent
 	}
-	registryFilePath, err := regist.LockedFilePath(is.param.RootDir, chk.Algorithm, chk.Checksum)
+	registryFilePath, err := regist.CommitFilePath(is.param.RootDir, commit)
 	if err != nil {
 		return nil, fmt.Errorf("get a registry file path: %w", err)
 	}
@@ -38,7 +40,7 @@ func (is *Installer) InstallLockedRegistry(ctx context.Context, logger *slog.Log
 		return content, err
 	}
 
-	content, err := is.downloadGitHubContent(ctx, logger, regist)
+	content, err := is.downloadGitHubContent(ctx, logger, regist, commit)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +60,7 @@ func (is *Installer) InstallLockedRegistry(ctx context.Context, logger *slog.Log
 	return registryContent, nil
 }
 
-// readLockedRegistry reads a registry kept at its LockedFilePath, the JSON made from a
+// readLockedRegistry reads a registry kept at its CommitFilePath, the JSON made from a
 // YAML registry first, as InstallRegistry does. It returns nil without an error when
 // nothing is there yet.
 func (is *Installer) readLockedRegistry(logger *slog.Logger, registryFilePath string) (*registry.Config, error) {

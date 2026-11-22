@@ -82,43 +82,32 @@ func (r *Registry) FilePath(rootDir, cfgFilePath string) (string, error) {
 	return "", errInvalidRegistryType
 }
 
-// The number of hex digits of a checksum of each algorithm a lock file may record for a
-// registry file.
+// The number of hex digits of a commit SHA: SHA-1, and SHA-256 for a repository using it.
 const (
+	sha1HexLen   = 40
 	sha256HexLen = 64
-	sha512HexLen = 128
 )
 
-func lockedChecksumLen(algorithm string) int {
-	switch algorithm {
-	case "sha256":
-		return sha256HexLen
-	case "sha512":
-		return sha512HexLen
-	}
-	return 0
-}
-
-// LockedFilePath returns where a github_content registry file whose checksum a lock file
+// CommitFilePath returns where a github_content registry file at a commit the lock file
 // recorded is kept.
 //
-// The file at FilePath is named by the ref, which another configuration's lock update can
-// rewrite with whatever the ref points at now. A file kept under its checksum is never
-// replaced by different content, so what is read from it is what the lock file recorded.
-// It sits apart from FilePath's tree, which a registry path with directories could
-// otherwise collide with.
+// The file at FilePath is named by the ref, which moves on, and is shared with every
+// configuration: another one's lock update rewrites it with whatever the ref points at now.
+// A commit doesn't move, so a file kept under it always holds the content of that commit.
+// It sits apart from FilePath's tree, where a ref that looks like a commit SHA could
+// otherwise collide with it.
 //
-// The checksum comes from the lock file, which nothing validates, so it is checked to be
-// a hex digest of the algorithm before it becomes part of a path.
-func (r *Registry) LockedFilePath(rootDir, algorithm, checksum string) (string, error) {
+// The commit comes from the lock file, which nothing validates, so it is checked to be a
+// commit SHA before it becomes part of a path.
+func (r *Registry) CommitFilePath(rootDir, commit string) (string, error) {
 	if r.Type != RegistryTypeGitHubContent {
 		return "", slogerr.With(errInvalidRegistryType, "registry_type", r.Type) //nolint:wrapcheck
 	}
-	checksum = strings.ToLower(checksum)
-	if n := lockedChecksumLen(algorithm); n == 0 || len(checksum) != n || !isHex(checksum) {
-		return "", slogerr.With(errInvalidLockedChecksum, "checksum_algorithm", algorithm) //nolint:wrapcheck
+	commit = strings.ToLower(commit)
+	if (len(commit) != sha1HexLen && len(commit) != sha256HexLen) || !isHex(commit) {
+		return "", errInvalidCommit
 	}
-	return filepath.Join(rootDir, "registries", "github_content_locked", "github.com", r.RepoOwner, r.RepoName, r.Ref, algorithm+"-"+checksum, r.Path), nil
+	return filepath.Join(rootDir, "registries", "github_content_commit", "github.com", r.RepoOwner, r.RepoName, commit, r.Path), nil
 }
 
 func isHex(s string) bool {

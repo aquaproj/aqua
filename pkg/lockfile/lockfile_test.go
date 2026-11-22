@@ -300,3 +300,31 @@ func TestRead_commands(t *testing.T) {
 		t.Errorf("the commands are wrong (-want +got):\n%s", diff)
 	}
 }
+
+// The commit a registry was recorded at is written and read back with its checksum.
+func TestWriteAndRead_registryCommit(t *testing.T) {
+	t.Parallel()
+	p := filepath.Join(t.TempDir(), lockfile.FileName)
+	lf := lockfile.New()
+	lf.Registries = []*lockfile.Registry{{
+		Type: "github_content", RepoOwner: "corp", RepoName: "registry", Ref: "v1.0.0", Path: "registry.yaml",
+		Commit: strings.Repeat("a", 40), Checksum: "abc", ChecksumAlgorithm: "sha256",
+	}}
+	if err := lockfile.Write(p, lf); err != nil {
+		t.Fatal(err)
+	}
+	b, err := os.ReadFile(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(b), `"commit": "`+strings.Repeat("a", 40)+`"`) {
+		t.Errorf("the commit isn't written: %s", b)
+	}
+	got, err := lockfile.ReadFile(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff(lf.Registries, got.Registries); diff != "" {
+		t.Error(diff)
+	}
+}

@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
@@ -14,6 +15,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/controller/lockupdate"
+	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/aquaproj/aqua/v2/pkg/lockfile"
 	"github.com/aquaproj/aqua/v2/pkg/resolve"
 	"github.com/google/go-cmp/cmp"
@@ -61,6 +63,22 @@ func (r *fakeResolver) Resolve(_ context.Context, _ *slog.Logger, pkgName, versi
 	}, nil
 }
 
+// fakeCommitResolver resolves every ref to commit, or fails with err.
+type fakeCommitResolver struct {
+	commit string
+	err    error
+}
+
+func (r *fakeCommitResolver) GetCommitSHA1(context.Context, string, string, string, string) (string, *github.Response, error) {
+	if r.err != nil {
+		return "", nil, r.err
+	}
+	if r.commit == "" {
+		return strings.Repeat("c", 40), nil, nil
+	}
+	return r.commit, nil, nil
+}
+
 // fakeRegistryInstaller answers with one package definition, whatever is asked for. With
 // rootDir, it writes a github_content registry's file where the real installer would.
 type fakeRegistryInstaller struct {
@@ -68,11 +86,11 @@ type fakeRegistryInstaller struct {
 	rootDir string
 }
 
-func (i *fakeRegistryInstaller) DownloadRegistry(ctx context.Context, logger *slog.Logger, rgst *aqua.Registry, cfgFilePath string, chks *checksum.Checksums) (*registry.Config, error) {
-	return i.InstallRegistry(ctx, logger, rgst, cfgFilePath, chks)
+func (i *fakeRegistryInstaller) DownloadRegistry(ctx context.Context, logger *slog.Logger, rgst *aqua.Registry, _ string, chks *checksum.Checksums) (*registry.Config, error) {
+	return i.InstallRegistry(ctx, logger, rgst, "aqua.yaml", chks)
 }
 
-func (i *fakeRegistryInstaller) InstallLockedRegistry(ctx context.Context, logger *slog.Logger, rgst *aqua.Registry, chk *checksum.Checksum) (*registry.Config, error) {
+func (i *fakeRegistryInstaller) InstallLockedRegistry(ctx context.Context, logger *slog.Logger, rgst *aqua.Registry, _ string, chk *checksum.Checksum) (*registry.Config, error) {
 	chks := checksum.New()
 	chks.Set(chk.ID, chk)
 	return i.InstallRegistry(ctx, logger, rgst, "", chks)
@@ -133,7 +151,7 @@ func run(t *testing.T, cfg *aqua.Config, resolver *fakeResolver, args *lockupdat
 	t.Helper()
 	dir := t.TempDir()
 	cfgFilePath := filepath.Join(dir, "aqua.yaml")
-	ctrl := lockupdate.New(&fakeFinder{paths: []string{cfgFilePath}}, &fakeReader{cfg: cfg}, nil, nil, resolver)
+	ctrl := lockupdate.New(&fakeFinder{paths: []string{cfgFilePath}}, &fakeReader{cfg: cfg}, nil, &fakeCommitResolver{}, nil, resolver)
 	err := ctrl.Update(t.Context(), slog.New(slog.DiscardHandler), &config.Param{}, args)
 	return filepath.Join(dir, lockfile.FileName), err
 }
@@ -185,7 +203,7 @@ func TestController_Update_alreadyLocked(t *testing.T) {
 	ctrl := lockupdate.New(
 		&fakeFinder{paths: []string{cfgFilePath}},
 		&fakeReader{cfg: &aqua.Config{Packages: []*aqua.Package{pkg("cli/cli", "v2.1.0")}}},
-		nil, nil, resolver,
+		nil, &fakeCommitResolver{}, nil, resolver,
 	)
 	if err := ctrl.Update(t.Context(), slog.New(slog.DiscardHandler), &config.Param{}, &lockupdate.Args{}); err != nil {
 		t.Fatal(err)
@@ -224,7 +242,7 @@ func TestController_Update_force(t *testing.T) {
 	ctrl := lockupdate.New(
 		&fakeFinder{paths: []string{cfgFilePath}},
 		&fakeReader{cfg: &aqua.Config{Packages: []*aqua.Package{pkg("cli/cli", "v2.1.0")}}},
-		nil, nil, resolver,
+		nil, &fakeCommitResolver{}, nil, resolver,
 	)
 	if err := ctrl.Update(t.Context(), slog.New(slog.DiscardHandler), &config.Param{}, &lockupdate.Args{Force: true}); err != nil {
 		t.Fatal(err)
@@ -330,6 +348,7 @@ func TestController_Update_otherRegistry(t *testing.T) {
 			Format:        "tar.gz",
 			SupportedEnvs: registry.SupportedEnvs{"linux/amd64"},
 		}},
+		&fakeCommitResolver{},
 		&fakeChecksumGetter{checksum: "abc"},
 		g2,
 	)
@@ -410,6 +429,7 @@ func TestController_Update_recordRegistry(t *testing.T) {
 			Asset:         "foo_{{.OS}}_{{.Arch}}.tar.gz",
 			SupportedEnvs: registry.SupportedEnvs{"linux/amd64"},
 		}},
+		&fakeCommitResolver{},
 		&fakeChecksumGetter{checksum: "new"},
 		&fakeResolver{},
 	)
@@ -446,6 +466,7 @@ func TestController_Update_otherRegistry_noChecksum(t *testing.T) {
 			Asset:         "foo_{{.OS}}_{{.Arch}}.tar.gz",
 			SupportedEnvs: registry.SupportedEnvs{"linux/amd64"},
 		}},
+		&fakeCommitResolver{},
 		&fakeChecksumGetter{},
 		&fakeResolver{},
 	)
@@ -515,6 +536,7 @@ func TestController_Update_otherRegistry_versionOverrides(t *testing.T) {
 				},
 			},
 		}},
+		&fakeCommitResolver{},
 		getter,
 		&fakeResolver{},
 	)
@@ -572,6 +594,7 @@ func TestController_Update_recordRegistry_failure(t *testing.T) {
 			Name: "foo/foo", Type: "github_release", RepoOwner: "foo", RepoName: "foo",
 			Asset: "foo_{{.OS}}_{{.Arch}}.tar.gz", SupportedEnvs: registry.SupportedEnvs{"linux/amd64"},
 		}},
+		&fakeCommitResolver{},
 		// No checksum can be found, so resolving the package fails.
 		&fakeChecksumGetter{},
 		&fakeResolver{},
@@ -612,6 +635,7 @@ func TestController_Update_recordRegistry_named(t *testing.T) {
 			Name: "foo/foo", Type: "github_release", RepoOwner: "foo", RepoName: "foo",
 			Asset: "foo_{{.OS}}_{{.Arch}}.tar.gz", SupportedEnvs: registry.SupportedEnvs{"linux/amd64"},
 		}},
+		&fakeCommitResolver{},
 		&fakeChecksumGetter{checksum: "abc"},
 		&fakeResolver{},
 	)
@@ -650,7 +674,7 @@ func TestController_Update_forceNamed(t *testing.T) {
 	lf := lockfile.New()
 	// The registry served something else when it was recorded.
 	lf.Registries = []*lockfile.Registry{
-		{Type: "github_content", RepoOwner: "suzuki-shunsuke", RepoName: "my-registry", Ref: "main", Path: "registry.yaml", Checksum: "0000", ChecksumAlgorithm: "sha256"},
+		{Type: "github_content", RepoOwner: "suzuki-shunsuke", RepoName: "my-registry", Ref: "main", Path: "registry.yaml", Commit: strings.Repeat("a", 40), Checksum: "0000", ChecksumAlgorithm: "sha256"},
 	}
 	if err := lockfile.Write(lockFilePath, lf); err != nil {
 		t.Fatal(err)
@@ -662,6 +686,7 @@ func TestController_Update_forceNamed(t *testing.T) {
 			Name: "foo/foo", Type: "github_release", RepoOwner: "foo", RepoName: "foo",
 			Asset: "foo_{{.OS}}_{{.Arch}}.tar.gz", SupportedEnvs: registry.SupportedEnvs{"linux/amd64"},
 		}},
+		&fakeCommitResolver{},
 		&fakeChecksumGetter{checksum: "abc"},
 		&fakeResolver{},
 	)
@@ -703,6 +728,7 @@ func TestController_Update_recordRegistry_sameFile(t *testing.T) {
 			Name: "foo/foo", Type: "github_release", RepoOwner: "foo", RepoName: "foo",
 			Asset: "foo_{{.OS}}_{{.Arch}}.tar.gz", SupportedEnvs: registry.SupportedEnvs{"linux/amd64"},
 		}},
+		&fakeCommitResolver{},
 		&fakeChecksumGetter{checksum: "abc"},
 		&fakeResolver{},
 	)
@@ -715,5 +741,85 @@ func TestController_Update_recordRegistry_sameFile(t *testing.T) {
 	}
 	if len(got.Registries) != 0 {
 		t.Errorf("the registry file must stay unrecorded, got %+v", got.Registries)
+	}
+}
+
+// commitTestConfig is a configuration with one package from a github_content registry, and
+// a lock file that has the package and a record of the registry without the commit, as
+// one written before the commit was recorded has.
+func commitTestConfig(t *testing.T) (*aqua.Config, string, *lockfile.LockFile) {
+	t.Helper()
+	cfg := &aqua.Config{
+		Registries: aqua.Registries{
+			"foo": {Name: "foo", Type: "github_content", RepoOwner: "suzuki-shunsuke", RepoName: "my-registry", Ref: "v1.0.0", Path: "registry.yaml"},
+		},
+		Packages: []*aqua.Package{{Name: "foo/foo", Version: "v1.0.0", Registry: "foo"}},
+	}
+	lf := lockfile.New()
+	lf.Packages = []*lockfile.Entry{
+		{Name: "foo/foo", Version: "v1.0.0", OS: "linux", Arch: "amd64", Checksum: "abc", Commands: []string{"foo"}},
+	}
+	lf.Registries = []*lockfile.Registry{
+		{Type: "github_content", RepoOwner: "suzuki-shunsuke", RepoName: "my-registry", Ref: "v1.0.0", Path: "registry.yaml", Checksum: "old", ChecksumAlgorithm: "sha256"},
+	}
+	lockFilePath := filepath.Join(t.TempDir(), lockfile.FileName)
+	if err := lockfile.Write(lockFilePath, lf); err != nil {
+		t.Fatal(err)
+	}
+	return cfg, lockFilePath, lf
+}
+
+func commitTestController(cfg *aqua.Config, lockFilePath, rootDir string, resolver *fakeCommitResolver) *lockupdate.Controller {
+	return lockupdate.New(
+		&fakeFinder{paths: []string{filepath.Join(filepath.Dir(lockFilePath), "aqua.yaml")}},
+		&fakeReader{cfg: cfg},
+		&fakeRegistryInstaller{rootDir: rootDir, pkgInfo: &registry.PackageInfo{
+			Name: "foo/foo", Type: "github_release", RepoOwner: "foo", RepoName: "foo",
+			Asset: "foo_{{.OS}}_{{.Arch}}.tar.gz", SupportedEnvs: registry.SupportedEnvs{"linux/amd64"},
+		}},
+		resolver,
+		&fakeChecksumGetter{checksum: "new"},
+		&fakeResolver{},
+	)
+}
+
+// A record without the commit is recorded again without --force, with the commit, and the
+// package beside it is resolved again.
+func TestController_Update_recordCommit(t *testing.T) {
+	t.Parallel()
+	rootDir := t.TempDir()
+	cfg, lockFilePath, _ := commitTestConfig(t)
+	commit := strings.Repeat("e", 40)
+	ctrl := commitTestController(cfg, lockFilePath, rootDir, &fakeCommitResolver{commit: commit})
+	if err := ctrl.Update(t.Context(), slog.New(slog.DiscardHandler), &config.Param{RootDir: rootDir}, &lockupdate.Args{}); err != nil {
+		t.Fatal(err)
+	}
+	got, err := lockfile.ReadFile(lockFilePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Registries) != 1 || got.Registries[0].Commit != commit || got.Registries[0].Checksum == "old" {
+		t.Errorf("the registries are %+v, want the commit and the checksum recorded again", got.Registries)
+	}
+	if len(got.Packages) != 1 || got.Packages[0].Checksum != "new" {
+		t.Errorf("the package entry wasn't resolved again: %+v", got.Packages)
+	}
+}
+
+// A ref that can't be resolved to a commit fails the run and leaves the record as it was.
+func TestController_Update_unresolvableRef(t *testing.T) {
+	t.Parallel()
+	rootDir := t.TempDir()
+	cfg, lockFilePath, lf := commitTestConfig(t)
+	ctrl := commitTestController(cfg, lockFilePath, rootDir, &fakeCommitResolver{err: errors.New("not found")})
+	if err := ctrl.Update(t.Context(), slog.New(slog.DiscardHandler), &config.Param{RootDir: rootDir}, &lockupdate.Args{}); err == nil {
+		t.Fatal("an error must be returned")
+	}
+	got, err := lockfile.ReadFile(lockFilePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Registries) != 1 || *got.Registries[0] != *lf.Registries[0] {
+		t.Errorf("the registries are %+v, want the record left as it was", got.Registries)
 	}
 }

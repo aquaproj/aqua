@@ -148,9 +148,9 @@ func TestRegistry_FilePath(t *testing.T) {
 	}
 }
 
-func TestRegistry_LockedFilePath(t *testing.T) { //nolint:funlen
+func TestRegistry_CommitFilePath(t *testing.T) { //nolint:funlen
 	t.Parallel()
-	sha256Sum := strings.Repeat("ab", 32)
+	commit := strings.Repeat("ab", 20)
 	rgst := &aqua.Registry{
 		Type:      pkgTypeGitHubContent,
 		RepoOwner: "corp",
@@ -159,67 +159,58 @@ func TestRegistry_LockedFilePath(t *testing.T) { //nolint:funlen
 		Path:      "dir/registry.yaml",
 	}
 	data := []struct {
-		title     string
-		registry  *aqua.Registry
-		algorithm string
-		checksum  string
-		exp       string
-		isErr     bool
+		title    string
+		registry *aqua.Registry
+		commit   string
+		exp      string
+		isErr    bool
 	}{
 		{
-			title:     "sha256",
-			registry:  rgst,
-			algorithm: "sha256",
-			checksum:  sha256Sum,
-			exp:       "/root/.aqua/registries/github_content_locked/github.com/corp/registry/v1.0.0/sha256-" + sha256Sum + "/dir/registry.yaml",
+			title:    "SHA-1",
+			registry: rgst,
+			commit:   commit,
+			exp:      "/root/.aqua/registries/github_content_commit/github.com/corp/registry/" + commit + "/dir/registry.yaml",
 		},
 		{
-			title:     "an uppercase checksum names the same path",
-			registry:  rgst,
-			algorithm: "sha256",
-			checksum:  strings.ToUpper(sha256Sum),
-			exp:       "/root/.aqua/registries/github_content_locked/github.com/corp/registry/v1.0.0/sha256-" + sha256Sum + "/dir/registry.yaml",
+			title:    "an uppercase commit names the same path",
+			registry: rgst,
+			commit:   strings.ToUpper(commit),
+			exp:      "/root/.aqua/registries/github_content_commit/github.com/corp/registry/" + commit + "/dir/registry.yaml",
 		},
 		{
-			title:     "sha512",
-			registry:  rgst,
-			algorithm: "sha512",
-			checksum:  strings.Repeat("0f", 64),
-			exp:       "/root/.aqua/registries/github_content_locked/github.com/corp/registry/v1.0.0/sha512-" + strings.Repeat("0f", 64) + "/dir/registry.yaml",
+			title:    "SHA-256",
+			registry: rgst,
+			commit:   strings.Repeat("0f", 32),
+			exp:      "/root/.aqua/registries/github_content_commit/github.com/corp/registry/" + strings.Repeat("0f", 32) + "/dir/registry.yaml",
 		},
 		{
-			title:     "a checksum that would leave the directory",
-			registry:  rgst,
-			algorithm: "sha256",
-			checksum:  "../../../../../github_content/github.com/corp/registry/v1.0.0",
-			isErr:     true,
+			title:    "a commit that would leave the directory",
+			registry: rgst,
+			commit:   "../../../../github_content/github.com/corp/registry/v1.0",
+			isErr:    true,
 		},
 		{
-			title:     "a checksum of another length than the algorithm's",
-			registry:  rgst,
-			algorithm: "sha512",
-			checksum:  sha256Sum,
-			isErr:     true,
+			title:    "an abbreviated commit",
+			registry: rgst,
+			commit:   commit[:7],
+			isErr:    true,
 		},
 		{
-			title:     "a weak algorithm",
-			registry:  rgst,
-			algorithm: "md5",
-			checksum:  strings.Repeat("ab", 16),
-			isErr:     true,
+			title:    "no commit",
+			registry: rgst,
+			isErr:    true,
 		},
 		{
-			title:     "a local registry",
-			registry:  &aqua.Registry{Type: regTypeLocal, Path: "registry.yaml"},
-			algorithm: "sha256",
-			checksum:  sha256Sum,
-			isErr:     true,
+			title:    "a local registry",
+			registry: &aqua.Registry{Type: regTypeLocal, Path: "registry.yaml"},
+			commit:   commit,
+			isErr:    true,
 		},
 	}
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			t.Parallel()
-			p, err := d.registry.LockedFilePath("/root/.aqua", d.algorithm, d.checksum)
+			p, err := d.registry.CommitFilePath("/root/.aqua", d.commit)
 			if d.isErr {
 				if err == nil {
 					t.Fatalf("an error must be returned, got %s", p)

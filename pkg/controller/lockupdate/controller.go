@@ -47,21 +47,26 @@ type ChecksumGetter interface {
 // packages being resolved come from are installed.
 type RegistryInstaller = lockresolve.RegistryDownloader
 
+// CommitResolver resolves a registry's ref to the commit the lock file records.
+type CommitResolver = lockresolve.CommitResolver
+
 // Controller updates lock files.
 type Controller struct {
 	configFinder      ConfigFinder
 	configReader      ConfigReader
 	registryInstaller RegistryInstaller
+	commitResolver    CommitResolver
 	checksumGetter    ChecksumGetter
 	g2                Resolver
 }
 
 // New creates a Controller.
-func New(configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, checksumGetter ChecksumGetter, g2 Resolver) *Controller {
+func New(configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, commitResolver CommitResolver, checksumGetter ChecksumGetter, g2 Resolver) *Controller {
 	return &Controller{
 		configFinder:      configFinder,
 		configReader:      configReader,
 		registryInstaller: registryInstaller,
+		commitResolver:    commitResolver,
 		checksumGetter:    checksumGetter,
 		g2:                g2,
 	}

@@ -81,7 +81,7 @@ func (c *Controller) update(ctx context.Context, logger *slog.Logger, lf *lockfi
 	// --force replaces a registry checksum only when the run resolves every package of
 	// the registry. Otherwise the packages it resolves would be read from a new file
 	// whose checksum isn't recorded, beside the old one that is.
-	rgsts := lockresolve.NewRecordingRegistries(c.registryInstaller, cfg, cfgFilePath, lf, func(key *lockfile.Registry) bool {
+	rgsts := lockresolve.NewRecordingRegistries(c.registryInstaller, c.commitResolver, cfg, cfgFilePath, lf, func(key *lockfile.Registry) bool {
 		return args.Force && !containsRegistryFile(partial, key)
 	})
 	stale := unrecordedRegistries(lf, cfg, args)
@@ -187,7 +187,9 @@ func partialRegistries(cfg *aqua.Config, args *Args) map[string]struct{} {
 func unrecordedRegistries(lf *lockfile.LockFile, cfg *aqua.Config, args *Args) map[string]struct{} {
 	stale := map[string]struct{}{}
 	lockedRegistries(cfg, args, func(pkg *aqua.Package, key *lockfile.Registry) {
-		if lf.FindRegistry(key) == nil {
+		// A record without the commit, from a lock file written before the commit was
+		// recorded, is recorded again, and so are the entries beside it.
+		if r := lf.FindRegistry(key); r == nil || r.Commit == "" {
 			stale[pkg.Registry] = struct{}{}
 		}
 	})

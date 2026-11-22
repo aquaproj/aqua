@@ -171,7 +171,9 @@ type Package struct {
 }
 
 // Registry names where the entry was resolved from. In LockFile.Registries it also
-// names one file of the registry at one ref, with that file's checksum.
+// names one file of the registry at one ref, with the commit the ref pointed at when it
+// was recorded and the checksum of the file at that commit. The file is downloaded from
+// the commit, so a ref that moves on doesn't change what the lock file installs.
 //
 // The fields are spelled out rather than combined into one string. A short form
 // would need a rule to parse it, and writing the parts keeps the entry's meaning
@@ -182,6 +184,7 @@ type Registry struct {
 	RepoName          string `json:"repo_name,omitempty"`
 	Ref               string `json:"ref,omitempty"`
 	Path              string `json:"path,omitempty"`
+	Commit            string `json:"commit,omitempty"`
 	Checksum          string `json:"checksum,omitempty"`
 	ChecksumAlgorithm string `json:"checksum_algorithm,omitempty"`
 }

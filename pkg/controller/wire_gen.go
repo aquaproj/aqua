@@ -565,7 +565,7 @@ func InitializeLockUpdateCommandController(ctx context.Context, logger *slog.Log
 	getter := checksumgetter.New(checksumDownloaderImpl, downloader, installpackageInstaller)
 	cache := g2.NewCache(param)
 	g2Client := g2.NewDefault(gitHubContentFileDownloader, cache)
-	controller := lockupdate.New(configFinder, configReader, installer, getter, g2Client)
+	controller := lockupdate.New(configFinder, configReader, installer, v, getter, g2Client)
 	return controller, nil
 }
 

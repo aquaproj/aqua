@@ -27,20 +27,32 @@ const servedRegistry = `packages:
   asset: "ci-info_{{.Arch}}-{{.OS}}.tar.gz"
 `
 
-// servingDownloader serves the registry file, and counts how often it was asked. With
-// offline, it fails instead, to show a registry was read from disk.
+var commit1 = strings.Repeat("1", 40) //nolint:gochecknoglobals
+
+// servingDownloader serves the registry file at the commits it knows, and remembers the
+// refs it was asked for. With offline, it fails instead, to show a registry was read from
+// disk.
 type servingDownloader struct {
-	content string
-	offline bool
-	calls   int
+	contents map[string]string
+	offline  bool
+	refs     []string
 }
 
-func (d *servingDownloader) DownloadGitHubContentFile(_ context.Context, _ *slog.Logger, _ *domain.GitHubContentFileParam) (*domain.GitHubContentFile, error) {
-	d.calls++
+// serving serves servedRegistry at commit1.
+func serving() *servingDownloader {
+	return &servingDownloader{contents: map[string]string{commit1: servedRegistry}}
+}
+
+func (d *servingDownloader) DownloadGitHubContentFile(_ context.Context, _ *slog.Logger, param *domain.GitHubContentFileParam) (*domain.GitHubContentFile, error) {
+	d.refs = append(d.refs, param.Ref)
 	if d.offline {
 		return nil, errors.New("offline")
 	}
-	return &domain.GitHubContentFile{String: d.content}, nil
+	content, ok := d.contents[param.Ref]
+	if !ok {
+		return nil, errors.New("not found")
+	}
+	return &domain.GitHubContentFile{String: content}, nil
 }
 
 func newInstaller(rootDir string, d *servingDownloader) *registry.Installer {
@@ -60,9 +72,9 @@ func sha256Of(t *testing.T, content string) string {
 	return strings.ToLower(sum)
 }
 
-func lockedPath(t *testing.T, rootDir string, rgst *aqua.Registry, sum string) string {
+func commitPath(t *testing.T, rootDir string, rgst *aqua.Registry, commit string) string {
 	t.Helper()
-	p, err := rgst.LockedFilePath(rootDir, "sha256", sum)
+	p, err := rgst.CommitFilePath(rootDir, commit)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -74,9 +86,9 @@ func recorded(rgst *aqua.Registry, sum string) *checksum.Checksum {
 	return &checksum.Checksum{ID: id, Checksum: sum, Algorithm: "sha256"}
 }
 
-// DownloadRegistry downloads the registry even when a file is installed at the ref's path,
-// records its checksum, and keeps it under that checksum, with the JSON made from it. The
-// file at the ref's path is left alone: it may be what another lock file recorded.
+// DownloadRegistry downloads the registry from the commit even when a file is installed at
+// the ref's path, records its checksum, and keeps it under the commit, with the JSON made
+// from it. The file at the ref's path is left alone.
 func TestInstaller_DownloadRegistry(t *testing.T) {
 	t.Parallel()
 	rootDir := t.TempDir()
@@ -91,18 +103,20 @@ func TestInstaller_DownloadRegistry(t *testing.T) {
 	}
 	writeStale(t, old)
 
-	d := &servingDownloader{content: servedRegistry}
+	d := serving()
 	chks := checksum.New()
-	got, err := newInstaller(rootDir, d).DownloadRegistry(t.Context(), slog.New(slog.DiscardHandler), rgst, cfgFilePath, chks)
+	got, err := newInstaller(rootDir, d).DownloadRegistry(t.Context(), slog.New(slog.DiscardHandler), rgst, commit1, chks)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(got.PackageInfos) != 1 || got.PackageInfos[0].RepoName != "ci-info" {
 		t.Errorf("got %+v, want the served registry", got.PackageInfos)
 	}
-	sum := sha256Of(t, servedRegistry)
-	checkRecorded(t, chks, rgst, sum)
-	p := lockedPath(t, rootDir, rgst, sum)
+	if len(d.refs) != 1 || d.refs[0] != commit1 {
+		t.Errorf("downloaded at %v, want the commit", d.refs)
+	}
+	checkRecorded(t, chks, rgst, sha256Of(t, servedRegistry))
+	p := commitPath(t, rootDir, rgst, commit1)
 	assertContent(t, p, servedRegistry)
 	if _, err := os.Stat(p + ".json"); err != nil {
 		t.Errorf("the JSON made from the registry must be kept beside it: %v", err)
@@ -110,8 +124,7 @@ func TestInstaller_DownloadRegistry(t *testing.T) {
 	assertContent(t, old, "edited\n")
 	assertNoTemporaryFiles(t, rootDir)
 	assertRegistryFilesArePrivate(t, filepath.Join(rootDir, "registries"))
-
-	assertReadsOffline(t, rootDir, rgst, sum)
+	assertReadsOffline(t, rootDir, rgst, sha256Of(t, servedRegistry))
 }
 
 // assertReadsOffline checks InstallLockedRegistry reads the kept registry without
@@ -119,7 +132,7 @@ func TestInstaller_DownloadRegistry(t *testing.T) {
 func assertReadsOffline(t *testing.T, rootDir string, rgst *aqua.Registry, sum string) {
 	t.Helper()
 	offline := &servingDownloader{offline: true}
-	installed, err := newInstaller(rootDir, offline).InstallLockedRegistry(t.Context(), slog.New(slog.DiscardHandler), rgst, recorded(rgst, sum))
+	installed, err := newInstaller(rootDir, offline).InstallLockedRegistry(t.Context(), slog.New(slog.DiscardHandler), rgst, commit1, recorded(rgst, sum))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -134,9 +147,8 @@ func TestInstaller_DownloadRegistry_checksumMismatch(t *testing.T) {
 	rootDir := t.TempDir()
 	rgst := corpRegistry()
 	chks := checksum.New()
-	other := sha256Of(t, "packages: []\n")
-	chks.Set(checksum.RegistryID(rgst), recorded(rgst, other))
-	if _, err := newInstaller(rootDir, &servingDownloader{content: servedRegistry}).DownloadRegistry(t.Context(), slog.New(slog.DiscardHandler), rgst, "aqua.yaml", chks); err == nil {
+	chks.Set(checksum.RegistryID(rgst), recorded(rgst, sha256Of(t, "packages: []\n")))
+	if _, err := newInstaller(rootDir, serving()).DownloadRegistry(t.Context(), slog.New(slog.DiscardHandler), rgst, commit1, chks); err == nil {
 		t.Fatal("an error must be returned")
 	}
 	if _, err := os.Stat(filepath.Join(rootDir, "registries")); !os.IsNotExist(err) {
@@ -144,13 +156,13 @@ func TestInstaller_DownloadRegistry_checksumMismatch(t *testing.T) {
 	}
 }
 
-// A file already kept under the checksum isn't written again: its content is fixed by the
-// checksum, and on Windows a file another aqua is reading can't be replaced.
+// A file already kept under the commit isn't written again: its content is fixed by the
+// commit, and on Windows a file another aqua is reading can't be replaced.
 func TestInstaller_DownloadRegistry_alreadyKept(t *testing.T) {
 	t.Parallel()
 	rootDir := t.TempDir()
 	rgst := corpRegistry()
-	p := lockedPath(t, rootDir, rgst, sha256Of(t, servedRegistry))
+	p := commitPath(t, rootDir, rgst, commit1)
 	if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -158,24 +170,25 @@ func TestInstaller_DownloadRegistry_alreadyKept(t *testing.T) {
 	if err := os.WriteFile(p+".json", []byte(kept), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := newInstaller(rootDir, &servingDownloader{content: servedRegistry}).DownloadRegistry(t.Context(), slog.New(slog.DiscardHandler), rgst, "aqua.yaml", checksum.New()); err != nil {
+	if _, err := newInstaller(rootDir, serving()).DownloadRegistry(t.Context(), slog.New(slog.DiscardHandler), rgst, commit1, checksum.New()); err != nil {
 		t.Fatal(err)
 	}
 	assertContent(t, p+".json", kept)
 	assertContent(t, p, servedRegistry)
 }
 
-// InstallLockedRegistry downloads a registry not kept yet, checks it against the recorded
-// checksum, and keeps it under that checksum. The next call reads it from disk.
+// InstallLockedRegistry downloads a registry not kept yet from the recorded commit, checks
+// it against the recorded checksum, and keeps it under the commit. The next call reads it
+// from disk.
 func TestInstaller_InstallLockedRegistry(t *testing.T) {
 	t.Parallel()
 	rootDir := t.TempDir()
 	rgst := corpRegistry()
 	sum := sha256Of(t, servedRegistry)
-	d := &servingDownloader{content: servedRegistry}
+	d := serving()
 	inst := newInstaller(rootDir, d)
 	for range 2 {
-		got, err := inst.InstallLockedRegistry(t.Context(), slog.New(slog.DiscardHandler), rgst, recorded(rgst, strings.ToUpper(sum)))
+		got, err := inst.InstallLockedRegistry(t.Context(), slog.New(slog.DiscardHandler), rgst, strings.ToUpper(commit1), recorded(rgst, strings.ToUpper(sum)))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -183,20 +196,19 @@ func TestInstaller_InstallLockedRegistry(t *testing.T) {
 			t.Errorf("got %+v, want the served registry", got.PackageInfos)
 		}
 	}
-	if d.calls != 1 {
-		t.Errorf("downloaded %d times, want once", d.calls)
+	if len(d.refs) != 1 || !strings.EqualFold(d.refs[0], commit1) {
+		t.Errorf("downloaded at %v, want once at the commit", d.refs)
 	}
-	assertContent(t, lockedPath(t, rootDir, rgst, sum), servedRegistry)
+	assertContent(t, commitPath(t, rootDir, rgst, commit1), servedRegistry)
 	assertNoTemporaryFiles(t, rootDir)
 }
 
-// What the ref serves now doesn't match the recorded checksum: it is refused and not kept.
+// What the commit holds doesn't match the recorded checksum: it is refused and not kept.
 func TestInstaller_InstallLockedRegistry_checksumMismatch(t *testing.T) {
 	t.Parallel()
 	rootDir := t.TempDir()
 	rgst := corpRegistry()
-	other := sha256Of(t, "packages: []\n")
-	if _, err := newInstaller(rootDir, &servingDownloader{content: servedRegistry}).InstallLockedRegistry(t.Context(), slog.New(slog.DiscardHandler), rgst, recorded(rgst, other)); err == nil {
+	if _, err := newInstaller(rootDir, serving()).InstallLockedRegistry(t.Context(), slog.New(slog.DiscardHandler), rgst, commit1, recorded(rgst, sha256Of(t, "packages: []\n"))); err == nil {
 		t.Fatal("an error must be returned")
 	}
 	if _, err := os.Stat(filepath.Join(rootDir, "registries")); !os.IsNotExist(err) {
@@ -204,16 +216,16 @@ func TestInstaller_InstallLockedRegistry_checksumMismatch(t *testing.T) {
 	}
 }
 
-// A checksum that isn't a hex digest never becomes part of a path.
-func TestInstaller_InstallLockedRegistry_invalidChecksum(t *testing.T) {
+// A commit that isn't a commit SHA never becomes part of a path, nor is downloaded.
+func TestInstaller_InstallLockedRegistry_invalidCommit(t *testing.T) {
 	t.Parallel()
 	rootDir := t.TempDir()
 	rgst := corpRegistry()
-	d := &servingDownloader{content: servedRegistry}
-	if _, err := newInstaller(rootDir, d).InstallLockedRegistry(t.Context(), slog.New(slog.DiscardHandler), rgst, recorded(rgst, "../../../../github_content")); err == nil {
+	d := serving()
+	if _, err := newInstaller(rootDir, d).InstallLockedRegistry(t.Context(), slog.New(slog.DiscardHandler), rgst, "../../../../github_content", recorded(rgst, sha256Of(t, servedRegistry))); err == nil {
 		t.Fatal("an error must be returned")
 	}
-	if d.calls != 0 {
+	if len(d.refs) != 0 {
 		t.Error("nothing must be downloaded")
 	}
 }
