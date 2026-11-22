@@ -124,7 +124,7 @@ func excludeAsset(logger *slog.Logger, tag, asset string, cfg *Config) bool {
 }
 
 func (c *Controller) getPackageInfoWithVersionOverrides(ctx context.Context, logger *slog.Logger, pkgName string, pkgInfo *registry.PackageInfo, limit int, cfg *Config) []string {
-	return c.versionOverrides(logger, pkgName, pkgInfo, c.gitHubReleases(ctx, logger, pkgInfo, limit, cfg), cfg)
+	return c.versionOverrides(logger, pkgName, pkgInfo, c.gitHubReleases(ctx, logger, pkgInfo, limit, cfg), cfg) //nolint:contextcheck // the asset names are read with archives.Identify, which reads no stream without one
 }
 
 // gitHubReleases are the releases of a GitHub repository, with what each publishes.

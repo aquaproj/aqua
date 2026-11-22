@@ -1,7 +1,10 @@
 package asset
 
 import (
+	"context"
 	"strings"
+
+	"github.com/mholt/archives"
 )
 
 const (
@@ -49,7 +52,35 @@ func RemoveExtFromAsset(assetName string) (string, string) {
 			return s, format
 		}
 	}
+	if format := archiveFormat(assetName); format != "" {
+		return strings.TrimSuffix(assetName, "."+format), format
+	}
 	return assetName, formatRaw
+}
+
+// archiveFormat returns the format the unarchiver opens an asset as, read off its name, or
+// an empty string when it opens none.
+//
+// The list above is how a name is read first: it has the short forms such as tgz, and dmg
+// and pkg, which mholt/archives doesn't, and it decides what AssetWithoutExt drops. The
+// unarchiver is mholt/archives, though, so a format it opens is one aqua can install, and
+// asking it keeps the formats it adds, such as 7z, from being taken for raw files.
+//
+// Identify matches a name that merely contains an extension: foo.tar.gz.sha256 is a
+// .tar.gz to it. Only a name that ends in the format's extension is the format here.
+//
+// Identify is given no stream, so it reads the name and nothing else, and the context it
+// takes has nothing to cancel.
+func archiveFormat(assetName string) string {
+	format, _, err := archives.Identify(context.Background(), assetName, nil)
+	if err != nil {
+		return ""
+	}
+	ext := format.Extension()
+	if ext == "" || !strings.HasSuffix(assetName, ext) {
+		return ""
+	}
+	return strings.TrimPrefix(ext, ".")
 }
 
 // getFormat extracts the file format from an asset name.

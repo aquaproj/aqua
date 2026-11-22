@@ -71,7 +71,7 @@ func (c *Controller) getGitLabPackageInfo(ctx context.Context, logger *slog.Logg
 // definition with version_overrides, the same as for a GitHub repository.
 func (c *Controller) gitLabVersions(ctx context.Context, logger *slog.Logger, pkgInfo *registry.PackageInfo, pkgName, project, version string, limit int, cfg *Config) []string {
 	if limit != 1 && version == "" {
-		return c.versionOverrides(logger, pkgName, pkgInfo,
+		return c.versionOverrides(logger, pkgName, pkgInfo, //nolint:contextcheck // the asset names are read with archives.Identify, which reads no stream without one
 			c.gitLabReleases(ctx, logger, project, limit, cfg), cfg)
 	}
 
@@ -91,7 +91,7 @@ func (c *Controller) gitLabVersions(ctx context.Context, logger *slog.Logger, pk
 	}
 	logger.Debug("got assets", "num_of_assets", len(assetNames))
 
-	c.patchRelease(logger, cfg, pkgInfo, pkgName, release.TagName, assetNames)
+	c.patchRelease(logger, cfg, pkgInfo, pkgName, release.TagName, assetNames) //nolint:contextcheck // the asset names are read with archives.Identify, which reads no stream without one
 	return []string{release.TagName}
 }
 
