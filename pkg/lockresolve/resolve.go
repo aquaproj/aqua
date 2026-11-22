@@ -41,8 +41,9 @@ var (
 	// ErrRegistryMismatch is an entry resolved from another registry than the one
 	// aqua.yaml now says the package comes from.
 	ErrRegistryMismatch = errors.New(`the lock file entry was resolved from another registry than aqua.yaml declares. Please run "aqua lock update --force"`)
-	// ErrRegistryNotInLockFile is a registry file the lock file has no checksum of.
-	ErrRegistryNotInLockFile = errors.New(`the lock file has no checksum of the registry. Please run "aqua lock update"`)
+	// ErrRegistryNotInLockFile is a registry file the lock file has no commit and checksum
+	// of, which a lock file written before the commit was recorded lacks too.
+	ErrRegistryNotInLockFile = errors.New(`the lock file has no commit or checksum of the registry. Please run "aqua lock update"`)
 	// ErrWeakRegistryChecksum is a registry checksum of an algorithm that isn't
 	// collision resistant.
 	ErrWeakRegistryChecksum = errors.New(`the checksum of the registry in the lock file must be sha256 or sha512. Please run "aqua lock update --force"`)
