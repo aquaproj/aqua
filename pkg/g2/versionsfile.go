@@ -1,9 +1,12 @@
 package g2
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"slices"
 	"strings"
 )
@@ -106,4 +109,22 @@ func (v *Versions) Sort() {
 		}
 		return strings.Compare(a.Version, b.Version)
 	})
+}
+
+// ReadVersionsFile reads the versions.json of a package.
+//
+// A package the registry doesn't hold fails with ErrNoPackageBranch, as it does for
+// every other read. Any other failure, the file not being there among them, is just
+// a failure: the download can't tell a missing file from one it couldn't fetch, so the
+// caller reads the versions directory, which can.
+func (c *Client) ReadVersionsFile(ctx context.Context, logger *slog.Logger, pkgName string) (*Versions, error) {
+	dir, err := c.DirOf(ctx, logger, pkgName)
+	if err != nil {
+		return nil, err
+	}
+	b, err := c.downloadFromDefaultBranch(ctx, logger, dir+"/"+VersionsFileName)
+	if err != nil {
+		return nil, err
+	}
+	return ReadVersions(bytes.NewReader(b))
 }

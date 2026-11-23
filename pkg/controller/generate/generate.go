@@ -15,6 +15,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate/output"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/aquaproj/aqua/v2/pkg/osfile"
+	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
@@ -234,7 +235,8 @@ func (c *Controller) getOutputtedPkg(ctx context.Context, logger *slog.Logger, p
 		outputPkg.Package.Registry = ""
 	}
 	if outputPkg.Package.Version == "" {
-		version := c.fuzzyGetter.Get(ctx, logger, pkg.RegistryName, pkg.PackageInfo, "", param.SelectVersion, param.Limit)
+		// Only versiongetter.SourceG2 returns an error, and it isn't used here.
+		version, _ := c.fuzzyGetter.Get(ctx, logger, versiongetter.SourceOf(pkg.RegistryName), pkg.PackageInfo, "", param.SelectVersion, param.Limit)
 		if version == "" {
 			outputPkg.Package.Version = "[SET PACKAGE VERSION]"
 			return outputPkg

@@ -11,6 +11,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/controller/generate/output"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
+	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
 )
 
 type Controller struct {
@@ -29,7 +30,7 @@ type ConfigReader interface {
 }
 
 type FuzzyGetter interface {
-	Get(ctx context.Context, logger *slog.Logger, registryName string, pkg *registry.PackageInfo, currentVersion string, useFinder bool, limit int) string
+	Get(ctx context.Context, logger *slog.Logger, source versiongetter.Source, pkg *registry.PackageInfo, currentVersion string, useFinder bool, limit int) (string, error)
 }
 
 type FuzzyFinder interface {

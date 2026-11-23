@@ -244,6 +244,7 @@ func InitializeGenerateCommandController(ctx context.Context, logger *slog.Logge
 		wire.NewSet(
 			g2.NewDefault,
 			wire.Bind(new(g2.Dirs), new(*g2.Client)),
+			wire.Bind(new(versiongetter.VersionsFileReader), new(*g2.Client)),
 		),
 		g2.NewCache,
 		versiongetter.NewCargo,
@@ -1054,6 +1055,7 @@ func InitializeUpdateCommandController(ctx context.Context, logger *slog.Logger,
 		wire.NewSet(
 			g2.NewDefault,
 			wire.Bind(new(g2.Dirs), new(*g2.Client)),
+			wire.Bind(new(versiongetter.VersionsFileReader), new(*g2.Client)),
 			wire.Bind(new(lockresolve.G2), new(*g2.Client)),
 		),
 		g2.NewCache,

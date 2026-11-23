@@ -1,6 +1,7 @@
 package g2_test
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
@@ -56,5 +57,43 @@ func TestVersions_nil(t *testing.T) {
 	versions.Sort()
 	if got := versions.Tags(); got != nil {
 		t.Errorf("the tags are %v", got)
+	}
+}
+
+// The list is read from the package's directory on the default branch, the name resolved
+// through the table.
+func TestClient_ReadVersionsFile(t *testing.T) {
+	t.Parallel()
+	dl := opencode()
+	dl.files[g2.DefaultBranch+":"+g2.PackageDir(opencodeID)+"/"+g2.VersionsFileName] = `{"versions":[
+		{"version":"v1.1.0","prerelease":true},{"version":"v1.0.0"}]}`
+	versions, err := g2.New(dl, nil, "", "").ReadVersionsFile(t.Context(), discardLogger(), "sst/opencode")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff([]*g2.Version{{Version: "v1.1.0", Prerelease: true}, {Version: "v1.0.0"}}, versions.Versions); diff != "" {
+		t.Error(diff)
+	}
+}
+
+// A package the registry doesn't hold is told apart from a file that couldn't be read.
+func TestClient_ReadVersionsFile_notHeld(t *testing.T) {
+	t.Parallel()
+	c := g2.New(opencode(), nil, "", "")
+	if _, err := c.ReadVersionsFile(t.Context(), discardLogger(), "cli/cli"); !errors.Is(err, g2.ErrNoPackageBranch) {
+		t.Errorf("got %v, want the registry not holding the package", err)
+	}
+	if _, err := c.ReadVersionsFile(t.Context(), discardLogger(), "sst/opencode"); err == nil || errors.Is(err, g2.ErrNoPackageBranch) {
+		t.Errorf("got %v, want a failure to read the file", err)
+	}
+}
+
+// A table that can't be read says nothing about whether the registry holds the package,
+// so it isn't taken for the registry not holding it.
+func TestClient_DirOf_tableUnreadable(t *testing.T) {
+	t.Parallel()
+	_, err := g2.New(&refDownloader{}, nil, "", "").DirOf(t.Context(), discardLogger(), "cli/cli")
+	if err == nil || errors.Is(err, g2.ErrNoPackageBranch) {
+		t.Errorf("got %v, want a failure to read the table", err)
 	}
 }

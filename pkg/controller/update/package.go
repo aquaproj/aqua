@@ -12,6 +12,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/controller/update/ast"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
+	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
 	"github.com/goccy/go-yaml/parser"
 )
 
@@ -80,19 +81,16 @@ func (c *Controller) updatePackagesInFile(ctx context.Context, logger *slog.Logg
 	return nil
 }
 
+// getPackageNewVersion finds the new version of a package of a project without a lock
+// file. The name of the registry decides where the versions are chosen from, and a
+// failure leaves the package as it is, as it always has.
 func (c *Controller) getPackageNewVersion(ctx context.Context, logger *slog.Logger, param *config.Param, updatedPkgs map[string]struct{}, pkg *config.Package) string {
-	if len(updatedPkgs) != 0 {
-		var item string
-		if pkg.Package.Registry != "standard" {
-			item = fmt.Sprintf("%s,%s@%s", pkg.Package.Registry, pkg.Package.Name, pkg.Package.Version)
-		} else {
-			item = fmt.Sprintf("%s@%s", pkg.Package.Name, pkg.Package.Version)
-		}
-		if _, ok := updatedPkgs[item]; !ok {
-			return ""
-		}
+	if !isSelected(updatedPkgs, pkg.Package) {
+		return ""
 	}
-	return c.fuzzyGetter.Get(ctx, logger, pkg.Package.Registry, pkg.PackageInfo, pkg.Package.Version, param.SelectVersion, param.Limit)
+	// Only versiongetter.SourceG2 returns an error, and it isn't used here.
+	version, _ := c.fuzzyGetter.Get(ctx, logger, versiongetter.SourceOf(pkg.Package.Registry), pkg.PackageInfo, pkg.Package.Version, param.SelectVersion, param.Limit)
+	return version
 }
 
 func (c *Controller) selectPackages(logger *slog.Logger, cfgFilePath string) (map[string]struct{}, error) {
@@ -110,14 +108,8 @@ func (c *Controller) selectPackages(logger *slog.Logger, cfgFilePath string) (ma
 				"package_version", pkg.Version)
 			continue
 		}
-		var item string
-		if pkg.Registry != "standard" {
-			item = fmt.Sprintf("%s,%s@%s", pkg.Registry, pkg.Name, pkg.Version)
-		} else {
-			item = fmt.Sprintf("%s@%s", pkg.Name, pkg.Version)
-		}
 		items = append(items, &fuzzyfinder.Item{
-			Item: item,
+			Item: selectionItem(pkg),
 		})
 	}
 	idxs, err := c.fuzzyFinder.FindMulti(items, false)

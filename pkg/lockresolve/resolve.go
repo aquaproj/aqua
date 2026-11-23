@@ -115,6 +115,10 @@ type Registries struct {
 	lf          *lockfile.LockFile
 	record      bool
 	force       func(key *lockfile.Registry) bool
+	// readRef makes a github_content registry the lock file has no record of read at its
+	// ref, checked against refChecksums, rather than fail. The update command does that.
+	readRef      bool
+	refChecksums *checksum.Checksums
 	// mu guards pending and installs.
 	mu sync.Mutex
 	// pending holds the checksums recorded this run, by registry name, until Commit
@@ -159,6 +163,24 @@ func NewRecordingRegistries(downloader RegistryDownloader, resolver CommitResolv
 	r.record = true
 	r.force = force
 	r.pending = map[string]*lockfile.Registry{}
+	return r
+}
+
+// NewUpdateRegistries creates Registries for the update command: a github_content registry
+// the lock file has a record of is read at the recorded commit and checked against the
+// recorded checksum, as install does, and one it has none of is read at its ref, as it was
+// before there were lock files, and checked against checksums, aqua-checksums.json when
+// it is enabled.
+//
+// A registry with no record is what a project has after adding a registry and before the
+// next lock update, and after "aqua update" moved the registry's ref. All the update
+// command needs from it is how the versions of a package are found, and failing because
+// the lock file is behind would only make "aqua update" depend on "aqua lock update" for
+// no gain: nothing is installed from what is read.
+func NewUpdateRegistries(installer RegistryInstaller, cfg *aqua.Config, cfgFilePath string, lf *lockfile.LockFile, checksums *checksum.Checksums) *Registries {
+	r := NewRegistries(installer, cfg, cfgFilePath, lf)
+	r.readRef = true
+	r.refChecksums = checksums
 	return r
 }
 
@@ -260,16 +282,7 @@ func (r *Registries) install(ctx context.Context, logger *slog.Logger, rgst *aqu
 		chks.Set(id, &checksum.Checksum{ID: id, Checksum: recorded.Checksum, Algorithm: recorded.ChecksumAlgorithm})
 	}
 	if !r.record {
-		// Install and exec read the registry at the recorded commit. The ref may have
-		// moved on, and the file named by it is shared with every configuration.
-		content, err := r.installer.InstallLockedRegistry(ctx, logger, rgst, recorded.Commit, chks.Get(id))
-		if err != nil {
-			// The commit may have become unavailable, the repository deleted for one.
-			// The hint is an attribute: slogerr keeps attributes, not the messages of
-			// errors wrapped around one of its own.
-			return nil, slogerr.With(err, "registry_commit", recorded.Commit, "hint", commitUnavailableHint) //nolint:wrapcheck
-		}
-		return content, nil
+		return r.read(ctx, logger, rgst, recorded, chks.Get(id))
 	}
 	commit, err := r.commit(ctx, rgst, recorded)
 	if err != nil {
@@ -290,6 +303,24 @@ func (r *Registries) install(ctx context.Context, logger *slog.Logger, rgst *aqu
 		r.mu.Lock()
 		r.pending[rgst.Name] = key
 		r.mu.Unlock()
+	}
+	return content, nil
+}
+
+// read reads a registry for install, exec and the update command, which record nothing.
+func (r *Registries) read(ctx context.Context, logger *slog.Logger, rgst *aqua.Registry, recorded *lockfile.Registry, chk *checksum.Checksum) (*registry.Config, error) {
+	if recorded == nil {
+		// Only the update command gets here: recorded fails for anyone else.
+		return r.installer.InstallRegistry(ctx, logger, rgst, r.cfgFilePath, r.refChecksums) //nolint:wrapcheck
+	}
+	// Install and exec read the registry at the recorded commit. The ref may have
+	// moved on, and the file named by it is shared with every configuration.
+	content, err := r.installer.InstallLockedRegistry(ctx, logger, rgst, recorded.Commit, chk)
+	if err != nil {
+		// The commit may have become unavailable, the repository deleted for one.
+		// The hint is an attribute: slogerr keeps attributes, not the messages of
+		// errors wrapped around one of its own.
+		return nil, slogerr.With(err, "registry_commit", recorded.Commit, "hint", commitUnavailableHint) //nolint:wrapcheck
 	}
 	return content, nil
 }
@@ -322,7 +353,7 @@ func (r *Registries) recorded(key *lockfile.Registry) (*lockfile.Registry, error
 		return nil, nil //nolint:nilnil
 	}
 	if recorded == nil {
-		if r.record {
+		if r.record || r.readRef {
 			return nil, nil //nolint:nilnil
 		}
 		return nil, ErrRegistryNotInLockFile

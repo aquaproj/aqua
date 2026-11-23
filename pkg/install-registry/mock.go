@@ -17,3 +17,11 @@ type MockInstaller struct {
 func (m *MockInstaller) InstallRegistries(ctx context.Context, logger *slog.Logger, cfg *aqua.Config, cfgFilePath string, checksums *checksum.Checksums) (map[string]*registry.Config, error) {
 	return m.M, m.Err
 }
+
+func (m *MockInstaller) InstallRegistry(ctx context.Context, logger *slog.Logger, regist *aqua.Registry, cfgFilePath string, checksums *checksum.Checksums) (*registry.Config, error) {
+	return m.M[regist.Name], m.Err
+}
+
+func (m *MockInstaller) InstallLockedRegistry(ctx context.Context, logger *slog.Logger, regist *aqua.Registry, commit string, chk *checksum.Checksum) (*registry.Config, error) {
+	return m.M[regist.Name], m.Err
+}

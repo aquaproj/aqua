@@ -11,7 +11,9 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller/which"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
 	"github.com/aquaproj/aqua/v2/pkg/github"
+	"github.com/aquaproj/aqua/v2/pkg/lockresolve"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
+	"github.com/aquaproj/aqua/v2/pkg/versiongetter"
 )
 
 type Controller struct {
@@ -41,7 +43,7 @@ type ConfigReader interface {
 }
 
 type FuzzyGetter interface {
-	Get(ctx context.Context, logger *slog.Logger, registryName string, pkg *registry.PackageInfo, currentVersion string, useFinder bool, limit int) string
+	Get(ctx context.Context, logger *slog.Logger, source versiongetter.Source, pkg *registry.PackageInfo, currentVersion string, useFinder bool, limit int) (string, error)
 }
 
 type RepositoriesService interface {
@@ -68,6 +70,10 @@ type ConfigFinder interface {
 	Find(wd, configFilePath string, globalConfigFilePaths ...string) (string, error)
 }
 
+// RegistryInstaller installs the registries. A project without a lock file reads every
+// registry at once; one with a lock file reads the registry of each package to update, as
+// install does.
 type RegistryInstaller interface {
+	lockresolve.RegistryInstaller
 	InstallRegistries(ctx context.Context, logger *slog.Logger, cfg *aqua.Config, cfgFilePath string, checksums *checksum.Checksums) (map[string]*registry.Config, error)
 }

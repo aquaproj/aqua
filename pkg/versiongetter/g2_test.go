@@ -57,7 +57,7 @@ func (f *fakeBranches) DirOf(_ context.Context, _ *slog.Logger, pkgName string) 
 
 func newG2(versions ...string) *versiongetter.G2VersionGetter {
 	return versiongetter.NewG2(g2.NewVersionLister(
-		&fakeTreeGetter{versions: versions}, &fakeBranches{}, "", ""))
+		&fakeTreeGetter{versions: versions}, &fakeBranches{}, "", ""), nil)
 }
 
 // newG2NotFound builds a getter for a package aqua-registry-g2 has no branch for.
@@ -66,7 +66,7 @@ func newG2(versions ...string) *versiongetter.G2VersionGetter {
 // now: there is no branch to ask about.
 func newG2NotFound() *versiongetter.G2VersionGetter {
 	return versiongetter.NewG2(g2.NewVersionLister(
-		&fakeTreeGetter{notFound: true}, &fakeBranches{notHeld: true}, "", ""))
+		&fakeTreeGetter{notFound: true}, &fakeBranches{notHeld: true}, "", ""), nil)
 }
 
 func items(versions ...string) []*fuzzyfinder.Item {
