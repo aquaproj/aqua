@@ -63,7 +63,7 @@ packages:
 The default preset updates GitHub Actions [aquaproj/aqua-installer](https://github.com/aquaproj/aqua-installer)'s `aqua_version` in `.github` too.
 
 ```yaml
-- uses: aquaproj/aqua-installer@611554c6f0137ba41c8dd15aca8bee82504ea461 # v4.1.1
+- uses: aquaproj/aqua-installer@b8be739961814ee66b9e0d505f4d5de0d2eff047 # v4.1.2
   with:
     aqua_version: v2.48.3
 ```
