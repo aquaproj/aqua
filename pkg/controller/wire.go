@@ -1221,6 +1221,7 @@ func InitializeVacuumCommandController(ctx context.Context, param *config.Param,
 
 func InitializeVacuumInitCommandController(ctx context.Context, logger *slog.Logger, param *config.Param, rt *runtime.Runtime, httpClient *http.Client) (*initialize.Controller, error) {
 	wire.Build(
+		g2LockSet,
 		initialize.New,
 		wire.NewSet(
 			vacuum.New,

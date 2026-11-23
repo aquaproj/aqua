@@ -519,7 +519,9 @@ func InitializeVacuumInitCommandController(ctx context.Context, logger *slog.Log
 	executorImpl := slsa.NewExecutor(executor, param)
 	slsaVerifier := slsa.New(downloader, executorImpl)
 	installer := registry.New(param, gitHubContentFileDownloader, rt, verifier, slsaVerifier)
-	controller := initialize.New(param, rt, client, configFinder, configReader, installer)
+	cache := g2.NewCache(param)
+	g2Client := g2.NewDefault(gitHubContentFileDownloader, cache)
+	controller := initialize.New(param, rt, client, configFinder, configReader, installer, g2Client)
 	return controller, nil
 }
 
