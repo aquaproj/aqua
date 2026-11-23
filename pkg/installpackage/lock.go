@@ -11,6 +11,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/lockfile"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
+	"golang.org/x/sync/errgroup"
 )
 
 // Target is a package to install, together with the checksum its download must match
@@ -141,39 +142,64 @@ func CommandsPackageInfo(name string, entry *lockfile.Entry) *registry.PackageIn
 // It runs before links are created, including for "aqua install -l": a link is created for
 // every command of a package, and the commands are the lock file's until they have been
 // compared with the registry's definition. A lock file listing a command such as git for a
-// package that doesn't have it would otherwise shadow the system's git. The targets are
-// read one at a time, since the registries are installed on first use.
+// package that doesn't have it would otherwise shadow the system's git.
+//
+// The targets are read in parallel, as many at a time as installing them, since reading
+// one is mostly a download. The targets come back in the order they were given, and a
+// failure is logged once they have all been read, in that order too.
 //
 // A locked target the tags or the names leave out is dropped without reading its
 // registry, and gets no links either. Reading it would let a registry the run doesn't
 // need, such as a private one the machine can't reach, fail the run.
 func (is *Installer) resolveLockedTargets(ctx context.Context, logger *slog.Logger, targets []*Target, param *ParamInstallPackages) ([]*Target, bool) {
-	failed := false
-	resolved := make([]*Target, 0, len(targets))
+	// Filtered first, one at a time: the names a target matches are recorded in
+	// param.FoundNames. They are recorded here because a target whose registry can't
+	// be read is dropped below, and would otherwise be reported as not found too.
+	kept := make([]*Target, 0, len(targets))
 	for _, t := range targets {
+		if t.Entry != nil && (!aqua.FilterPackageByTag(t.Pkg.Package, param.Tags, param.ExcludedTags) || !filterPackageByNames(t.Pkg, param.Names, param.FoundNames)) {
+			continue
+		}
+		kept = append(kept, t)
+	}
+
+	resolved := make([]*Target, len(kept))
+	errs := make([]error, len(kept))
+	eg := &errgroup.Group{}
+	eg.SetLimit(is.maxParallelism)
+	for i, t := range kept {
 		if t.Entry == nil {
-			resolved = append(resolved, t)
+			resolved[i] = t
 			continue
 		}
-		// The names a target matches are recorded here: one whose registry can't be
-		// read is dropped below, and would otherwise be reported as not found too.
-		if !aqua.FilterPackageByTag(t.Pkg.Package, param.Tags, param.ExcludedTags) || !filterPackageByNames(t.Pkg, param.Names, param.FoundNames) {
-			continue
-		}
-		logger := logger.With(
-			"package_name", t.Pkg.Package.Name,
-			"package_version", t.Pkg.Package.Version,
-			"registry", t.Pkg.Package.Registry,
-		)
-		r, err := resolveLocked(ctx, logger, param.LockSource, t, is.runtime)
-		if err != nil {
-			slogerr.WithError(logger, err).Error("read the package from its registry")
+		eg.Go(func() error {
+			// A failure drops the target and the others go on, so nothing is
+			// returned to the group.
+			resolved[i], errs[i] = resolveLocked(ctx, targetLogger(logger, t), param.LockSource, t, is.runtime)
+			return nil
+		})
+	}
+	_ = eg.Wait()
+
+	failed := false
+	ret := make([]*Target, 0, len(kept))
+	for i, t := range kept {
+		if err := errs[i]; err != nil {
+			slogerr.WithError(targetLogger(logger, t), err).Error("read the package from its registry")
 			failed = true
 			continue
 		}
-		resolved = append(resolved, r)
+		ret = append(ret, resolved[i])
 	}
-	return resolved, failed
+	return ret, failed
+}
+
+func targetLogger(logger *slog.Logger, t *Target) *slog.Logger {
+	return logger.With(
+		"package_name", t.Pkg.Package.Name,
+		"package_version", t.Pkg.Package.Version,
+		"registry", t.Pkg.Package.Registry,
+	)
 }
 
 // resolveLocked reads the definition of a locked target from its registry, with the
