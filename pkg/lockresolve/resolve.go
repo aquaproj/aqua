@@ -16,6 +16,7 @@ import (
 	"log/slog"
 	"slices"
 	"strings"
+	"sync"
 
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
@@ -101,6 +102,10 @@ type CommitResolver interface {
 // The registry decides where a package is downloaded from, so a github_content registry
 // file is checked against the checksum the lock file recorded for it. Install and exec
 // require one; the lock update command records it.
+//
+// It is safe to use from more than one goroutine: install resolves its packages in
+// parallel. Each registry is installed once, and what came of it, failure included, is
+// what every package from it gets.
 type Registries struct {
 	installer   RegistryInstaller
 	downloader  RegistryDownloader
@@ -110,10 +115,20 @@ type Registries struct {
 	lf          *lockfile.LockFile
 	record      bool
 	force       func(key *lockfile.Registry) bool
+	// mu guards pending and installs.
+	mu sync.Mutex
 	// pending holds the checksums recorded this run, by registry name, until Commit
 	// writes them to the lock file.
-	pending  map[string]*lockfile.Registry
-	contents map[string]*registry.Config
+	pending map[string]*lockfile.Registry
+	// installs holds what installing each registry came to, by registry name.
+	installs map[string]*registryInstall
+}
+
+// registryInstall is the one installation of a registry, and what came of it.
+type registryInstall struct {
+	once    sync.Once
+	content *registry.Config
+	err     error
 }
 
 // NewRegistries creates Registries that check every github_content registry file against
@@ -124,7 +139,7 @@ func NewRegistries(installer RegistryInstaller, cfg *aqua.Config, cfgFilePath st
 		cfg:         cfg,
 		cfgFilePath: cfgFilePath,
 		lf:          lf,
-		contents:    map[string]*registry.Config{},
+		installs:    map[string]*registryInstall{},
 	}
 }
 
@@ -159,6 +174,8 @@ func (r *Registries) Config() *aqua.Config {
 // recorded for it would sit beside entries resolved from the file it replaced, and the
 // next run would see the registry recorded and leave those entries alone.
 func (r *Registries) Commit(ok func(key *lockfile.Registry) bool) bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	changed := false
 	for _, key := range r.pending {
 		if !ok(key) {
@@ -192,20 +209,37 @@ func LockFileRegistry(rgst *aqua.Registry) *lockfile.Registry {
 }
 
 // Get returns the content of the named registry, installing it the first time.
+//
+// A registry that failed to install isn't tried again: it fails the same way for every
+// package from it. A private registry the machine can't reach would otherwise be
+// requested once for each of its packages.
 func (r *Registries) Get(ctx context.Context, logger *slog.Logger, name string) (*registry.Config, error) {
-	if content, ok := r.contents[name]; ok {
-		return content, nil
-	}
 	rgst, ok := r.cfg.Registries[name]
 	if !ok || rgst == nil {
 		return nil, errRegistryNotFound
 	}
-	content, err := r.install(ctx, logger, rgst)
-	if err != nil {
-		return nil, fmt.Errorf("install the registry: %w", slogerr.With(err, "registry_name", name))
+	r.mu.Lock()
+	inst, ok := r.installs[name]
+	if !ok {
+		inst = &registryInstall{}
+		r.installs[name] = inst
 	}
-	r.contents[name] = content
-	return content, nil
+	r.mu.Unlock()
+	// Installed outside the lock, so that other registries install meanwhile. The
+	// installation records a checksum in pending, which takes the lock.
+	inst.once.Do(func() {
+		content, err := r.install(ctx, logger, rgst)
+		if err != nil {
+			inst.err = fmt.Errorf("install the registry: %w", slogerr.With(err, "registry_name", name))
+			return
+		}
+		// The index of the packages by name is built on first use, without a lock.
+		// Building it here, before anyone else sees the content, keeps the packages
+		// resolved in parallel from building it at once.
+		content.Packages(logger)
+		inst.content = content
+	})
+	return inst.content, inst.err
 }
 
 func (r *Registries) install(ctx context.Context, logger *slog.Logger, rgst *aqua.Registry) (*registry.Config, error) {
@@ -253,7 +287,9 @@ func (r *Registries) install(ctx context.Context, logger *slog.Logger, rgst *aqu
 		key.Commit = commit
 		key.Checksum = strings.ToLower(downloaded.Checksum)
 		key.ChecksumAlgorithm = downloaded.Algorithm
+		r.mu.Lock()
 		r.pending[rgst.Name] = key
+		r.mu.Unlock()
 	}
 	return content, nil
 }
