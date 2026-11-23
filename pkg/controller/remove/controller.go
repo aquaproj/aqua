@@ -10,6 +10,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/controller/which"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
+	"github.com/aquaproj/aqua/v2/pkg/lockresolve"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 )
 
@@ -23,6 +24,7 @@ type Controller struct {
 	which             WhichController
 	mode              *config.RemoveMode
 	vacuum            Vacuum
+	g2                lockresolve.G2
 }
 
 type WhichController interface {
@@ -37,7 +39,7 @@ type FuzzyFinder interface {
 	FindMulti(pkgs []*fuzzyfinder.Item, hasPreview bool) ([]int, error)
 }
 
-func New(param *config.Param, target *config.RemoveMode, rt *runtime.Runtime, configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, fuzzyFinder FuzzyFinder, whichController WhichController, vacuum Vacuum) *Controller {
+func New(param *config.Param, target *config.RemoveMode, rt *runtime.Runtime, configFinder ConfigFinder, configReader ConfigReader, registryInstaller RegistryInstaller, fuzzyFinder FuzzyFinder, whichController WhichController, vacuum Vacuum, g2 lockresolve.G2) *Controller {
 	return &Controller{
 		rootDir:           param.RootDir,
 		runtime:           rt,
@@ -48,6 +50,7 @@ func New(param *config.Param, target *config.RemoveMode, rt *runtime.Runtime, co
 		which:             whichController,
 		mode:              target,
 		vacuum:            vacuum,
+		g2:                g2,
 	}
 }
 
@@ -55,7 +58,10 @@ type ConfigFinder interface {
 	Find(wd, configFilePath string, globalConfigFilePaths ...string) (string, error)
 }
 
+// RegistryInstaller installs the registries a package is removed with: every registry, for
+// a package the lock file doesn't have, or the one registry of a package it has.
 type RegistryInstaller interface {
+	lockresolve.RegistryInstaller
 	InstallRegistries(ctx context.Context, logger *slog.Logger, cfg *aqua.Config, cfgFilePath string, checksums *checksum.Checksums) (map[string]*registry.Config, error)
 }
 
