@@ -36,7 +36,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{github.token}}
 
-      - uses: aquaproj/aqua-installer@v4.1.1
+      - uses: aquaproj/aqua-installer@v4.1.2
         if: inputs.aqua_version != ''
         with:
           aqua_version: ${{inputs.aqua_version}}
@@ -125,7 +125,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{github.token}}
 
-      - uses: aquaproj/aqua-installer@v4.1.1
+      - uses: aquaproj/aqua-installer@v4.1.2
         if: inputs.aqua_version != ''
         with:
           aqua_version: ${{inputs.aqua_version}}

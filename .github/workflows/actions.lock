@@ -13,7 +13,7 @@ workflows:
     '.github/workflows/debug-with-action-tmate.yaml':
         - 'actions/checkout@v7.0.1'
         - 'actions/setup-go@v7.1.0'
-        - 'aquaproj/aqua-installer@v4.1.1'
+        - 'aquaproj/aqua-installer@v4.1.2'
         - 'mxschmitt/action-tmate@v3.22'
         - 'rhysd/action-setup-vim@v1.6.1'
     '.github/workflows/macos-test.yaml':
@@ -23,7 +23,7 @@ workflows:
     '.github/workflows/test-goreleaser.yaml':
         - 'actions/checkout@v7.0.1'
         - 'actions/setup-go@v7.1.0'
-        - 'aquaproj/aqua-installer@v4.1.1'
+        - 'aquaproj/aqua-installer@v4.1.2'
     '.github/workflows/test.yaml': []
     '.github/workflows/watch-star.yaml':
         - 'suzuki-shunsuke/watch-star-action@v0.1.1'
@@ -37,12 +37,12 @@ workflows:
         - 'suzuki-shunsuke/download-go-module-action@v0.0.10'
     '.github/workflows/wc_autofix.yaml':
         - 'actions/checkout@v7.0.1'
-        - 'aquaproj/aqua-installer@v4.1.1'
+        - 'aquaproj/aqua-installer@v4.1.2'
         - 'autofix-ci/action@v1.3.4'
     '.github/workflows/windows-test.yaml':
         - 'actions/checkout@v7.0.1'
         - 'actions/setup-go@v7.1.0'
-        - 'aquaproj/aqua-installer@v4.1.1'
+        - 'aquaproj/aqua-installer@v4.1.2'
     '.github/workflows/workflow_call_test.yaml':
         - 'actions/checkout@v7.0.1'
         - 'actions/setup-go@v7.1.0'
@@ -69,9 +69,9 @@ dependencies:
         commit: 'sha1-611554c6f0137ba41c8dd15aca8bee82504ea461'
         owner_id: 95116411
         repo_id: 400140776
-    'aquaproj/aqua-installer@v4.1.1':
-        ref: 'v4.1.1'
-        commit: 'sha1-611554c6f0137ba41c8dd15aca8bee82504ea461'
+    'aquaproj/aqua-installer@v4.1.2':
+        ref: 'v4.1.2'
+        commit: 'sha1-b8be739961814ee66b9e0d505f4d5de0d2eff047'
         owner_id: 95116411
         repo_id: 400140776
     'autofix-ci/action@v1.3.4':
