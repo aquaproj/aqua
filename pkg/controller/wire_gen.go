@@ -493,7 +493,7 @@ func InitializeRemoveCommandController(ctx context.Context, logger *slog.Logger,
 	client := g2.NewDefault(gitHubContentFileDownloader, cache)
 	controller := which.New(param, configFinder, configReader, installer, rt, osEnv, linker, client)
 	vacuumClient := vacuum.New(param)
-	removeController := remove.New(param, target, rt, configFinder, configReader, installer, fuzzyfinderFinder, controller, vacuumClient)
+	removeController := remove.New(param, target, rt, configFinder, configReader, installer, fuzzyfinderFinder, controller, vacuumClient, client)
 	return removeController, nil
 }
 

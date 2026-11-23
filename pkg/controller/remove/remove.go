@@ -19,7 +19,7 @@ import (
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
-func (c *Controller) Remove(ctx context.Context, logger *slog.Logger, param *config.Param) error { //nolint:cyclop
+func (c *Controller) Remove(ctx context.Context, logger *slog.Logger, param *config.Param) error {
 	if param.All {
 		logger.Info("removing all packages")
 		return c.removeAll(param.RootDir)
@@ -43,6 +43,20 @@ func (c *Controller) Remove(ctx context.Context, logger *slog.Logger, param *con
 		return err
 	}
 
+	// A command was found and removed through which, which reads only the registry of the
+	// package it found. Registries are installed for package names and for choosing
+	// packages interactively alone, so nothing else is read here: an unreadable registry
+	// mustn't fail removing a command.
+	if len(pkgs) == 0 && !param.SelectVersion {
+		return nil
+	}
+
+	return c.removeNamedPackages(ctx, logger, param, pkgs)
+}
+
+// removeNamedPackages removes the packages named on the command line, or chosen
+// interactively.
+func (c *Controller) removeNamedPackages(ctx context.Context, logger *slog.Logger, param *config.Param, pkgs []string) error {
 	param.Args = pkgs
 
 	cfgFilePath, err := c.configFinder.Find(param.CWD, param.ConfigFilePath, param.GlobalConfigFilePaths...)
@@ -53,6 +67,17 @@ func (c *Controller) Remove(ctx context.Context, logger *slog.Logger, param *con
 	cfg := &aqua.Config{}
 	if err := c.configReader.Read(logger, cfgFilePath, cfg); err != nil {
 		return fmt.Errorf("read a configuration file: %w", err)
+	}
+
+	if !param.SelectVersion {
+		rest, err := c.removeLockedPackages(ctx, logger, cfg, cfgFilePath, pkgs)
+		if err != nil {
+			return err
+		}
+		if len(rest) == 0 {
+			return nil
+		}
+		param.Args = rest
 	}
 
 	checksums, updateChecksum, err := checksum.Open(
