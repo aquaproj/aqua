@@ -271,7 +271,7 @@ jobs:
       - name: Fix aqua-checksums.json
         run: aqua upc -prune
       - name: Commit and push
-        uses: securefix-action/action@ebb1c87f14e7c20a81a8557d087d75f470aae886 # v0.7.1
+        uses: securefix-action/action@6774841b4892cf7c56e56ca99c201db9b5f8acf9 # v0.8.0
         with:
           app_id: ${{secrets.APP_ID}}
           app_private_key: ${{secrets.APP_PRIVATE_KEY}}
