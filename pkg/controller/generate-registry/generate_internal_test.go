@@ -320,6 +320,31 @@ func TestController_checkChecksumCosign(t *testing.T) { //nolint:funlen
 			},
 		},
 		{
+			name: "keyless bundle takes precedence over the other bundle",
+			pkgInfo: &registry.PackageInfo{
+				RepoOwner: repoOwner,
+				RepoName:  repoName,
+			},
+			checksumFileName: fileChecksumsTxt,
+			assetNames: map[string]struct{}{
+				fileChecksumsTxt:                      {},
+				"checksums.txt.sigstore.json":         {},
+				"checksums.txt-keyless.sigstore.json": {},
+			},
+			want: &registry.Cosign{
+				Bundle: &registry.DownloadedFile{
+					Type:  pkgTypeGitHubRelease,
+					Asset: new("checksums.txt-keyless.sigstore.json"),
+				},
+				Opts: []string{
+					flagCertIdentityRegexp,
+					regexpCertIdentity,
+					flagCertOIDCIssuer,
+					urlOIDCIssuer,
+				},
+			},
+		},
+		{
 			name: "with certificate and signature",
 			pkgInfo: &registry.PackageInfo{
 				RepoOwner: repoOwner,
