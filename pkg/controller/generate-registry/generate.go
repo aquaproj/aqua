@@ -392,11 +392,21 @@ func findCertificate(assetNames map[string]struct{}, checksumAssetName string) s
 	return ""
 }
 
+// findCosignBundle returns the bundle beside the asset, if there is one.
+//
+// A keyless bundle is preferred, as a keyless signature and certificate are by
+// findSignature and findCertificate. A release signed both ways publishes the keyless
+// bundle beside one signed with a key that nothing in the release names:
+// sigstore/rekor v1.4.3 has rekor-cli-linux-amd64-keyless.sigstore.json, which holds the
+// certificate, and rekor-cli-linux-amd64.sigstore.json, which holds neither a
+// certificate nor a key.
 func findCosignBundle(assetNames map[string]struct{}, assetName string) string {
-	for _, suf := range []string{".cosign.bundle", ".bundle", ".sigstore", ".sigstore.json"} {
-		bundle := assetName + suf
-		if _, ok := assetNames[bundle]; ok {
-			return bundle
+	for _, prefix := range []string{"-keyless", ""} {
+		for _, suf := range []string{".cosign.bundle", ".bundle", ".sigstore", ".sigstore.json"} {
+			bundle := assetName + prefix + suf
+			if _, ok := assetNames[bundle]; ok {
+				return bundle
+			}
 		}
 	}
 	return ""
