@@ -19,6 +19,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/download"
 	"github.com/aquaproj/aqua/v2/pkg/osexec"
 	"github.com/aquaproj/aqua/v2/pkg/unarchive"
+	"github.com/mholt/archives"
 )
 
 func TestIsUnarchived(t *testing.T) {
@@ -861,4 +862,92 @@ func setTarChecksum(hdr []byte) {
 		sum += int(c)
 	}
 	copy(hdr[148:], fmt.Sprintf("%06o\x00 ", sum))
+}
+
+func buildTar(t *testing.T, entries ...tarEntry) []byte {
+	t.Helper()
+	var buf bytes.Buffer
+	tw := tar.NewWriter(&buf)
+	for _, e := range entries {
+		e.hdr.Size = int64(len(e.payload))
+		if err := tw.WriteHeader(e.hdr); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := tw.Write(e.payload); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := tw.Close(); err != nil {
+		t.Fatal(err)
+	}
+	return buf.Bytes()
+}
+
+func xzCompress(t *testing.T, b []byte) []byte {
+	t.Helper()
+	var buf bytes.Buffer
+	w, err := archives.Xz{}.OpenWriter(&buf)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := w.Write(b); err != nil {
+		t.Fatal(err)
+	}
+	if err := w.Close(); err != nil {
+		t.Fatal(err)
+	}
+	return buf.Bytes()
+}
+
+// TestUnarchiver_Unarchive_misnamed verifies that an archive whose name names a format
+// its content isn't is extracted as what its content is. grampelberg/kty v0.2.1 and
+// awslabs/dynein v0.2.0 published plain tars as .tar.gz, and librespeed/speedtest-cli
+// xz-compressed tars as .tar.gz.
+func TestUnarchiver_Unarchive_misnamed(t *testing.T) {
+	t.Parallel()
+	plain := buildTar(t, tarEntry{hdr: &tar.Header{Name: "tool", Typeflag: tar.TypeReg, Mode: 0o755}, payload: []byte("hello")})
+	data := []struct {
+		title   string
+		archive []byte
+	}{
+		{title: "a plain tar named .tar.gz", archive: plain},
+		{title: "an xz-compressed tar named .tar.gz", archive: xzCompress(t, plain)},
+	}
+	for _, d := range data {
+		t.Run(d.title, func(t *testing.T) {
+			t.Parallel()
+			dest := t.TempDir()
+			src := &unarchive.File{
+				Filename: "tool.tar.gz",
+				Body:     download.NewDownloadedFile(io.NopCloser(bytes.NewReader(d.archive)), nil),
+			}
+			if err := unarchive.New(nil).Unarchive(t.Context(), slog.New(slog.DiscardHandler), src, dest); err != nil {
+				t.Fatal(err)
+			}
+			got, err := os.ReadFile(filepath.Join(dest, "tool"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if string(got) != "hello" {
+				t.Fatalf("unexpected file content: %q", got)
+			}
+		})
+	}
+}
+
+// TestUnarchiver_Unarchive_notAnArchive verifies that content no format matches still
+// fails, with the error the name gave.
+func TestUnarchiver_Unarchive_notAnArchive(t *testing.T) {
+	t.Parallel()
+	src := &unarchive.File{
+		Filename: "tool.tar.gz",
+		Body:     download.NewDownloadedFile(io.NopCloser(strings.NewReader("not an archive")), nil),
+	}
+	err := unarchive.New(nil).Unarchive(t.Context(), slog.New(slog.DiscardHandler), src, t.TempDir())
+	if err == nil {
+		t.Fatal("content that is no archive must fail")
+	}
+	if !strings.Contains(err.Error(), "gzip") {
+		t.Fatalf("want the error the name gave, got %v", err)
+	}
 }
