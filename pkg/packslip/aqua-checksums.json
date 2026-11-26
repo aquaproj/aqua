@@ -1,28 +1,28 @@
 {
   "checksums": [
     {
-      "id": "github_release/github.com/jdx/packslip/v1.11.4/packslip-v1.11.4-darwin-arm64.tar.xz",
-      "checksum": "A97D048677DE32ADE64EA353D85C4AEEBC8DC1E2ADEE51F83E0CB0311E135E52",
+      "id": "github_release/github.com/jdx/packslip/v1.11.5/packslip-v1.11.5-darwin-arm64.tar.xz",
+      "checksum": "EC9F6B799030F5DB24429F8E467A9FC3ED246097262CA9390FECA93075B91123",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/jdx/packslip/v1.11.4/packslip-v1.11.4-linux-arm64.tar.xz",
-      "checksum": "0CD0E3F96917DACBC0A993AFFACFC2A838DF2503E3AC2017CEE072C064CB30BC",
+      "id": "github_release/github.com/jdx/packslip/v1.11.5/packslip-v1.11.5-linux-arm64.tar.xz",
+      "checksum": "22542A0243235DE8EDCDCEB5E13DC56DD3351EFD382CDBC6555F13F7AE9D6493",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/jdx/packslip/v1.11.4/packslip-v1.11.4-linux-x64.tar.xz",
-      "checksum": "011CCC784584A466BD12A96F76C8E7A3FF365A2C99AEE53884140CECF020AADD",
+      "id": "github_release/github.com/jdx/packslip/v1.11.5/packslip-v1.11.5-linux-x64.tar.xz",
+      "checksum": "8F69DB2646F31A59CCBEE65FFD907BD5D0FB7EDCA772FCDB416D69359CE8630F",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/jdx/packslip/v1.11.4/packslip-v1.11.4-windows-arm64.zip",
-      "checksum": "E6A901288726D74439FCA90D24AF2ADA0F2766FC60193D8926952EFD82B0AC70",
+      "id": "github_release/github.com/jdx/packslip/v1.11.5/packslip-v1.11.5-windows-arm64.zip",
+      "checksum": "30EBDECC51299B8559522395CF932AB56B08ED706D0A014C0101CCDFA7E0C96D",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/jdx/packslip/v1.11.4/packslip-v1.11.4-windows-x64.zip",
-      "checksum": "8D0A3EFEDC68BF9DFFDF4F88946FF4E48E3A6FDAFA52A6889AD18C1479E80F68",
+      "id": "github_release/github.com/jdx/packslip/v1.11.5/packslip-v1.11.5-windows-x64.zip",
+      "checksum": "3F5BEA7EFDEE93B1AE0AA7E603F5C2F3523B00B0E55DB456F6391CC8069F77E8",
       "algorithm": "sha256"
     },
     {
