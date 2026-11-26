@@ -447,6 +447,9 @@ func installable(pkgName, name, version string) bool {
 	for _, ext := range []string{
 		".sig", ".asc", ".pem", ".cert", ".crt", ".bundle", ".sigstore", ".sigstore.json",
 		".minisig", ".gpg", ".gpgsig", ".intoto.jsonl", ".pub", ".sha256", ".sha512", ".sha1", ".md5",
+		// A checksum whose extension doesn't say the algorithm: adhocteam/ssm publishes
+		// ssm-linux.amd64.sha beside ssm-linux-amd64.
+		".sha",
 		// A checksum named with a dash rather than an extension: grafana/mimir publishes
 		// mimir-darwin-amd64-sha-256 beside mimir-darwin-amd64.
 		"-sha-256", "-sha256", "_sha256", "-sha-512", "-sha512",

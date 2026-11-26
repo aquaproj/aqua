@@ -101,6 +101,20 @@ func TestSelect(t *testing.T) { //nolint:funlen,maintidx
 			},
 		},
 		{
+			name:    "a checksum whose extension doesn't say the algorithm is not a build",
+			pkgName: "adhocteam/ssm",
+			version: "1.2.0",
+			assets: []string{
+				"ssm-darwin-amd64", "ssm-darwin-amd64.sha",
+				"ssm-linux-amd64", "ssm-linux.amd64.sha",
+			},
+			want: map[string]picked{
+				"darwin/amd64": {Name: "ssm-darwin-amd64"},
+				"darwin/arm64": {Name: "ssm-darwin-amd64", Emulated: true},
+				"linux/amd64":  {Name: "ssm-linux-amd64"},
+			},
+		},
+		{
 			name:    "the ordinary build is preferred to a FIPS or a debug build",
 			pkgName: "static-web-server/static-web-server",
 			version: "v2.43.0",
