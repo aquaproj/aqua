@@ -270,9 +270,9 @@ func (h *handler) unarchive(ctx context.Context, fileName, file string) error {
 	}
 	defer archiveFile.Close()
 
-	format, input, err := archives.Identify(ctx, fileName, archiveFile)
+	format, input, err := identify(ctx, fileName, archiveFile)
 	if err != nil {
-		return fmt.Errorf("identify the format: %w", err)
+		return err
 	}
 
 	if extractor, ok := format.(archives.Extractor); ok {
@@ -292,6 +292,29 @@ func (h *handler) unarchive(ctx context.Context, fileName, file string) error {
 		return h.decompress(input, decomp)
 	}
 	return errUnsupportedFileFormat
+}
+
+// identify returns the archive's format, going by its name and then, when that fails,
+// by the content alone.
+//
+// A name is taken at its word first. A name ending in .tar.gz matches gzip, and the
+// gzip reader then opens the content to look for the archive inside -- which fails for a release that named a plain tar or an
+// xz-compressed tar that way: grampelberg/kty v0.2.1's kty-0.2.1-darwin-arm64.tar.gz,
+// awslabs/dynein v0.2.0's .tar.gz assets and librespeed/speedtest-cli before v1.0.4
+// are all of these. The content's magic bytes say what it actually is.
+func identify(ctx context.Context, fileName string, file io.Reader) (archives.Format, io.Reader, error) {
+	format, input, err := archives.Identify(ctx, fileName, file)
+	if err == nil {
+		return format, input, nil
+	}
+	// Identify hands back the stream at where it started, even when it fails: a file is
+	// sought back, and anything else is replayed from what it buffered.
+	format, input, contentErr := archives.Identify(ctx, "", input)
+	if contentErr != nil {
+		// The error by name is the one that says what the name promised.
+		return nil, nil, fmt.Errorf("identify the format: %w", err)
+	}
+	return format, input, nil
 }
 
 // isGNUSparse reports whether f is a GNU sparse tar entry. Such entries are
