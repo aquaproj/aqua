@@ -76,7 +76,7 @@ func TestFuzzyGetter_Get(t *testing.T) { //nolint:funlen
 			// A registry other than the standard one keeps asking upstream, which
 			// is the getter under test here.
 			fg := versiongetter.NewFuzzy(finder, vg, nil)
-			version := fg.Get(t.Context(), logger, "foo", d.pkg, d.currentVersion, d.useFinder, -1)
+			version, _ := fg.Get(t.Context(), logger, versiongetter.SourceUpstream, d.pkg, d.currentVersion, d.useFinder, -1)
 			if version != d.version {
 				t.Fatalf("wanted %s, got %s", d.version, version)
 			}
@@ -96,10 +96,10 @@ func TestFuzzyGetter_Get_source(t *testing.T) {
 	fg := versiongetter.NewFuzzy(fuzzyfinder.NewMock([]int{0}, nil), upstream, newG2("v2.0.0"))
 	logger := slog.New(slog.DiscardHandler)
 
-	if got := fg.Get(t.Context(), logger, "standard", pkg, "", false, -1); got != "v2.0.0" {
+	if got, _ := fg.Get(t.Context(), logger, versiongetter.SourceG2OrUpstream, pkg, "", false, -1); got != "v2.0.0" {
 		t.Errorf("the standard registry got %q, want v2.0.0 from g2", got)
 	}
-	if got := fg.Get(t.Context(), logger, "foo", pkg, "", false, -1); got != "v3.0.0" {
+	if got, _ := fg.Get(t.Context(), logger, versiongetter.SourceUpstream, pkg, "", false, -1); got != "v3.0.0" {
 		t.Errorf("another registry got %q, want v3.0.0 from upstream", got)
 	}
 }
@@ -119,10 +119,10 @@ func TestFuzzyGetter_Get_notInG2(t *testing.T) {
 	fg := versiongetter.NewFuzzy(fuzzyfinder.NewMock([]int{0}, nil), upstream, newG2NotFound())
 	logger := slog.New(slog.DiscardHandler)
 
-	if got := fg.Get(t.Context(), logger, "standard", pkg, "", false, -1); got != "v3.0.0" {
+	if got, _ := fg.Get(t.Context(), logger, versiongetter.SourceG2OrUpstream, pkg, "", false, -1); got != "v3.0.0" {
 		t.Errorf("got %q, want v3.0.0 from upstream", got)
 	}
-	if got := fg.Get(t.Context(), logger, "standard", pkg, "", true, -1); got != "v3.0.0" {
+	if got, _ := fg.Get(t.Context(), logger, versiongetter.SourceG2OrUpstream, pkg, "", true, -1); got != "v3.0.0" {
 		t.Errorf("the finder got %q, want v3.0.0 from upstream", got)
 	}
 }
@@ -141,10 +141,10 @@ func TestFuzzyGetter_Get_emptyInG2(t *testing.T) {
 	fg := versiongetter.NewFuzzy(fuzzyfinder.NewMock([]int{0}, nil), upstream, newG2())
 	logger := slog.New(slog.DiscardHandler)
 
-	if got := fg.Get(t.Context(), logger, "standard", pkg, "", false, -1); got != "v3.0.0" {
+	if got, _ := fg.Get(t.Context(), logger, versiongetter.SourceG2OrUpstream, pkg, "", false, -1); got != "v3.0.0" {
 		t.Errorf("got %q, want v3.0.0 from upstream", got)
 	}
-	if got := fg.Get(t.Context(), logger, "standard", pkg, "", true, -1); got != "v3.0.0" {
+	if got, _ := fg.Get(t.Context(), logger, versiongetter.SourceG2OrUpstream, pkg, "", true, -1); got != "v3.0.0" {
 		t.Errorf("the finder got %q, want v3.0.0 from upstream", got)
 	}
 }

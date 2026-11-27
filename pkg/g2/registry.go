@@ -148,6 +148,9 @@ type Client struct {
 	// through its own age rather than kept for good the way registry.json is.
 	names     *Names
 	namesOnce sync.Once
+	// namesErr is why the table couldn't be read, when it couldn't. A name the table
+	// doesn't know is then not a package the registry doesn't hold: nobody asked.
+	namesErr error
 	// catalogue is what the registry says it holds, read once, for the same reason.
 	catalogue     *Index
 	catalogueOnce sync.Once
@@ -222,6 +225,12 @@ func (c *Client) DirOf(ctx context.Context, logger *slog.Logger, pkgName string)
 	}
 	if id, ok := c.fetchNames(ctx, logger).ID(pkgName); ok {
 		return PackageDir(id), nil
+	}
+	if c.namesErr != nil {
+		// The registry couldn't be asked, which says nothing about whether it holds
+		// the package. A caller that would take "not held" as a reason to look
+		// elsewhere must not take this for it.
+		return "", fmt.Errorf("resolve the package name: %w", slogerr.With(c.namesErr, "package_name", pkgName))
 	}
 	return "", fmt.Errorf("%w: %s", ErrNoPackageBranch, pkgName)
 }
