@@ -74,6 +74,12 @@ func Test_Exclude(t *testing.T) { //nolint:funlen
 			assetName: "foo_linux_amd64.tar.gz.sigstore.json",
 		},
 		{
+			name:      "a vs code extension",
+			pkgName:   "ubugeeei-prod/vize",
+			assetName: "vize-linux-x64.vsix",
+			exp:       true,
+		},
+		{
 			name:      "the binary beside an sbom",
 			pkgName:   "regclient/regclient/regctl",
 			assetName: "regctl-windows-amd64.exe",
