@@ -51,6 +51,29 @@ func Test_Exclude(t *testing.T) { //nolint:funlen
 			exp:       true,
 		},
 		{
+			name:      "slsa provenance",
+			pkgName:   "kubernetes-sigs/zeitgeist",
+			assetName: "zeitgeist.intoto.json",
+			exp:       true,
+		},
+		{
+			name:      "an sbom ending in sbom.json",
+			pkgName:   "kubernetes-sigs/kubebuilder",
+			assetName: "kubebuilder_4.16.0_linux_amd64.cyclonedx.sbom.json",
+			exp:       true,
+		},
+		{
+			name:      "a yaml manifest",
+			pkgName:   "foo/foo",
+			assetName: "foo-install.yaml",
+			exp:       true,
+		},
+		{
+			name:      "a sigstore bundle stays for the cosign inference",
+			pkgName:   "foo/foo",
+			assetName: "foo_linux_amd64.tar.gz.sigstore.json",
+		},
+		{
 			name:      "the binary beside an sbom",
 			pkgName:   "regclient/regclient/regctl",
 			assetName: "regctl-windows-amd64.exe",

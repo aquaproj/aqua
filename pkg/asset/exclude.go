@@ -90,9 +90,22 @@ func arm32Spellings(asset string) []string {
 }
 
 // excludedExt reports whether an asset is a file aqua can't install from: a package for
-// a system package manager, or an SBOM published beside a binary.
+// a system package manager, an SBOM published beside a binary, or a document of any kind.
 func excludedExt(asset string) bool {
+	// A Sigstore bundle is JSON too, but the inference reads the cosign signature off the
+	// assets Exclude leaves, so it has to stay among them. installable keeps it from being
+	// taken for the package's asset.
+	if strings.HasSuffix(asset, ".sigstore.json") {
+		return false
+	}
 	exts := []string{
+		// A JSON or YAML file is a document, never a command or an archive of one. Listing
+		// the kinds one by one missed the next: kubernetes-sigs/zeitgeist publishes its SLSA
+		// provenance as zeitgeist.intoto.json, a name that says no OS, and it was taken for
+		// the windows/amd64 binary.
+		".json",
+		".yaml",
+		".yml",
 		".deb",
 		".rpm",
 		".msi",
@@ -105,25 +118,18 @@ func excludedExt(asset string) bool {
 		".mcpb",
 		".so",
 		".dylib",
-		// SBOMs published beside each binary. regclient/regclient's v0.11.6 Windows
-		// assets include regctl-windows-amd64.cyclonedx.json, which sorts before the
-		// .exe and was taken for the binary.
-		".cyclonedx.json",
+		// SBOMs published beside each binary in a format other than JSON or YAML.
+		// regclient/regclient's v0.11.6 Windows assets include
+		// regctl-windows-amd64.cyclonedx.json, which sorts before the .exe and was taken
+		// for the binary; the JSON ones are left out above.
 		".cyclonedx.xml",
-		".cdx.json",
 		".cdx.xml",
-		".bom.json",
 		".bom.xml",
-		".spdx.json",
 		".spdx.xml",
-		".spdx.yaml",
-		".spdx.yml",
 		".spdx.rdf",
 		".spdx",
-		".sbom.json",
 		".sbom.xml",
 		".sbom",
-		".syft.json",
 	}
 	for _, ext := range exts {
 		if strings.HasSuffix(asset, ext) {
