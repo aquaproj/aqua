@@ -15,6 +15,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/controller/lockupdate"
+	"github.com/aquaproj/aqua/v2/pkg/g2"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/aquaproj/aqua/v2/pkg/lockfile"
 	"github.com/aquaproj/aqua/v2/pkg/resolve"
@@ -52,15 +53,15 @@ type fakeResolver struct {
 	err      error
 }
 
-func (r *fakeResolver) Resolve(_ context.Context, _ *slog.Logger, pkgName, version string) ([]*lockfile.Package, error) {
+func (r *fakeResolver) Resolve(_ context.Context, _ *slog.Logger, pkgName, version string, _ []string) (*g2.Resolved, error) {
 	r.resolved = append(r.resolved, pkgName+"@"+version)
 	if r.err != nil {
 		return nil, r.err
 	}
-	return []*lockfile.Package{
+	return &g2.Resolved{Packages: []*lockfile.Package{
 		{Name: pkgName, Version: version, OS: "linux", Arch: "amd64", Type: "github_release", Checksum: "x"},
 		{Name: pkgName, Version: version, OS: "darwin", Arch: "arm64", Type: "github_release", Checksum: "y"},
-	}, nil
+	}}, nil
 }
 
 // fakeCommitResolver resolves every ref to commit, or fails with err.

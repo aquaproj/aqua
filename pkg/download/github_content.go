@@ -2,6 +2,7 @@ package download
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -41,6 +42,9 @@ func (dl *GitHubContentFileDownloader) DownloadGitHubContentFile(ctx context.Con
 		}
 		if body != nil {
 			body.Close()
+		}
+		if param.Public && errors.Is(err, errNotFound) {
+			return nil, fmt.Errorf("download a file from raw.githubusercontent.com: %w", domain.ErrGitHubContentNotFound)
 		}
 	}
 

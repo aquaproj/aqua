@@ -15,6 +15,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/controller/remove"
 	"github.com/aquaproj/aqua/v2/pkg/controller/which"
 	"github.com/aquaproj/aqua/v2/pkg/fuzzyfinder"
+	"github.com/aquaproj/aqua/v2/pkg/g2"
 	"github.com/aquaproj/aqua/v2/pkg/lockfile"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 )
@@ -70,7 +71,7 @@ type fakeG2 struct {
 	asked []string
 }
 
-func (g *fakeG2) Definitions(_ context.Context, _ *slog.Logger, pkgName, version string) ([]*lockfile.Package, error) {
+func (g *fakeG2) Definitions(_ context.Context, _ *slog.Logger, pkgName, version string, _ []string) (*g2.Resolved, error) {
 	g.asked = append(g.asked, pkgName+"@"+version)
 	pkgs := make([]*lockfile.Package, 0, 2)
 	for _, env := range [][2]string{{"linux", "amd64"}, {"darwin", "arm64"}} {
@@ -81,7 +82,7 @@ func (g *fakeG2) Definitions(_ context.Context, _ *slog.Logger, pkgName, version
 			Files: []*lockfile.File{{Name: "gh"}},
 		})
 	}
-	return pkgs, nil
+	return &g2.Resolved{Packages: pkgs}, nil
 }
 
 // fakeWhich finds gh as cli/cli, and nothing else.

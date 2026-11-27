@@ -13,7 +13,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
-	"github.com/aquaproj/aqua/v2/pkg/lockfile"
+	"github.com/aquaproj/aqua/v2/pkg/g2"
 	"github.com/aquaproj/aqua/v2/pkg/lockresolve"
 )
 
@@ -30,10 +30,11 @@ type ConfigReader interface {
 // Resolver turns a package version into lock file entries, one per environment.
 //
 // This is the arm for the standard registry, which aqua-registry-g2 mirrors: it reads
-// a generated registry.json, falling back to the local cache first. A package from any
-// other registry has no branch there and is resolved from its registry instead.
+// a generated registry.json, falling back to the local cache first, or the package's
+// template when it serves one, expanded for supportedEnvs. A package from any other
+// registry has no branch there and is resolved from its registry instead.
 type Resolver interface {
-	Resolve(ctx context.Context, logger *slog.Logger, pkgName, version string) ([]*lockfile.Package, error)
+	Resolve(ctx context.Context, logger *slog.Logger, pkgName, version string, supportedEnvs []string) (*g2.Resolved, error)
 }
 
 // ChecksumGetter reads the checksum of every environment a package supports, after

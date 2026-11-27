@@ -35,7 +35,11 @@ func (dl *httpDownloader) Download(ctx context.Context, u string) (io.ReadCloser
 		return nil, 0, fmt.Errorf("send http request: %w", err)
 	}
 	if resp.StatusCode >= http.StatusBadRequest {
-		return resp.Body, 0, slogerr.With(errInvalidHTTPStatusCode, //nolint:wrapcheck
+		err := errInvalidHTTPStatusCode
+		if resp.StatusCode == http.StatusNotFound {
+			err = errNotFound
+		}
+		return resp.Body, 0, slogerr.With(err, //nolint:wrapcheck
 			"http_status_code", resp.StatusCode)
 	}
 	return resp.Body, resp.ContentLength, nil

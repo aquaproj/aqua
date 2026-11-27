@@ -2,9 +2,14 @@ package g2
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log/slog"
 
+	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/domain"
 	"github.com/aquaproj/aqua/v2/pkg/lockfile"
+	"github.com/aquaproj/aqua/v2/pkg/resolve"
 )
 
 // RegistryType is the registry type recorded in a lock entry resolved from g2.
@@ -77,22 +82,36 @@ func lockFiles(files []*File) []*lockfile.File {
 	return out
 }
 
+// Resolved is a package version resolved for every environment it supports.
+type Resolved struct {
+	Packages []*lockfile.Package
+	// PkgInfo is the definition of the version the entries were expanded from, for a
+	// package served as a template. Its entries carry no checksum, since nothing verified
+	// them ahead of time, and fetching the checksums needs it. It is nil for a generated
+	// registry.json, whose entries carry their checksums already.
+	PkgInfo *registry.PackageInfo
+}
+
 // Resolve returns the lock file entries for one package version.
 //
-// It is the g2 arm of the lock update command's resolution order. The registry cache
-// and aqua-registry arms answer the same question, so they get the same shape: the
-// caller tries each in turn and keeps the first that answers.
-func (c *Client) Resolve(ctx context.Context, logger *slog.Logger, pkgName, version string) ([]*lockfile.Package, error) {
+// It is the g2 arm of the lock update command's resolution order. The version's
+// registry.json answers when the registry generated one; otherwise the package's template
+// does, expanded for supportedEnvs. Only a package served as a template has one, so a
+// version of any other package never falls through to it.
+//
+// The template is read from the registry every time rather than from the cache: its
+// definition can be fixed after it is written, and what is locked is what it says now.
+func (c *Client) Resolve(ctx context.Context, logger *slog.Logger, pkgName, version string, supportedEnvs []string) (*Resolved, error) {
 	// Both names reach the package: the table maps a name a repository used to have to
 	// the one it has now, and both of them to the same id. So resolving is the
 	// fetch's business, and what is left here is saying that the configuration asks for
 	// a name the registry no longer calls it.
-	pkgs, err := c.Definitions(ctx, logger, pkgName, version)
+	resolved, err := c.definitions(ctx, logger, pkgName, version, supportedEnvs, true)
 	if err != nil {
 		return nil, err
 	}
 	c.sayRenamed(logger, pkgName, c.cachedNames().Resolve(pkgName))
-	return pkgs, nil
+	return resolved, nil
 }
 
 // Definitions returns the definitions of one package version, the way Resolve does, for
@@ -101,16 +120,98 @@ func (c *Client) Resolve(ctx context.Context, logger *slog.Logger, pkgName, vers
 // It says nothing about a rename. Install and exec run it, and exec runs on every command
 // through aqua-proxy: a warning there would be printed beside the output of the tool
 // itself, every time. "aqua lock update" is where the rename is said.
-func (c *Client) Definitions(ctx context.Context, logger *slog.Logger, pkgName, version string) ([]*lockfile.Package, error) {
-	reg, err := c.Get(ctx, logger, pkgName, version)
-	if err != nil {
-		return nil, err
+//
+// A template cached within TemplateTTL answers without the network, and so does one of any
+// age when the registry can't be read: a package installed already keeps running offline,
+// as a generated one does.
+func (c *Client) Definitions(ctx context.Context, logger *slog.Logger, pkgName, version string, supportedEnvs []string) (*Resolved, error) {
+	return c.definitions(ctx, logger, pkgName, version, supportedEnvs, false)
+}
+
+func (c *Client) definitions(ctx context.Context, logger *slog.Logger, pkgName, version string, supportedEnvs []string, fresh bool) (*Resolved, error) {
+	if !fresh {
+		if reg := c.cachedRegistry(logger, pkgName, version); reg != nil {
+			return &Resolved{Packages: c.LockPackages(reg, pkgName, version)}, nil
+		}
+		if tmpl := c.cachedTemplate(pkgName, TemplateTTL); tmpl != nil {
+			return c.expand(logger, tmpl, pkgName, version, supportedEnvs)
+		}
 	}
-	// The entry is named the way aqua.yaml asked for it, not the way the registry holds
-	// it. That name is what ties the entry to the configuration, so install and exec
-	// find it without resolving anything -- which is what keeps the table off the path
-	// that runs on every command.
-	return c.LockPackages(reg, pkgName, version), nil
+	reg, err := c.Get(ctx, logger, pkgName, version)
+	if err == nil {
+		// The entry is named the way aqua.yaml asked for it, not the way the registry
+		// holds it. That name is what ties the entry to the configuration, so install
+		// and exec find it without resolving anything -- which is what keeps the table
+		// off the path that runs on every command.
+		return &Resolved{Packages: c.LockPackages(reg, pkgName, version)}, nil
+	}
+	if !errors.Is(err, domain.ErrGitHubContentNotFound) {
+		return c.fallBack(logger, pkgName, version, supportedEnvs, fresh, err)
+	}
+	tmpl, tmplErr := c.fetchTemplate(ctx, logger, pkgName)
+	if tmplErr == nil {
+		return c.expand(logger, tmpl, pkgName, version, supportedEnvs)
+	}
+	if errors.Is(tmplErr, domain.ErrGitHubContentNotFound) {
+		return nil, fmt.Errorf("%w: %w", ErrNoTemplate, err)
+	}
+	return c.fallBack(logger, pkgName, version, supportedEnvs, fresh, tmplErr)
+}
+
+// fallBack answers from a cached template of any age when the registry couldn't be read,
+// for install and exec. The lock update command fails instead: what it records has to be
+// what the registry says now.
+func (c *Client) fallBack(logger *slog.Logger, pkgName, version string, supportedEnvs []string, fresh bool, err error) (*Resolved, error) {
+	if !fresh {
+		if tmpl := c.staleTemplate(logger, pkgName); tmpl != nil {
+			return c.expand(logger, tmpl, pkgName, version, supportedEnvs)
+		}
+	}
+	return nil, err
+}
+
+// cachedRegistry is the version's cached registry.json, or nil.
+func (c *Client) cachedRegistry(logger *slog.Logger, pkgName, version string) *Registry {
+	if c.cache == nil {
+		return nil
+	}
+	cachePath := c.cache.Path(c.repoOwner, c.repoName, pkgName, version)
+	b := c.cache.Read(cachePath)
+	if b == nil {
+		return nil
+	}
+	reg, err := parseRegistry(b)
+	if err != nil {
+		logger.Debug("the cached registry.json is broken", "cache_path", cachePath)
+		return nil
+	}
+	return reg
+}
+
+// expand resolves a template for one version, for every environment in supportedEnvs (every
+// environment the definition supports when it is empty).
+func (c *Client) expand(logger *slog.Logger, tmpl *Config, pkgName, version string, supportedEnvs []string) (*Resolved, error) {
+	versioned, err := tmpl.Versioned(logger, version)
+	if err != nil {
+		return nil, fmt.Errorf("apply version_overrides to the template: %w", err)
+	}
+	pkgs, err := resolve.Resolve(logger, &resolve.Param{
+		PkgName:       pkgName,
+		Version:       version,
+		PkgInfo:       versioned,
+		SupportedEnvs: supportedEnvs,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("expand the template: %w", err)
+	}
+	for _, pkg := range pkgs {
+		pkg.Registry = &lockfile.Registry{
+			Type:      RegistryType,
+			RepoOwner: c.repoOwner,
+			RepoName:  c.repoName,
+		}
+	}
+	return &Resolved{Packages: pkgs, PkgInfo: versioned}, nil
 }
 
 // sayRenamed tells whoever is watching that the package has another name now.

@@ -21,6 +21,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/g2"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/aquaproj/aqua/v2/pkg/lockfile"
 	"github.com/aquaproj/aqua/v2/pkg/resolve"
@@ -58,14 +59,14 @@ const commitUnavailableHint = `if the commit of the registry in the lock file is
 // lock update command. It says when the configuration asks for a package by a name the
 // registry no longer uses.
 type Resolver interface {
-	Resolve(ctx context.Context, logger *slog.Logger, pkgName, version string) ([]*lockfile.Package, error)
+	Resolve(ctx context.Context, logger *slog.Logger, pkgName, version string, supportedEnvs []string) (*g2.Resolved, error)
 }
 
 // G2 reads the definitions of a package of the standard registry from aqua-registry-g2,
 // for install and exec. It says nothing about renames: it runs on every command, and the
 // lock update command is where that is said.
 type G2 interface {
-	Definitions(ctx context.Context, logger *slog.Logger, pkgName, version string) ([]*lockfile.Package, error)
+	Definitions(ctx context.Context, logger *slog.Logger, pkgName, version string, supportedEnvs []string) (*g2.Resolved, error)
 }
 
 // RegistryInstaller installs one registry a configuration declares. It uses the registry
@@ -342,9 +343,10 @@ func strongAlgorithm(algorithm string) bool {
 type Definitions struct {
 	Packages []*lockfile.Package
 	// PkgInfo and SupportedEnvs are what Packages were resolved from, for a package
-	// from a registry other than the standard one. Its checksums aren't in the
-	// registry, and fetching them needs these. Both are empty for the standard
-	// registry, whose entries carry their checksums already.
+	// whose checksums aren't in the registry: one from a registry other than the
+	// standard one, or one aqua-registry-g2 serves as a template. Fetching them needs
+	// these. Both are empty for a registry.json aqua-registry-g2 generated, whose
+	// entries carry their checksums already.
 	PkgInfo       *registry.PackageInfo
 	SupportedEnvs []string
 }
@@ -362,20 +364,37 @@ func Resolve(ctx context.Context, logger *slog.Logger, g2 Resolver, rgsts *Regis
 	return resolveWith(ctx, logger, fetch, rgsts, pkg)
 }
 
-type fetchFunc func(ctx context.Context, logger *slog.Logger, pkgName, version string) ([]*lockfile.Package, error)
+type fetchFunc func(ctx context.Context, logger *slog.Logger, pkgName, version string, supportedEnvs []string) (*g2.Resolved, error)
 
 func resolveWith(ctx context.Context, logger *slog.Logger, fetch fetchFunc, rgsts *Registries, pkg *aqua.Package) (*Definitions, error) {
 	if IsStandard(rgsts.Config().Registries[pkg.Registry]) {
 		if fetch == nil {
 			return nil, errNoG2
 		}
-		pkgs, err := fetch(ctx, logger, pkg.Name, pkg.Version)
+		supportedEnvs := supportedEnvsOf(rgsts.Config())
+		resolved, err := fetch(ctx, logger, pkg.Name, pkg.Version, supportedEnvs)
 		if err != nil {
 			return nil, err
 		}
-		return &Definitions{Packages: pkgs}, nil
+		defs := &Definitions{Packages: resolved.Packages}
+		if resolved.PkgInfo != nil {
+			// A package served as a template, which was expanded here for the
+			// environments the configuration supports.
+			defs.PkgInfo = resolved.PkgInfo
+			defs.SupportedEnvs = supportedEnvs
+		}
+		return defs, nil
 	}
 	return fromRegistry(ctx, logger, rgsts, pkg)
+}
+
+// supportedEnvsOf is the environments a configuration locks, or nil for every environment
+// a package supports.
+func supportedEnvsOf(cfg *aqua.Config) []string {
+	if cfg == nil || cfg.Checksum == nil {
+		return nil
+	}
+	return cfg.Checksum.SupportedEnvs
 }
 
 // IsStandard says whether the registry is the standard one, which aqua-registry-g2
@@ -409,10 +428,7 @@ func fromRegistry(ctx context.Context, logger *slog.Logger, rgsts *Registries, p
 	}
 
 	cfg := rgsts.Config()
-	var supportedEnvs []string
-	if cfg.Checksum != nil {
-		supportedEnvs = cfg.Checksum.SupportedEnvs
-	}
+	supportedEnvs := supportedEnvsOf(cfg)
 	pkgs, err := resolve.Resolve(logger, &resolve.Param{
 		PkgName:       pkg.Name,
 		Version:       pkg.Version,
