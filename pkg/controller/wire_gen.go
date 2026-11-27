@@ -145,7 +145,7 @@ func InitializeGenerateCommandController(ctx context.Context, logger *slog.Logge
 	cache := g2.NewCache(param)
 	g2Client := g2.NewDefault(gitHubContentFileDownloader, cache)
 	versionLister := g2.NewDefaultVersionLister(v2, g2Client)
-	g2VersionGetter := versiongetter.NewG2(versionLister)
+	g2VersionGetter := versiongetter.NewG2(versionLister, g2Client)
 	fuzzyGetter := versiongetter.NewFuzzy(fuzzyfinderFinder, generalVersionGetter, g2VersionGetter)
 	controller := generate.New(configFinder, configReader, installer, v, fuzzyfinderFinder, fuzzyGetter)
 	return controller, nil
@@ -442,7 +442,7 @@ func InitializeUpdateCommandController(ctx context.Context, logger *slog.Logger,
 	cache := g2.NewCache(param)
 	g2Client := g2.NewDefault(gitHubContentFileDownloader, cache)
 	versionLister := g2.NewDefaultVersionLister(v2, g2Client)
-	g2VersionGetter := versiongetter.NewG2(versionLister)
+	g2VersionGetter := versiongetter.NewG2(versionLister, g2Client)
 	fuzzyGetter := versiongetter.NewFuzzy(fuzzyfinderFinder, generalVersionGetter, g2VersionGetter)
 	osEnv := osenv.New()
 	linker := link.New()

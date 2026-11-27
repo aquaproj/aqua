@@ -202,11 +202,13 @@ func (c *Client) fetchNames(ctx context.Context, logger *slog.Logger) *Names {
 		b, err := c.downloadFromDefaultBranch(ctx, logger, NamesFileName)
 		if err != nil {
 			logger.Debug("the registry has no table of names", "error", err.Error())
+			c.namesErr = err
 			return
 		}
 		names, err := ReadNames(bytes.NewReader(b))
 		if err != nil {
 			logger.Debug("the table of names isn't readable", "error", err.Error())
+			c.namesErr = err
 			return
 		}
 		c.names = names
