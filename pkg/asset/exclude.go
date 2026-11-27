@@ -116,6 +116,9 @@ func excludedExt(asset string) bool {
 		".apk",
 		".whl",
 		".mcpb",
+		// A VS Code extension: ubugeeei-prod/vize publishes vize-linux-x64.vsix beside
+		// vize-x86_64-unknown-linux-gnu.tar.gz, and it was taken for the linux/amd64 build.
+		".vsix",
 		".so",
 		".dylib",
 		// SBOMs published beside each binary in a format other than JSON or YAML.
