@@ -92,6 +92,12 @@ func arm32Spellings(asset string) []string {
 // excludedExt reports whether an asset is a file aqua can't install from: a package for
 // a system package manager, an SBOM published beside a binary, or a document of any kind.
 func excludedExt(asset string) bool {
+	// A Sigstore bundle is JSON too, but the inference reads the cosign signature off the
+	// assets Exclude leaves, so it has to stay among them. installable keeps it from being
+	// taken for the package's asset.
+	if strings.HasSuffix(asset, ".sigstore.json") {
+		return false
+	}
 	exts := []string{
 		// A JSON or YAML file is a document, never a command or an archive of one. Listing
 		// the kinds one by one missed the next: kubernetes-sigs/zeitgeist publishes its SLSA

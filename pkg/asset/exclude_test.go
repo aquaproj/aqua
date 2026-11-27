@@ -69,6 +69,11 @@ func Test_Exclude(t *testing.T) { //nolint:funlen
 			exp:       true,
 		},
 		{
+			name:      "a sigstore bundle stays for the cosign inference",
+			pkgName:   "foo/foo",
+			assetName: "foo_linux_amd64.tar.gz.sigstore.json",
+		},
+		{
 			name:      "the binary beside an sbom",
 			pkgName:   "regclient/regclient/regctl",
 			assetName: "regctl-windows-amd64.exe",
