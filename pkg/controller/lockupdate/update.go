@@ -285,9 +285,9 @@ func (c *Controller) updatePackage(ctx context.Context, logger *slog.Logger, lf 
 // resolve reads the package from where its registry says it lives, with a checksum for
 // every environment.
 //
-// aqua-registry-g2 serves its checksums with the definitions. Any other registry doesn't,
-// so they are fetched here, which is the work ar2 does ahead of time for the packages g2
-// covers.
+// aqua-registry-g2 serves its checksums with the definitions it generates. A package it
+// serves as a template has none, and neither does any other registry, so they are fetched
+// here, which is the work ar2 does ahead of time for the packages g2 generates.
 func (c *Controller) resolve(ctx context.Context, logger *slog.Logger, rgsts *lockresolve.Registries, pkg *aqua.Package) ([]*lockfile.Package, error) {
 	defs, err := lockresolve.Resolve(ctx, logger, c.g2, rgsts, pkg)
 	if err != nil {

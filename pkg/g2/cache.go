@@ -114,5 +114,14 @@ func (c *Cache) Write(path string, b []byte) error {
 	return nil
 }
 
+// Touch makes the cached file count as written now, without changing it.
+func (c *Cache) Touch(path string) error {
+	now := time.Now()
+	if err := os.Chtimes(path, now, now); err != nil {
+		return fmt.Errorf("change the time of the cache file: %w", err)
+	}
+	return nil
+}
+
 // filePerm is the mode a cached file is created with.
 const filePerm = 0o644

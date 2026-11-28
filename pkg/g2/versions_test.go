@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"net/http"
 	"testing"
 
 	"github.com/aquaproj/aqua/v2/pkg/g2"
@@ -148,5 +149,22 @@ func TestVersionLister_List_nested(t *testing.T) {
 	}
 	if diff := cmp.Diff([]string{}, got); diff != "" {
 		t.Errorf("nothing there is a version (-want +got):\n%s", diff)
+	}
+}
+
+// notFoundTreeGetter answers the way GitHub does for a directory that isn't there.
+type notFoundTreeGetter struct{}
+
+func (notFoundTreeGetter) GetTree(_ context.Context, _, _, _ string, _ bool) (*github.Tree, *github.Response, error) {
+	return nil, &github.Response{Response: &http.Response{StatusCode: http.StatusNotFound}}, errors.New("404 Not Found")
+}
+
+// A package served as a template has no versions directory, which is the registry holding no
+// version of it rather than a failure to list them. The caller asks upstream instead.
+func TestVersionLister_List_template(t *testing.T) {
+	t.Parallel()
+	lister := g2.NewDefaultVersionLister(notFoundTreeGetter{}, &fakeBranches{})
+	if _, err := lister.List(t.Context(), discardLogger(), "example/cli"); !errors.Is(err, g2.ErrNoPackageBranch) {
+		t.Fatalf("want ErrNoPackageBranch, got %v", err)
 	}
 }

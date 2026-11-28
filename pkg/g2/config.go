@@ -47,6 +47,27 @@ type Config struct {
 	// only when the project has never published anything else. Either way the version
 	// is marked as a prerelease, so that whoever offers versions can pass it over.
 	Prerelease bool `yaml:"prerelease,omitempty"`
+	// Template says the package is served as a template rather than as a registry.json
+	// generated for each version: ar2 writes the definition, templates unexpanded, to
+	// TemplateFileName beside it, and aqua expands it for the version a configuration
+	// asks for. It is for a package whose versions can't be generated ahead of time --
+	// one with no list of versions anywhere, or one whose assets can't be downloaded in
+	// time to verify them -- and is declared for the package as a whole, so that a
+	// version that merely failed to generate never falls through to it.
+	Template *Template `yaml:"template,omitempty"`
+}
+
+// Template is how a package served as a template is checked, since nothing generates
+// and verifies its versions.
+type Template struct {
+	// Reason is why the package's versions can't be generated ahead of time.
+	Reason string `yaml:"reason"`
+	// TestVersions are the versions CI installs, like a pkg.yaml of aqua-registry: the
+	// newest and one at each boundary of version_overrides.
+	TestVersions []string `yaml:"test_versions,omitempty"`
+	// SkipTest is why CI installs no version, such as an asset too large to download in
+	// time. Exactly one of it and TestVersions is set.
+	SkipTest string `yaml:"skip_test,omitempty"`
 }
 
 // AssetRule says which environments an asset whose name says no OS is for.

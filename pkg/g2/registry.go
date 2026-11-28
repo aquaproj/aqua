@@ -245,6 +245,10 @@ func (c *Client) download(ctx context.Context, logger *slog.Logger, pkgName, ver
 		RepoName:  c.repoName,
 		Ref:       DefaultBranch,
 		Path:      dir + "/" + Path(version),
+		// A version that has no file is answered by raw.githubusercontent.com alone: a
+		// package served as a template has none for any version, and asking the API too
+		// would spend a request on every read of it.
+		Public: true,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("download registry.json: %w", err)

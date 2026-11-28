@@ -12,9 +12,11 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/checksum"
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
+	"github.com/aquaproj/aqua/v2/pkg/g2"
 	"github.com/aquaproj/aqua/v2/pkg/github"
 	"github.com/aquaproj/aqua/v2/pkg/lockfile"
 	"github.com/aquaproj/aqua/v2/pkg/lockresolve"
+	"github.com/google/go-cmp/cmp"
 	"github.com/suzuki-shunsuke/slog-error/slogerr"
 )
 
@@ -25,9 +27,9 @@ type fakeG2 struct {
 	asked []string
 }
 
-func (g *fakeG2) Definitions(_ context.Context, _ *slog.Logger, pkgName, version string) ([]*lockfile.Package, error) {
+func (g *fakeG2) Definitions(_ context.Context, _ *slog.Logger, pkgName, version string, _ []string) (*g2.Resolved, error) {
 	g.asked = append(g.asked, pkgName+"@"+version)
-	return g.pkgs, nil
+	return &g2.Resolved{Packages: g.pkgs}, nil
 }
 
 // registryFile is the content every fake registry file has.
@@ -661,5 +663,65 @@ func TestLocked_registryCommitUnavailable(t *testing.T) {
 	slogerr.WithError(slog.New(slog.NewTextHandler(buf, nil)), err).Error("install the registry")
 	if !strings.Contains(buf.String(), `aqua lock update --force`) || !strings.Contains(buf.String(), testCommit) {
 		t.Errorf("logged %q, want the commit and a hint pointing to aqua lock update --force", buf.String())
+	}
+}
+
+// templateG2 answers the way aqua-registry-g2 does for a package it serves as a template:
+// entries expanded for the environments asked for, with no checksum, and the definition
+// they were expanded from.
+type templateG2 struct {
+	envs [][]string
+}
+
+func (g *templateG2) Resolve(ctx context.Context, logger *slog.Logger, pkgName, version string, supportedEnvs []string) (*g2.Resolved, error) {
+	return g.Definitions(ctx, logger, pkgName, version, supportedEnvs)
+}
+
+func (g *templateG2) Definitions(_ context.Context, _ *slog.Logger, pkgName, version string, supportedEnvs []string) (*g2.Resolved, error) {
+	g.envs = append(g.envs, supportedEnvs)
+	pkg := g2Package("", "gh_linux_amd64.tar.gz", "")
+	pkg.ChecksumAlgorithm = ""
+	pkg.Name = pkgName
+	pkg.Version = version
+	return &g2.Resolved{
+		Packages: []*lockfile.Package{pkg},
+		PkgInfo:  &registry.PackageInfo{Name: pkgName, Type: "github_release"},
+	}, nil
+}
+
+// A package served as a template is expanded for the environments the configuration locks,
+// and comes back with what its checksums are fetched from, as one from another registry does.
+func TestResolve_template(t *testing.T) {
+	t.Parallel()
+	cfg := standardConfig()
+	cfg.Checksum = &aqua.Checksum{SupportedEnvs: []string{"linux/amd64"}}
+	g := &templateG2{}
+	rgsts := lockresolve.NewRegistries(&fakeInstaller{}, cfg, "aqua.yaml", &lockfile.LockFile{})
+
+	defs, err := lockresolve.Resolve(t.Context(), slog.New(slog.DiscardHandler), g, rgsts, standardPkg())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if defs.PkgInfo == nil {
+		t.Fatal("the definition the checksums are fetched from must be returned")
+	}
+	if diff := cmp.Diff([]string{"linux/amd64"}, defs.SupportedEnvs); diff != "" {
+		t.Errorf("supported envs are wrong (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff([][]string{{"linux/amd64"}}, g.envs); diff != "" {
+		t.Errorf("the template was expanded for the wrong environments (-want +got):\n%s", diff)
+	}
+}
+
+// An entry of a template is installed with the lock file's checksum, the registry having none.
+func TestLocked_template(t *testing.T) {
+	t.Parallel()
+	rgsts := lockresolve.NewRegistries(&fakeInstaller{}, standardConfig(), "aqua.yaml", &lockfile.LockFile{})
+	got, err := lockresolve.Locked(t.Context(), slog.New(slog.DiscardHandler), &templateG2{}, rgsts, standardPkg(), ghEntry())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Checksum != "aaa" || got.ChecksumAlgorithm != "sha256" {
+		t.Errorf("the checksum is %s:%s, want the lock file's", got.ChecksumAlgorithm, got.Checksum)
 	}
 }

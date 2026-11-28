@@ -15,6 +15,7 @@ import (
 	"github.com/aquaproj/aqua/v2/pkg/config/aqua"
 	"github.com/aquaproj/aqua/v2/pkg/config/registry"
 	"github.com/aquaproj/aqua/v2/pkg/controller/vacuum/initialize"
+	"github.com/aquaproj/aqua/v2/pkg/g2"
 	"github.com/aquaproj/aqua/v2/pkg/lockfile"
 	"github.com/aquaproj/aqua/v2/pkg/runtime"
 )
@@ -68,14 +69,14 @@ func (i *fakeInstaller) InstallLockedRegistry(context.Context, *slog.Logger, *aq
 // linux/amd64, with the command gh.
 type fakeG2 struct{}
 
-func (fakeG2) Definitions(_ context.Context, _ *slog.Logger, pkgName, version string) ([]*lockfile.Package, error) {
+func (fakeG2) Definitions(_ context.Context, _ *slog.Logger, pkgName, version string, _ []string) (*g2.Resolved, error) {
 	owner, repo, _ := strings.Cut(pkgName, "/")
-	return []*lockfile.Package{{
+	return &g2.Resolved{Packages: []*lockfile.Package{{
 		Name: pkgName, Version: version, OS: "linux", Arch: "amd64",
 		Type: "github_release", RepoOwner: owner, RepoName: repo, Asset: "gh.tar.gz",
 		Checksum: "aaa", ChecksumAlgorithm: "sha256",
 		Files: []*lockfile.File{{Name: "gh"}},
-	}}, nil
+	}}}, nil
 }
 
 // fakeVacuum remembers the paths timestamps were created for.

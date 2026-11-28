@@ -171,10 +171,11 @@ func TestClient_Resolve_alias(t *testing.T) {
 	dl := opencode()
 	client := g2.New(dl, nil, "", "")
 
-	pkgs, err := client.Resolve(t.Context(), discardLogger(), "sst/opencode", "v1.0.0")
+	resolved, err := client.Resolve(t.Context(), discardLogger(), "sst/opencode", "v1.0.0", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
+	pkgs := resolved.Packages
 	if len(pkgs) != 1 {
 		t.Fatalf("got %d entries", len(pkgs))
 	}
@@ -183,7 +184,7 @@ func TestClient_Resolve_alias(t *testing.T) {
 	}
 
 	// The table is read once however many packages are resolved.
-	if _, err := client.Resolve(t.Context(), discardLogger(), "sst/opencode", "v1.0.0"); err != nil {
+	if _, err := client.Resolve(t.Context(), discardLogger(), "sst/opencode", "v1.0.0", nil); err != nil {
 		t.Fatal(err)
 	}
 	if got := dl.calls[dl.key(g2.DefaultBranch, g2.NamesFileName)]; got != 1 {
@@ -198,13 +199,13 @@ func TestClient_Resolve_cachedTable(t *testing.T) {
 	cache := g2.NewCache(&config.Param{CacheDir: t.TempDir()})
 	first := opencode()
 	if _, err := g2.New(first, cache, "", "").Resolve(t.Context(), discardLogger(),
-		"sst/opencode", "v1.0.0"); err != nil {
+		"sst/opencode", "v1.0.0", nil); err != nil {
 		t.Fatal(err)
 	}
 
 	second := opencode()
 	if _, err := g2.New(second, cache, "", "").Resolve(t.Context(), discardLogger(),
-		"sst/opencode", "v1.0.0"); err != nil {
+		"sst/opencode", "v1.0.0", nil); err != nil {
 		t.Fatal(err)
 	}
 	if got := second.calls[second.key(g2.DefaultBranch, g2.NamesFileName)]; got != 0 {
@@ -227,16 +228,17 @@ func TestClient_Resolve_staleTable(t *testing.T) {
 			 "repo_name":"cli","asset":"gh.tar.gz"}]}`,
 	}}
 	if _, err := g2.New(before, cache, "", "").Resolve(t.Context(), discardLogger(),
-		"cli/cli", "v2.1.0"); err != nil {
+		"cli/cli", "v2.1.0", nil); err != nil {
 		t.Fatal(err)
 	}
 
 	after := opencode()
-	pkgs, err := g2.New(after, cache, "", "").Resolve(t.Context(), discardLogger(),
-		"sst/opencode", "v1.0.0")
+	resolved, err := g2.New(after, cache, "", "").Resolve(t.Context(), discardLogger(),
+		"sst/opencode", "v1.0.0", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
+	pkgs := resolved.Packages
 	if len(pkgs) != 1 || pkgs[0].Name != "sst/opencode" {
 		t.Errorf("got %+v", pkgs)
 	}
@@ -250,7 +252,7 @@ func TestClient_Resolve_staleTable(t *testing.T) {
 func TestClient_Resolve_notHeld(t *testing.T) {
 	t.Parallel()
 	dl := opencode()
-	_, err := g2.New(dl, nil, "", "").Resolve(t.Context(), discardLogger(), "cli/cli", "v2.1.0")
+	_, err := g2.New(dl, nil, "", "").Resolve(t.Context(), discardLogger(), "cli/cli", "v2.1.0", nil)
 	if !errors.Is(err, g2.ErrNoPackageBranch) {
 		t.Fatalf("got %v, want the registry not holding the package", err)
 	}
@@ -262,7 +264,7 @@ func TestClient_Resolve_noTable(t *testing.T) {
 	t.Parallel()
 	dl := &refDownloader{}
 	if _, err := g2.New(dl, nil, "", "").Resolve(t.Context(), discardLogger(),
-		"cli/cli", "v2.1.0"); err == nil {
+		"cli/cli", "v2.1.0", nil); err == nil {
 		t.Fatal("want an error")
 	}
 }
